@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050505">
+  <meta name="description" content="Convite digital Kooler — Pgrowth Events">
+  <title>Kooler — Pgrowth Events</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+
+    /* =========================================================
+       CONFIGURAÇÃO GERAL
+       ========================================================= */
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --orange: #ff5a1f;
+      --orange2: #ff7a2f;
+      --black: #050505;
+      --card: #101010;
+      --text: #ffffff;
+      --muted: #a7a7a7;
+      --line: rgba(255,255,255,.10);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(
+          circle at top,
+          rgba(255,90,31,.13),
+          transparent 35%
+        ),
+        #050505;
+
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+
+      padding: 18px 12px 40px;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* =========================================================
+       MARCA
+       ========================================================= */
+
+    .brand {
+      text-align: center;
+      margin: 5px 0 14px;
+
+      letter-spacing: 2px;
+      font-size: 12px;
+
+      color: #ddd;
+      text-transform: uppercase;
+    }
+
+    .brand strong {
+      color: var(--orange);
+    }
+
+    /* =========================================================
+       IMAGEM DO CONVITE
+       ========================================================= */
+
+    .poster {
+      overflow: hidden;
+
+      border-radius: 20px;
+
+      background: #000;
+
+      box-shadow:
+        0 20px 60px rgba(0,0,0,.65);
+
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .poster img {
+      display: block;
+
+      width: 100%;
+      height: auto;
+    }
+
+    /* =========================================================
+       ÁREA PRINCIPAL
+       ========================================================= */
+
+    .content {
+      margin-top: 16px;
+
+      background:
+        linear-gradient(
+          180deg,
+          #121212,
+          #0b0b0b
+        );
+
+      border: 1px solid var(--line);
+
+      border-radius: 20px;
+
+      padding: 20px;
+
+      box-shadow:
+        0 15px 45px rgba(0,0,0,.45);
+    }
+
+    .title {
+      font-size: 25px;
+      font-weight: 800;
+
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+
+      font-size: 14px;
+
+      line-height: 1.5;
+
+      margin-bottom: 18px;
+    }
+
+    /* =========================================================
+       INFORMAÇÕES DO EVENTO
+       ========================================================= */
+
+    .info {
+      display: grid;
+
+      gap: 10px;
+
+      margin-bottom: 20px;
+    }
+
+    .info-item {
+      padding: 12px 14px;
+
+      border: 1px solid var(--line);
+
+      border-radius: 13px;
+
+      background: rgba(255,255,255,.03);
+
+      font-size: 14px;
+    }
+
+    .info-item b {
+      display: block;
+
+      color: var(--orange2);
+
+      font-size: 11px;
+
+      text-transform: uppercase;
+
+      letter-spacing: 1px;
+
+      margin-bottom: 3px;
+    }
+
+    /* =========================================================
+       FORMULÁRIO
+       ========================================================= */
+
+    .form-title {
+      font-size: 18px;
+
+      font-weight: 800;
+
+      margin-bottom: 14px;
+    }
+
+    label {
+      display: block;
+
+      margin: 13px 0 7px;
+
+      font-size: 13px;
+
+      color: #ddd;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+
+      border: 1px solid rgba(255,255,255,.13);
+
+      background: #070707;
+
+      color: #fff;
+
+      border-radius: 12px;
+
+      padding: 14px;
+
+      font-size: 15px;
+
+      outline: none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--orange);
+
+      box-shadow:
+        0 0 0 3px rgba(255,90,31,.10);
+    }
+
+    textarea {
+      min-height: 90px;
+
+      resize: vertical;
+    }
+
+    /* =========================================================
+       BOTÃO CONFIRMAR
+       ========================================================= */
+
+    .btn {
+      width: 100%;
+
+      border: 0;
+
+      border-radius: 13px;
+
+      padding: 15px;
+
+      margin-top: 18px;
+
+      background:
+        linear-gradient(
+          135deg,
+          var(--orange),
+          var(--orange2)
+        );
+
+      color: #fff;
+
+      font-size: 16px;
+
+      font-weight: 800;
+
+      cursor: pointer;
+
+      box-shadow:
+        0 10px 25px rgba(255,90,31,.20);
+    }
+
+    .btn:disabled {
+      opacity: .55;
+
+      cursor: not-allowed;
+    }
+
+    /* =========================================================
+       MENSAGEM DE ERRO
+       ========================================================= */
+
+    .status {
+      display: none;
+
+      margin-top: 15px;
+
+      padding: 13px;
+
+      border-radius: 12px;
+
+      font-size: 14px;
+
+      line-height: 1.45;
+    }
+
+    .error {
+      background: rgba(220,60,60,.12);
+
+      border: 1px solid rgba(220,60,60,.35);
+
+      color: #ffb0b0;
+    }
+
+    /* =========================================================
+       CONFIRMAÇÃO BONITA
+       ========================================================= */
+
+    .confirmation {
+      text-align: center;
+
+      padding: 10px 0 5px;
+    }
+
+    .check {
+      width: 72px;
+      height: 72px;
+
+      margin: 5px auto 16px;
+
+      border-radius: 50%;
+
+      display: grid;
+
+      place-items: center;
+
+      background:
+        rgba(255,90,31,.15);
+
+      border:
+        1px solid rgba(255,90,31,.45);
+
+      color: var(--orange2);
+
+      font-size: 38px;
+
+      font-weight: 800;
+
+      box-shadow:
+        0 0 35px rgba(255,90,31,.12);
+    }
+
+    .confirmation-kicker {
+      color: var(--orange2);
+
+      font-size: 11px;
+
+      font-weight: 800;
+
+      letter-spacing: 1.6px;
+
+      margin-bottom: 7px;
+    }
+
+    .confirmation h2 {
+      font-size: 27px;
+
+      margin-bottom: 8px;
+    }
+
+    .confirmation > p {
+      color: var(--muted);
+
+      font-size: 14px;
+
+      line-height: 1.5;
+
+      margin-bottom: 20px;
+    }
+
+    /* =========================================================
+       CARTÃO DA CONFIRMAÇÃO
+       ========================================================= */
+
+    .confirmation-card {
+      text-align: left;
+
+      border:
+        1px solid var(--line);
+
+      background:
+        rgba(255,255,255,.03);
+
+      border-radius: 15px;
+
+      overflow: hidden;
+
+      margin-bottom: 16px;
+    }
+
+    .confirmation-card div {
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      gap: 15px;
+
+      padding: 13px 14px;
+
+      border-bottom:
+        1px solid var(--line);
+
+      font-size: 13px;
+    }
+
+    .confirmation-card div:last-child {
+      border-bottom: 0;
+    }
+
+    .confirmation-card span {
+      color: #888;
+    }
+
+    .confirmation-card strong {
+      text-align: right;
+
+      font-weight: 700;
+    }
+
+    /* =========================================================
+       BOTÃO NOVA CONFIRMAÇÃO
+       ========================================================= */
+
+    .secondary-btn {
+      width: 100%;
+
+      border:
+        1px solid rgba(255,255,255,.14);
+
+      border-radius: 13px;
+
+      padding: 13px;
+
+      margin-top: 10px;
+
+      background: transparent;
+
+      color: #ddd;
+
+      font-size: 14px;
+
+      font-weight: 700;
+
+      cursor: pointer;
+    }
+
+    .secondary-btn:hover {
+      background:
+        rgba(255,255,255,.05);
+    }
+
+    /* =========================================================
+       RODAPÉ
+       ========================================================= */
+
+    .footer {
+      text-align: center;
+
+      color: #777;
+
+      font-size: 11px;
+
+      margin-top: 18px;
+
+      line-height: 1.6;
+    }
+
+    .footer strong {
+      color: #aaa;
+    }
+
+    /* =========================================================
+       CLASSE PARA ESCONDER ELEMENTOS
+       ========================================================= */
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* =========================================================
+       ECRÃS PEQUENOS
+       ========================================================= */
+
+    @media (max-width: 380px) {
+
+      body {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      .content {
+        padding: 16px;
+      }
+
+      .title {
+        font-size: 22px;
+      }
+
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+  <main class="page">
+
+    <!-- =====================================================
+         MARCA
+         ===================================================== -->
+
+    <div class="brand">
+      <strong>Pgrowth Events</strong> · Convite Digital
+    </div>
+
+
+    <!-- =====================================================
+         CONVITE
+         ===================================================== -->
+
+    <section class="poster">
+
+      <img
+        src="convite-kooler.png"
+        alt="Convite do evento Kooler"
+      >
+
+    </section>
+
+
+    <!-- =====================================================
+         ÁREA DO RSVP
+         ===================================================== -->
+
+    <section class="content">
+
+      <div id="registrationArea">
+
+        <h1 class="title">
+          Kooler
+        </h1>
+
+
+        <p class="subtitle">
+          Garanta a sua presença no evento.
+          Preencha os dados abaixo para confirmar.
+        </p>
+
+
+        <!-- INFORMAÇÕES -->
+
+        <div class="info">
+
+          <div class="info-item">
+            <b>Data</b>
+            Sábado, 29 de Agosto
+          </div>
+
+          <div class="info-item">
+            <b>Hora</b>
+            14:00 horas
+          </div>
+
+          <div class="info-item">
+            <b>Organização</b>
+            ELTON TOMAS
+          </div>
+
+        </div>
+
+
+        <!-- TÍTULO DO FORMULÁRIO -->
+
+        <h2 class="form-title">
+          Confirmar presença
+        </h2>
+
+
+        <!-- FORMULÁRIO -->
+
+        <form id="rsvpForm">
+
+
+          <!-- NOME -->
+
+          <label for="nome">
+            Nome completo *
+          </label>
+
+          <input
+            id="nome"
+            name="nome"
+            type="text"
+            placeholder="Digite o seu nome"
+            autocomplete="name"
+            required
+          >
+
+
+          <!-- WHATSAPP -->
+
+          <label for="telefone">
+            WhatsApp *
+          </label>
+
+          <input
+            id="telefone"
+            name="telefone"
+            type="tel"
+            placeholder="Ex.: 84 123 4567"
+            autocomplete="tel"
+            required
+          >
+
+
+          <!-- EMAIL -->
+
+          <label for="email">
+            E-mail (opcional)
+          </label>
+
+          <input
+            id="email"
+            name="email"
+            type="email"
+            placeholder="seuemail@email.com"
+            autocomplete="email"
+          >
+
+
+          <!-- NÚMERO DE PESSOAS -->
+
+          <label for="convidados">
+            Número de pessoas
+          </label>
+
+          <select
+            id="convidados"
+            name="convidados"
+          >
+
+            <option value="1">
+              1 pessoa
+            </option>
+
+            <option value="2">
+              2 pessoas
+            </option>
+
+            <option value="3">
+              3 pessoas
+            </option>
+
+            <option value="4">
+              4 pessoas
+            </option>
+
+            <option value="5">
+              5 pessoas
+            </option>
+
+          </select>
+
+
+          <!-- OBSERVAÇÃO -->
+
+          <label for="observacao">
+            Observação (opcional)
+          </label>
+
+          <textarea
+            id="observacao"
+            name="observacao"
+            placeholder="Alguma informação adicional?"
+          ></textarea>
+
+
+          <!-- BOTÃO -->
+
+          <button
+            class="btn"
+            id="submitBtn"
+            type="submit"
+          >
+            CONFIRMAR PRESENÇA
+          </button>
+
+
+        </form>
+
+
+        <!-- ERRO -->
+
+        <div
+          id="errorBox"
+          class="status error"
+        >
+          Não foi possível confirmar a presença.
+          Verifique a ligação e tente novamente.
+        </div>
+
+      </div>
+
+
+      <!-- =====================================================
+           TELA BONITA DE CONFIRMAÇÃO
+
+           IMPORTANTE:
+           "hidden" faz esta parte ficar escondida
+           quando o convite é aberto.
+           ===================================================== -->
+
+      <section
+        id="confirmationScreen"
+        class="confirmation hidden"
+      >
+
+
+        <!-- ÍCONE -->
+
+        <div class="check">
+          ✓
+        </div>
+
+
+        <!-- PEQUENO TÍTULO -->
+
+        <div class="confirmation-kicker">
+          CONFIRMAÇÃO RECEBIDA
+        </div>
+
+
+        <!-- TÍTULO PRINCIPAL -->
+
+        <h2>
+          Presença confirmada!
+        </h2>
+
+
+        <!-- TEXTO -->
+
+        <p>
+          A sua presença foi registada para o Kooler.
+          Obrigado por confirmar.
+        </p>
+
+
+        <!-- DADOS DO CONVIDADO -->
+
+        <div class="confirmation-card">
+
+
+          <div>
+            <span>
+              Convidado
+            </span>
+
+            <strong id="confirmedName">
+              —
+            </strong>
+          </div>
+
+
+          <div>
+            <span>
+              WhatsApp
+            </span>
+
+            <strong id="confirmedPhone">
+              —
+            </strong>
+          </div>
+
+
+          <div>
+            <span>
+              Pessoas
+            </span>
+
+            <strong id="confirmedGuests">
+              —
+            </strong>
+          </div>
+
+
+          <div>
+            <span>
+              Evento
+            </span>
+
+            <strong>
+              Kooler
+            </strong>
+          </div>
+
+
+          <div>
+            <span>
+              Data
+            </span>
+
+            <strong>
+              29 de Agosto · 14:00
+            </strong>
+          </div>
+
+
+        </div>
+
+
+        <!-- NOVA CONFIRMAÇÃO -->
+
+        <button
+          class="secondary-btn"
+          id="newConfirmationBtn"
+          type="button"
+        >
+          FAZER NOVA CONFIRMAÇÃO
+        </button>
+
+
+      </section>
+
+    </section>
+
+
+    <!-- =====================================================
+         RODAPÉ
+         ===================================================== -->
+
+    <footer class="footer">
+
+      <strong>
+        Pgrowth Events
+      </strong>
+
+      <br>
+
+      Convites digitais · RSVP · Gestão de eventos
+
+    </footer>
+
+  </main>
+
+
+  <!-- =======================================================
+       JAVASCRIPT
+       ======================================================= -->
+
+  <script>
+
+    /* ========================================================
+       SUPABASE
+       ======================================================== */
+
+    const SUPABASE_URL =
+      "https://zarcsbukhinadiczztlr.supabase.co";
+
+
+    const SUPABASE_ANON_KEY =
+      "sb_publishable_nmRk92jB7bFieU8OudQijw_FlojVAio";
+
+
+    const supabaseClient =
+      window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+
+    /* ========================================================
+       ELEMENTOS
+       ======================================================== */
+
+    const form =
+      document.getElementById("rsvpForm");
+
+
+    const submitBtn =
+      document.getElementById("submitBtn");
+
+
+    const errorBox =
+      document.getElementById("errorBox");
+
+
+    const registrationArea =
+      document.getElementById("registrationArea");
+
+
+    const confirmationScreen =
+      document.getElementById("confirmationScreen");
+
+
+    const newConfirmationBtn =
+      document.getElementById("newConfirmationBtn");
+
+
+    /* ========================================================
+       ENVIO DO RSVP
+       ======================================================== */
+
+    form.addEventListener(
+      "submit",
+      async function(event) {
+
+        event.preventDefault();
+
+
+        /*
+          Esconder mensagem de erro
+        */
+
+        errorBox.style.display = "none";
+
+
+        /*
+          Desativar botão enquanto envia
+        */
+
+        submitBtn.disabled = true;
+
+        submitBtn.textContent =
+          "A CONFIRMAR...";
+
+
+        /*
+          Recolher dados do formulário
+        */
+
+        const dados = {
+
+          nome:
+            document
+              .getElementById("nome")
+              .value
+              .trim(),
+
+          telefone:
+            document
+              .getElementById("telefone")
+              .value
+              .trim(),
+
+          email:
+            document
+              .getElementById("email")
+              .value
+              .trim() || null,
+
+          convidados:
+            Number(
+              document
+                .getElementById("convidados")
+                .value
+            ),
+
+          observacao:
+            document
+              .getElementById("observacao")
+              .value
+              .trim() || null,
+
+          evento:
+            "Kooler",
+
+          data_evento:
+            "2026-08-29",
+
+          hora_evento:
+            "14:00"
+
+        };
+
+
+        try {
+
+
+          /* ==================================================
+             ENVIAR PARA O SUPABASE
+             ================================================== */
+
+          const { error } =
+            await supabaseClient
+              .from("kooler_confirmacoes")
+              .insert([dados]);
+
+
+          /*
+            Se houver erro
+          */
+
+          if (error) {
+
+            console.error(
+              "Erro Supabase:",
+              error
+            );
+
+            errorBox.textContent =
+              "Não foi possível confirmar a presença. Tente novamente.";
+
+            errorBox.style.display =
+              "block";
+
+            return;
+          }
+
+
+          /* ==================================================
+             PREENCHER A CONFIRMAÇÃO
+             ================================================== */
+
+          document
+            .getElementById("confirmedName")
+            .textContent =
+              dados.nome;
+
+
+          document
+            .getElementById("confirmedPhone")
+            .textContent =
+              dados.telefone;
+
+
+          document
+            .getElementById("confirmedGuests")
+            .textContent =
+
+              dados.convidados +
+              (
+                dados.convidados === 1
+                  ? " pessoa"
+                  : " pessoas"
+              );
+
+
+          /* ==================================================
+             ESCONDER FORMULÁRIO
+             ================================================== */
+
+          registrationArea
+            .classList
+            .add("hidden");
+
+
+          /* ==================================================
+             MOSTRAR CONFIRMAÇÃO
+             ================================================== */
+
+          confirmationScreen
+            .classList
+            .remove("hidden");
+
+
+          /* ==================================================
+             VOLTAR PARA A CONFIRMAÇÃO
+             ================================================== */
+
+          window.scrollTo({
+
+            top:
+              confirmationScreen
+                .offsetTop - 20,
+
+            behavior:
+              "smooth"
+
+          });
+
+
+        } catch (error) {
+
+
+          console.error(
+            "Erro:",
+            error
+          );
+
+
+          errorBox.textContent =
+            "Ocorreu um erro. Verifique a internet e tente novamente.";
+
+
+          errorBox.style.display =
+            "block";
+
+
+        } finally {
+
+
+          /*
+            Reativar botão
+          */
+
+          submitBtn.disabled =
+            false;
+
+
+          submitBtn.textContent =
+            "CONFIRMAR PRESENÇA";
+
+        }
+
+      }
+    );
+
+
+    /* ========================================================
+       FAZER NOVA CONFIRMAÇÃO
+       ======================================================== */
+
+    newConfirmationBtn.addEventListener(
+      "click",
+      function() {
+
+
+        /*
+          Esconder confirmação
+        */
+
+        confirmationScreen
+          .classList
+          .add("hidden");
+
+
+        /*
+          Mostrar formulário
+        */
+
+        registrationArea
+          .classList
+          .remove("hidden");
+
+
+        /*
+          Limpar formulário
+        */
+
+        form.reset();
+
+
+        /*
+          Voltar ao início
+        */
+
+        window.scrollTo({
+
+          top: 0,
+
+          behavior: "smooth"
+
+        });
+
+      }
+    );
+
+  </script>
+
+</body>
+</html>
