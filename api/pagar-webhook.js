@@ -1,9 +1,21 @@
 import crypto from "node:crypto";
 
-const WEBHOOK_SECRET = process.env.PAGAR_WEBHOOK_SECRET;
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
-function sendJson(res, status, data) {
-  return res.status(status).json(data);
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const PAGAR_WEBHOOK_SECRET =
+  process.env.PAGAR_WEBHOOK_SECRET;
+
+function json(res, status, data) {
+  res.status(status).setHeader("Content-Type", "application/json");
+  return res.end(JSON.stringify(data));
 }
 
 function getHeader(req, name) {
@@ -16,39 +28,50 @@ function getHeader(req, name) {
   return value;
 }
 
-function getRawBody(req) {
-  // Vercel/Node pode disponibilizar o corpo bruto desta forma.
-  if (Buffer.isBuffer(req.body)) {
-    return req.body;
-  }
+/**
+ * Lê o corpo ORIGINAL da requisição.
+ *
+ * Isto é fundamental porque a Pagar assina:
+ *
+ * timestamp + "." + rawBody
+ *
+ * Se o JSON for reconstruído antes da validação,
+ * a assinatura pode deixar de coincidir.
+ */
+async function readRawBody(req) {
+  const chunks = [];
 
-  if (Buffer.isBuffer(req.rawBody)) {
-    return req.rawBody;
-  }
-
-  if (typeof req.body === "string") {
-    return Buffer.from(req.body, "utf8");
-  }
-
-  if (typeof req.rawBody === "string") {
-    return Buffer.from(req.rawBody, "utf8");
-  }
-
-  // NÃO é ideal para validação criptográfica porque JSON.stringify
-  // pode produzir um corpo diferente do originalmente recebido.
-  throw new Error("Raw body não disponível.");
-}
-
-function verifyPagarWebhook(req, rawBody) {
-  if (!WEBHOOK_SECRET) {
-    throw new Error(
-      "PAGAR_WEBHOOK_SECRET não configurado no servidor."
+  for await (const chunk of req) {
+    chunks.push(
+      Buffer.isBuffer(chunk)
+        ? chunk
+        : Buffer.from(chunk)
     );
   }
 
-  const eventId = getHeader(req, "pagar-event-id");
+  return Buffer.concat(chunks);
+}
+
+/**
+ * Verifica a assinatura oficial do webhook Pagar.
+ */
+function verifyPagarSignature(req, rawBody) {
+  if (!PAGAR_WEBHOOK_SECRET) {
+    throw new Error(
+      "PAGAR_WEBHOOK_SECRET não configurado."
+    );
+  }
+
+  const eventId = getHeader(
+    req,
+    "pagar-event-id"
+  );
+
   const signatureHeader =
-    getHeader(req, "pagar-signature") || "";
+    getHeader(
+      req,
+      "pagar-signature"
+    ) || "";
 
   if (!eventId) {
     return {
@@ -56,13 +79,6 @@ function verifyPagarWebhook(req, rawBody) {
       reason: "Pagar-Event-Id ausente.",
     };
   }
-
-  /*
-   * Formato esperado:
-   *
-   * Pagar-Signature:
-   * t=1720000000,v1=64-caracteres-hex
-   */
 
   const parts = {};
 
@@ -73,8 +89,13 @@ function verifyPagarWebhook(req, rawBody) {
       continue;
     }
 
-    const key = part.slice(0, separator).trim();
-    const value = part.slice(separator + 1).trim();
+    const key = part
+      .slice(0, separator)
+      .trim();
+
+    const value = part
+      .slice(separator + 1)
+      .trim();
 
     parts[key] = value;
   }
@@ -85,11 +106,10 @@ function verifyPagarWebhook(req, rawBody) {
   if (!timestamp || !receivedSignature) {
     return {
       valid: false,
-      reason: "Assinatura Pagar inválida ou incompleta.",
+      reason: "Pagar-Signature inválida.",
     };
   }
 
-  // Timestamp precisa ser somente numérico.
   if (!/^\d+$/.test(timestamp)) {
     return {
       valid: false,
@@ -97,16 +117,38 @@ function verifyPagarWebhook(req, rawBody) {
     };
   }
 
-  // A assinatura esperada é SHA-256 hexadecimal.
   if (!/^[a-f0-9]{64}$/i.test(receivedSignature)) {
     return {
       valid: false,
-      reason: "Formato da assinatura inválido.",
+      reason: "Formato de assinatura inválido.",
     };
   }
 
   /*
-   * A Pagar assina:
+   * A Pagar usa uma janela de 5 minutos
+   * para evitar replay attacks.
+   */
+  const timestampSeconds =
+    Number(timestamp);
+
+  const nowSeconds =
+    Math.floor(Date.now() / 1000);
+
+  if (
+    !Number.isSafeInteger(timestampSeconds) ||
+    Math.abs(
+      nowSeconds - timestampSeconds
+    ) > 300
+  ) {
+    return {
+      valid: false,
+      reason:
+        "Webhook fora da janela de 5 minutos.",
+    };
+  }
+
+  /*
+   * Payload EXATO usado pela Pagar:
    *
    * timestamp + "." + rawBody
    */
@@ -115,96 +157,237 @@ function verifyPagarWebhook(req, rawBody) {
     "." +
     rawBody.toString("utf8");
 
-  const expectedSignature = crypto
-    .createHmac("sha256", WEBHOOK_SECRET)
-    .update(signedPayload)
-    .digest("hex");
+  const expectedSignature =
+    crypto
+      .createHmac(
+        "sha256",
+        PAGAR_WEBHOOK_SECRET
+      )
+      .update(signedPayload)
+      .digest("hex");
 
-  /*
-   * Evita comparação simples de strings para reduzir
-   * risco de timing attack.
-   */
-  const receivedBuffer = Buffer.from(
-    receivedSignature,
-    "hex"
-  );
+  const receivedBuffer =
+    Buffer.from(
+      receivedSignature,
+      "hex"
+    );
 
-  const expectedBuffer = Buffer.from(
-    expectedSignature,
-    "hex"
-  );
-
-  if (receivedBuffer.length !== expectedBuffer.length) {
-    return {
-      valid: false,
-      reason: "Assinatura inválida.",
-    };
-  }
-
-  const signatureMatches = crypto.timingSafeEqual(
-    receivedBuffer,
-    expectedBuffer
-  );
-
-  if (!signatureMatches) {
-    return {
-      valid: false,
-      reason: "Assinatura inválida.",
-    };
-  }
-
-  /*
-   * Proteção contra replay.
-   *
-   * A documentação recomenda rejeitar eventos antigos.
-   * Aqui usamos uma janela de 5 minutos.
-   */
-  const timestampSeconds = Number(timestamp);
-  const nowSeconds = Math.floor(Date.now() / 1000);
+  const expectedBuffer =
+    Buffer.from(
+      expectedSignature,
+      "hex"
+    );
 
   if (
-    !Number.isSafeInteger(timestampSeconds) ||
-    Math.abs(nowSeconds - timestampSeconds) > 300
+    receivedBuffer.length !==
+    expectedBuffer.length
   ) {
     return {
       valid: false,
-      reason: "Webhook fora da janela de 5 minutos.",
+      reason: "Assinatura inválida.",
     };
   }
 
+  const valid =
+    crypto.timingSafeEqual(
+      receivedBuffer,
+      expectedBuffer
+    );
+
   return {
-    valid: true,
+    valid,
     eventId,
+    timestamp,
   };
 }
 
-export default async function handler(req, res) {
-  // --------------------------------------------------
-  // SOMENTE POST
-  // --------------------------------------------------
+/**
+ * Consulta o Supabase diretamente pela REST API.
+ */
+async function supabaseRequest(
+  path,
+  options = {}
+) {
+  if (
+    !SUPABASE_URL ||
+    !SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    throw new Error(
+      "Credenciais do Supabase não configuradas."
+    );
+  }
+
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/${path}`,
+    {
+      ...options,
+
+      headers: {
+        apikey:
+          SUPABASE_SERVICE_ROLE_KEY,
+
+        Authorization:
+          `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+
+        "Content-Type":
+          "application/json",
+
+        ...(options.headers || {}),
+      },
+    }
+  );
+
+  const text =
+    await response.text();
+
+  let data = null;
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+  }
+
+  if (!response.ok) {
+    const error = new Error(
+      "Erro ao comunicar com o Supabase."
+    );
+
+    error.status =
+      response.status;
+
+    error.data = data;
+
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Registra o evento somente uma vez.
+ *
+ * O índice UNIQUE de event_id protege
+ * contra webhooks duplicados.
+ */
+async function registerEvent({
+  eventId,
+  eventType,
+  paymentId,
+  reference,
+  status,
+  payload,
+}) {
+  const response =
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/pagar_webhook_events`,
+      {
+        method: "POST",
+
+        headers: {
+          apikey:
+            SUPABASE_SERVICE_ROLE_KEY,
+
+          Authorization:
+            `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+
+          "Content-Type":
+            "application/json",
+
+          /*
+           * Se event_id já existir,
+           * o Supabase ignora a duplicação.
+           */
+          Prefer:
+            "return=representation,resolution=ignore-duplicates",
+        },
+
+        body: JSON.stringify({
+          event_id: eventId,
+
+          event_type:
+            eventType,
+
+          payment_id:
+            paymentId,
+
+          payment_reference:
+            reference,
+
+          payment_status:
+            status,
+
+          payload,
+        }),
+      }
+    );
+
+  const text =
+    await response.text();
+
+  if (!response.ok) {
+    throw new Error(
+      `Erro ao registrar evento no Supabase: ${text}`
+    );
+  }
+
+  if (!text) {
+    return {
+      inserted: false,
+    };
+  }
+
+  const data =
+    JSON.parse(text);
+
+  return {
+    inserted:
+      Array.isArray(data) &&
+      data.length > 0,
+  };
+}
+
+export default async function handler(
+  req,
+  res
+) {
+  /*
+   * ------------------------------------------------
+   * 1. SOMENTE POST
+   * ------------------------------------------------
+   */
 
   if (req.method !== "POST") {
-    return sendJson(res, 405, {
+    return json(res, 405, {
       success: false,
-      message: "Método não permitido.",
+      message:
+        "Método não permitido.",
     });
   }
 
   try {
-    // ------------------------------------------------
-    // 1. OBTER RAW BODY
-    // ------------------------------------------------
+    /*
+     * ------------------------------------------------
+     * 2. RAW BODY
+     * ------------------------------------------------
+     */
 
-    const rawBody = getRawBody(req);
+    const rawBody =
+      await readRawBody(req);
 
-    // ------------------------------------------------
-    // 2. VALIDAR ASSINATURA
-    // ------------------------------------------------
+    /*
+     * ------------------------------------------------
+     * 3. VERIFICAR ASSINATURA
+     * ------------------------------------------------
+     */
 
-    const verification = verifyPagarWebhook(
-      req,
-      rawBody
-    );
+    const verification =
+      verifyPagarSignature(
+        req,
+        rawBody
+      );
 
     if (!verification.valid) {
       console.warn(
@@ -212,17 +395,21 @@ export default async function handler(req, res) {
         verification.reason
       );
 
-      return sendJson(res, 401, {
+      return json(res, 401, {
         success: false,
-        message: "Webhook não autorizado.",
+        message:
+          "Webhook não autorizado.",
       });
     }
 
-    const eventId = verification.eventId;
+    const eventId =
+      verification.eventId;
 
-    // ------------------------------------------------
-    // 3. LER JSON ORIGINAL
-    // ------------------------------------------------
+    /*
+     * ------------------------------------------------
+     * 4. PARSE DO JSON
+     * ------------------------------------------------
+     */
 
     let event;
 
@@ -231,15 +418,18 @@ export default async function handler(req, res) {
         rawBody.toString("utf8")
       );
     } catch {
-      return sendJson(res, 400, {
+      return json(res, 400, {
         success: false,
-        message: "JSON do webhook inválido.",
+        message:
+          "JSON inválido.",
       });
     }
 
-    // ------------------------------------------------
-    // 4. IDENTIFICAR EVENTO
-    // ------------------------------------------------
+    /*
+     * ------------------------------------------------
+     * 5. EXTRAIR PAGAMENTO
+     * ------------------------------------------------
+     */
 
     const eventType =
       event.type ||
@@ -256,56 +446,75 @@ export default async function handler(req, res) {
       payment.id ||
       null;
 
-    const paymentStatus =
-      String(
-        payment.status ||
-        ""
-      ).toUpperCase();
-
     const reference =
       payment.reference ||
       event.reference ||
       null;
 
+    const status =
+      String(
+        payment.status ||
+        event.status ||
+        ""
+      ).toUpperCase();
+
     console.log(
-      "PAGAR WEBHOOK:",
+      "PAGAR WEBHOOK RECEBIDO:",
       JSON.stringify({
         eventId,
         eventType,
         paymentId,
         reference,
-        status: paymentStatus,
+        status,
       })
     );
 
-    // ------------------------------------------------
-    // 5. IDEMPOTÊNCIA
-    // ------------------------------------------------
-
     /*
-     * IMPORTANTE:
-     *
-     * O Pagar-Event-Id deve ser guardado no Supabase
-     * com UNIQUE.
-     *
-     * Exemplo:
-     *
-     * pagar_event_id = eventId
-     *
-     * Se o mesmo webhook chegar novamente, ele não
-     * poderá gerar outro bilhete.
-     *
-     * Nesta etapa ainda não fazemos a gravação porque
-     * o Supabase será ligado no próximo passo.
+     * ------------------------------------------------
+     * 6. REGISTRAR EVENTO
+     * ------------------------------------------------
      */
 
-    // ------------------------------------------------
-    // 6. PAGAMENTO CONFIRMADO
-    // ------------------------------------------------
+    const registration =
+      await registerEvent({
+        eventId,
+        eventType,
+        paymentId,
+        reference,
+        status,
+        payload: event,
+      });
+
+    /*
+     * ------------------------------------------------
+     * 7. WEBHOOK DUPLICADO
+     * ------------------------------------------------
+     */
+
+    if (!registration.inserted) {
+      console.log(
+        "WEBHOOK DUPLICADO IGNORADO:",
+        eventId
+      );
+
+      return json(res, 200, {
+        success: true,
+        received: true,
+        duplicate: true,
+        eventId,
+      });
+    }
+
+    /*
+     * ------------------------------------------------
+     * 8. PAGAMENTO CONFIRMADO
+     * ------------------------------------------------
+     */
 
     if (
-      eventType === "payment.succeeded" ||
-      paymentStatus === "PAID"
+      eventType ===
+        "payment.succeeded" ||
+      status === "PAID"
     ) {
       console.log(
         "PAGAMENTO CONFIRMADO:",
@@ -317,34 +526,45 @@ export default async function handler(req, res) {
       );
 
       /*
-       * PRÓXIMO PASSO:
+       * AQUI entraremos na próxima etapa:
        *
-       * 1. Encontrar o pedido no Supabase pela reference.
-       * 2. Guardar paymentId.
-       * 3. Guardar eventId.
-       * 4. Confirmar que o pedido ainda não está PAID.
-       * 5. Alterar o pedido para PAID.
-       * 6. Gerar o número do bilhete.
-       * 7. Gerar QR Code.
-       * 8. Gerar PDF.
-       * 9. Disponibilizar o bilhete ao comprador.
+       * Supabase:
+       *
+       * blackout_orders
+       *       ↓
+       * reference
+       *       ↓
+       * status = PAID
+       *       ↓
+       * payment_id
+       *       ↓
+       * gerar bilhete
+       *
+       * Ainda NÃO geramos o bilhete aqui porque
+       * precisamos primeiro conhecer exatamente
+       * a estrutura da tabela blackout_orders.
        */
 
-      return sendJson(res, 200, {
+      return json(res, 200, {
         success: true,
         received: true,
         eventId,
+        paymentId,
+        reference,
         status: "PAID",
       });
     }
 
-    // ------------------------------------------------
-    // 7. PAGAMENTO FALHOU
-    // ------------------------------------------------
+    /*
+     * ------------------------------------------------
+     * 9. PAGAMENTO FALHOU
+     * ------------------------------------------------
+     */
 
     if (
-      eventType === "payment.failed" ||
-      paymentStatus === "FAILED"
+      eventType ===
+        "payment.failed" ||
+      status === "FAILED"
     ) {
       console.log(
         "PAGAMENTO FALHOU:",
@@ -355,39 +575,28 @@ export default async function handler(req, res) {
         }
       );
 
-      /*
-       * PRÓXIMO PASSO:
-       *
-       * Atualizar o pedido no Supabase para FAILED.
-       */
-
-      return sendJson(res, 200, {
+      return json(res, 200, {
         success: true,
         received: true,
         eventId,
+        paymentId,
+        reference,
         status: "FAILED",
       });
     }
 
-    // ------------------------------------------------
-    // 8. OUTROS EVENTOS
-    // ------------------------------------------------
-
-    console.log(
-      "EVENTO PAGAR RECEBIDO:",
-      eventType
-    );
-
     /*
-     * Eventos desconhecidos ou não relacionados ao
-     * pagamento não devem causar erro.
+     * ------------------------------------------------
+     * 10. OUTROS EVENTOS
+     * ------------------------------------------------
      */
 
-    return sendJson(res, 200, {
+    return json(res, 200, {
       success: true,
       received: true,
       eventId,
       event: eventType,
+      status: status || null,
     });
 
   } catch (error) {
@@ -396,10 +605,15 @@ export default async function handler(req, res) {
       error
     );
 
-    return sendJson(res, 500, {
+    /*
+     * 500 faz a Pagar saber que o processamento
+     * não terminou corretamente.
+     */
+
+    return json(res, 500, {
       success: false,
-      message: "Erro interno ao processar webhook.",
+      message:
+        "Erro interno ao processar webhook.",
     });
   }
 }
-```
