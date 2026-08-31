@@ -1,0 +1,13 @@
+{
+  "name": "blackout-event",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "pdfkit": "^0.17.2",
+    "qrcode": "^1.5.4"
+  }
+}
