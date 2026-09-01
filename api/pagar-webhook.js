@@ -21,10 +21,6 @@ function json(res, status, data) {
   return res.status(status).json(data);
 }
 
-/**
- * Lê exatamente o body recebido pela Pagar.
- * A assinatura depende do raw body.
- */
 function readRawBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -47,30 +43,20 @@ function readRawBody(req) {
   });
 }
 
-/**
- * Validação oficial:
- *
- * Pagar-Signature:
- * t=TIMESTAMP,v1=SIGNATURE
- *
- * assinatura =
- * HMAC-SHA256(
- *   timestamp + "." + rawBody,
- *   PAGAR_WEBHOOK_SECRET
- * )
- */
 function verifySignature(rawBody, header) {
   if (!PAGAR_WEBHOOK_SECRET) {
     return {
       valid: false,
-      reason: "PAGAR_WEBHOOK_SECRET não configurado",
+      reason:
+        "PAGAR_WEBHOOK_SECRET não configurado",
     };
   }
 
   if (!header) {
     return {
       valid: false,
-      reason: "Pagar-Signature não recebido",
+      reason:
+        "Pagar-Signature não recebido",
     };
   }
 
@@ -94,14 +80,17 @@ function verifySignature(rawBody, header) {
   const timestamp = parts.t?.[0];
   const receivedSignatures = parts.v1 || [];
 
-  if (!timestamp || !/^\d+$/.test(timestamp)) {
+  if (
+    !timestamp ||
+    !/^\d+$/.test(timestamp)
+  ) {
     return {
       valid: false,
       reason: "Timestamp inválido",
     };
   }
 
-  if (receivedSignatures.length === 0) {
+  if (!receivedSignatures.length) {
     return {
       valid: false,
       reason: "v1 da assinatura ausente",
@@ -109,10 +98,14 @@ function verifySignature(rawBody, header) {
   }
 
   const timestampSeconds = Number(timestamp);
-  const nowSeconds = Math.floor(Date.now() / 1000);
+  const nowSeconds = Math.floor(
+    Date.now() / 1000
+  );
 
   if (
-    Math.abs(nowSeconds - timestampSeconds) > 300
+    Math.abs(
+      nowSeconds - timestampSeconds
+    ) > 300
   ) {
     return {
       valid: false,
@@ -120,30 +113,41 @@ function verifySignature(rawBody, header) {
     };
   }
 
-  const signedPayload = `${timestamp}.${rawBody}`;
+  const signedPayload =
+    `${timestamp}.${rawBody}`;
 
-  const expectedSignature = crypto
-    .createHmac(
-      "sha256",
-      PAGAR_WEBHOOK_SECRET
-    )
-    .update(signedPayload)
-    .digest("hex");
+  const expectedSignature =
+    crypto
+      .createHmac(
+        "sha256",
+        PAGAR_WEBHOOK_SECRET
+      )
+      .update(signedPayload)
+      .digest("hex");
 
-  const expectedBuffer = Buffer.from(
-    expectedSignature,
-    "hex"
-  );
+  const expectedBuffer =
+    Buffer.from(
+      expectedSignature,
+      "hex"
+    );
 
-  for (const receivedSignature of receivedSignatures) {
-    if (!/^[a-f0-9]{64}$/i.test(receivedSignature)) {
+  for (
+    const receivedSignature
+    of receivedSignatures
+  ) {
+    if (
+      !/^[a-f0-9]{64}$/i.test(
+        receivedSignature
+      )
+    ) {
       continue;
     }
 
-    const receivedBuffer = Buffer.from(
-      receivedSignature,
-      "hex"
-    );
+    const receivedBuffer =
+      Buffer.from(
+        receivedSignature,
+        "hex"
+      );
 
     if (
       receivedBuffer.length ===
@@ -162,14 +166,15 @@ function verifySignature(rawBody, header) {
 
   return {
     valid: false,
-    reason: "Assinatura HMAC não corresponde",
+    reason:
+      "Assinatura HMAC não corresponde",
   };
 }
 
-/**
- * Supabase REST
- */
-async function supabase(path, options = {}) {
+async function supabase(
+  path,
+  options = {}
+) {
   if (
     !SUPABASE_URL ||
     !SUPABASE_SERVICE_ROLE_KEY
@@ -178,25 +183,18 @@ async function supabase(path, options = {}) {
       "Variáveis do Supabase não configuradas"
     );
   }
-console.log(
-  "SUPABASE REQUEST:",
-  `${SUPABASE_URL}/rest/v1/${path}`
-);
+
   const response = await fetch(
     `${SUPABASE_URL}/rest/v1/${path}`,
     {
       ...options,
-
       headers: {
         apikey:
           SUPABASE_SERVICE_ROLE_KEY,
-
         Authorization:
           `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-
         "Content-Type":
           "application/json",
-
         ...(options.headers || {}),
       },
     }
@@ -216,39 +214,36 @@ console.log(
   }
 
   if (!response.ok) {
-    throw new Error(
+    const error = new Error(
       data?.message ||
         data?.hint ||
         "Erro no Supabase"
     );
+
+    error.status = response.status;
+    error.data = data;
+
+    throw error;
   }
 
   return data;
 }
 
-/**
- * Registra Pagar-Event-Id.
- *
- * A coluna event_id precisa ser UNIQUE.
- */
-async function registerEvent(
+async function registerOrGetEvent(
   eventId,
   eventType,
   paymentId,
   payload
 ) {
-  try {
-  const result =
+  const inserted =
     await supabase(
       "pagar_webhook_events",
       {
         method: "POST",
-
         headers: {
           Prefer:
             "return=representation,resolution=ignore-duplicates",
         },
-
         body: JSON.stringify({
           event_id: eventId,
           event_type:
@@ -260,32 +255,29 @@ async function registerEvent(
       }
     );
 
-  return (
-    Array.isArray(result) &&
-    result.length > 0
-  );
-
-} catch (error) {
-
   if (
-    String(error.message || "")
-      .includes("duplicate key")
+    Array.isArray(inserted) &&
+    inserted.length > 0
   ) {
-    console.log(
-      "Webhook já registrado:",
-      eventId
+    return inserted[0];
+  }
+
+  const existing =
+    await supabase(
+      `pagar_webhook_events?event_id=eq.${encodeURIComponent(
+        eventId
+      )}&limit=1`,
+      {
+        method: "GET",
+      }
     );
 
-    return false;
-  }
-
-  throw error;
-  }
+  return Array.isArray(existing) &&
+    existing.length
+    ? existing[0]
+    : null;
 }
 
-/**
- * Marca evento como processado.
- */
 async function markProcessed(eventId) {
   await supabase(
     `pagar_webhook_events?event_id=eq.${encodeURIComponent(
@@ -293,11 +285,9 @@ async function markProcessed(eventId) {
     )}`,
     {
       method: "PATCH",
-
       headers: {
         Prefer: "return=minimal",
       },
-
       body: JSON.stringify({
         processed_at:
           new Date().toISOString(),
@@ -306,20 +296,14 @@ async function markProcessed(eventId) {
   );
 }
 
-/**
- * Atualiza o pedido.
- *
- * ATENÇÃO:
- * O nome da coluna usado aqui é
- * order_reference, conforme a estrutura
- * que você mostrou.
- */
 async function markOrderPaid(payment) {
   const reference =
     payment?.reference;
 
   const paymentId =
-    payment?.paymentId;
+    payment?.id ||
+    payment?.paymentId ||
+    null;
 
   if (!reference) {
     throw new Error(
@@ -340,17 +324,18 @@ async function markOrderPaid(payment) {
       )}`,
       {
         method: "PATCH",
-
         headers: {
           Prefer:
             "return=representation",
         },
-
         body: JSON.stringify({
           payment_status: "PAID",
-          pagar_payment_id: paymentId,
+          pagar_payment_id:
+            paymentId,
           payment_reference:
             reference,
+          paid_at:
+            new Date().toISOString(),
         }),
       }
     );
@@ -367,9 +352,39 @@ async function markOrderPaid(payment) {
   return result[0];
 }
 
-/**
- * Emite o bilhete depois de PAID.
- */
+async function markOrderFailed(payment) {
+  const reference =
+    payment?.reference;
+
+  if (!reference) {
+    return;
+  }
+
+  const paymentId =
+    payment?.id ||
+    payment?.paymentId ||
+    null;
+
+  await supabase(
+    `blackout_orders?order_reference=eq.${encodeURIComponent(
+      reference
+    )}&payment_status=neq.PAID`,
+    {
+      method: "PATCH",
+      headers: {
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        payment_status: "FAILED",
+        pagar_payment_id:
+          paymentId,
+        payment_reference:
+          reference,
+      }),
+    }
+  );
+}
+
 async function generateTicket(order) {
   const secret =
     process.env.TICKET_GENERATION_SECRET;
@@ -385,15 +400,17 @@ async function generateTicket(order) {
       `${SITE_URL}/api/generate-ticket`,
       {
         method: "POST",
-
         headers: {
           "Content-Type":
             "application/json",
 
-          Authorization:
-            `Bearer ${secret}`,
+          /*
+           * IMPORTANTE:
+           * generate-ticket verifica este header.
+           */
+          "x-ticket-generation-secret":
+            secret,
         },
-
         body: JSON.stringify({
           orderReference:
             order.order_reference,
@@ -426,9 +443,6 @@ async function generateTicket(order) {
   return data;
 }
 
-/**
- * Extrai o objeto payment do evento.
- */
 function getPayment(event) {
   if (event?.data?.payment) {
     return event.data.payment;
@@ -453,55 +467,45 @@ export default async function handler(
   req,
   res
 ) {
-  /*
-   * Apenas POST
-   */
   if (req.method !== "POST") {
     return json(res, 405, {
       success: false,
-      message:
-        "Método não permitido",
+      message: "Método não permitido",
     });
   }
 
   try {
-    /*
-     * =====================================================
-     * 1. RAW BODY
-     * =====================================================
-     */
-
     const rawBody =
       await readRawBody(req);
 
     if (!rawBody) {
       return json(res, 400, {
         success: false,
-        message:
-          "Body vazio",
+        message: "Body vazio",
       });
     }
 
-    /*
-     * =====================================================
-     * 2. HEADERS PAGAR
-     * =====================================================
-     */
-
     const eventId =
-      req.headers[
-        "pagar-event-id"
-      ];
+      Array.isArray(
+        req.headers["pagar-event-id"]
+      )
+        ? req.headers[
+            "pagar-event-id"
+          ][0]
+        : req.headers[
+            "pagar-event-id"
+          ];
 
     const signature =
-      req.headers[
-        "pagar-signature"
-      ];
-
-    /*
-     * Node/Vercel normalmente normaliza
-     * os headers para lowercase.
-     */
+      Array.isArray(
+        req.headers["pagar-signature"]
+      )
+        ? req.headers[
+            "pagar-signature"
+          ][0]
+        : req.headers[
+            "pagar-signature"
+          ];
 
     if (!eventId) {
       return json(res, 400, {
@@ -519,18 +523,10 @@ export default async function handler(
       });
     }
 
-    /*
-     * =====================================================
-     * 3. VALIDAR ASSINATURA
-     * =====================================================
-     */
-
     const verification =
       verifySignature(
         rawBody,
-        Array.isArray(signature)
-          ? signature[0]
-          : signature
+        signature
       );
 
     if (!verification.valid) {
@@ -539,23 +535,12 @@ export default async function handler(
         verification.reason
       );
 
-      /*
-       * NÃO mostramos secret nem assinatura
-       * nos logs.
-       */
-
       return json(res, 401, {
         success: false,
         message:
           "Assinatura do webhook inválida",
       });
     }
-
-    /*
-     * =====================================================
-     * 4. JSON
-     * =====================================================
-     */
 
     let event;
 
@@ -565,8 +550,7 @@ export default async function handler(
     } catch {
       return json(res, 400, {
         success: false,
-        message:
-          "JSON inválido",
+        message: "JSON inválido",
       });
     }
 
@@ -576,20 +560,10 @@ export default async function handler(
       event?.name ||
       null;
 
-    /*
-     * =====================================================
-     * 5. TESTE DA PAGAR
-     * =====================================================
-     */
-
     if (
       eventType ===
       "webhook.test"
     ) {
-      console.log(
-        "PAGAR WEBHOOK TEST OK"
-      );
-
       return json(res, 200, {
         success: true,
         message:
@@ -597,23 +571,12 @@ export default async function handler(
       });
     }
 
-    /*
-     * =====================================================
-     * 6. EVENTOS DE PAGAMENTO
-     * =====================================================
-     */
-
     if (
       eventType !==
         "payment.succeeded" &&
       eventType !==
         "payment.failed"
     ) {
-      console.log(
-        "Evento ignorado:",
-        eventType
-      );
-
       return json(res, 200, {
         success: true,
         ignored: true,
@@ -623,10 +586,6 @@ export default async function handler(
 
     const payment =
       getPayment(event);
-    console.log(
-  "PAGAR PAYMENT:",
-  JSON.stringify(payment)
-);
 
     if (!payment) {
       return json(res, 400, {
@@ -636,69 +595,59 @@ export default async function handler(
       });
     }
 
-    /*
-     * =====================================================
-     * 7. IDEMPOTÊNCIA DO WEBHOOK
-     * =====================================================
-     */
+    const paymentId =
+      payment?.id ||
+      payment?.paymentId ||
+      null;
 
-    const isNew =
-      await registerEvent(
+    console.log(
+      "PAGAR PAYMENT:",
+      JSON.stringify({
+        id: paymentId,
+        reference:
+          payment?.reference || null,
+        status:
+          payment?.status || null,
+      })
+    );
+
+    const storedEvent =
+      await registerOrGetEvent(
         eventId,
         eventType,
-        payment.paymentId || null,
+        paymentId,
         event
       );
 
-    if (!isNew) {
-      console.log(
-        "Webhook duplicado:",
-        eventId
+    if (!storedEvent) {
+      throw new Error(
+        "Não foi possível registrar ou recuperar o webhook."
       );
-
-      return json(res, 200, {
-        success: true,
-        duplicate: true,
-        eventId,
-      });
     }
 
     /*
-     * =====================================================
-     * 8. PAGAMENTO FALHOU
-     * =====================================================
+     * Se já foi processado, acabou.
+     *
+     * Se existe mas processed_at está vazio,
+     * NÃO tratamos como duplicado definitivo.
+     * Tentamos processar novamente.
      */
+    if (storedEvent.processed_at) {
+      return json(res, 200, {
+        success: true,
+        duplicate: true,
+        processed: true,
+        eventId,
+      });
+    }
 
     if (
       eventType ===
       "payment.failed"
     ) {
-      if (payment.reference) {
-        await supabase(
-          `blackout_orders?order_reference=eq.${encodeURIComponent(
-            payment.reference
-          )}`,
-          {
-            method: "PATCH",
-
-            headers: {
-              Prefer:
-                "return=minimal",
-            },
-
-            body: JSON.stringify({
-              payment_status:
-                "FAILED",
-
-              pagar_payment_id:
-                payment.paymentId || null,
-
-              payment_reference:
-                payment.reference,
-            }),
-          }
-        );
-      }
+      await markOrderFailed(
+        payment
+      );
 
       await markProcessed(
         eventId
@@ -707,47 +656,38 @@ export default async function handler(
       return json(res, 200, {
         success: true,
         status: "FAILED",
+        eventId,
       });
     }
 
     /*
-     * =====================================================
-     * 9. SÓ ENTREGAR COM PAID
-     * =====================================================
+     * payment.succeeded só entrega quando
+     * o estado final é PAID.
      */
+    const paymentStatus =
+      String(
+        payment?.status || ""
+      ).toUpperCase();
 
-    if (
-      payment.status !== "PAID"
-    ) {
-      console.error(
-        "Pagamento não está PAID:",
-        payment.status
-      );
-
+    if (paymentStatus !== "PAID") {
+      /*
+       * Não marcamos processed_at.
+       * Se a Pagar reenviar posteriormente
+       * com PAID, este evento ainda poderá
+       * ser processado.
+       */
       return json(res, 200, {
         success: true,
         received: true,
-        status:
-          payment.status,
+        eventId,
+        status: paymentStatus,
       });
     }
-
-    /*
-     * =====================================================
-     * 10. MARCAR PEDIDO PAID
-     * =====================================================
-     */
 
     const order =
       await markOrderPaid(
         payment
       );
-
-    /*
-     * =====================================================
-     * 11. GERAR BILHETE
-     * =====================================================
-     */
 
     let ticket;
 
@@ -763,22 +703,15 @@ export default async function handler(
       );
 
       /*
-       * Pagamento já está PAID.
-       * Não alteramos para FAILED.
+       * NÃO marcamos o evento como processado.
+       * Um retry da Pagar poderá recuperar.
        */
-
       return json(res, 500, {
         success: false,
         message:
           "Pagamento confirmado, mas o bilhete não pôde ser gerado.",
       });
     }
-
-    /*
-     * =====================================================
-     * 12. FINALIZAR EVENTO
-     * =====================================================
-     */
 
     await markProcessed(
       eventId
@@ -788,10 +721,8 @@ export default async function handler(
       success: true,
       eventId,
       eventType,
-      paymentId:
-        payment.paymentId,
-      paymentStatus:
-        payment.status,
+      paymentId,
+      paymentStatus,
       orderReference:
         order.order_reference,
       ticket,
@@ -809,4 +740,3 @@ export default async function handler(
     });
   }
 }
-// Pagar webhook TEST - redeploy

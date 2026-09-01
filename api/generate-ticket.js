@@ -3,28 +3,28 @@ import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
+
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const SITE_URL = process.env.SITE_URL;
+const SITE_URL =
+  process.env.SITE_URL ||
+  "https://pgrowth-events.vercel.app";
 
 const TICKET_GENERATION_SECRET =
   process.env.TICKET_GENERATION_SECRET;
 
 function sendJson(res, status, data) {
   res.status(status);
-  res.setHeader("Content-Type", "application/json");
+  res.setHeader(
+    "Content-Type",
+    "application/json"
+  );
 
   return res.end(
     JSON.stringify(data)
   );
 }
-
-/*
- * =========================================================
- * SUPABASE
- * =========================================================
- */
 
 async function supabaseRequest(
   path,
@@ -39,25 +39,25 @@ async function supabaseRequest(
     );
   }
 
-  const response = await fetch(
-    `${SUPABASE_URL}/rest/v1/${path}`,
-    {
-      ...options,
+  const response =
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/${path}`,
+      {
+        ...options,
+        headers: {
+          apikey:
+            SUPABASE_SERVICE_ROLE_KEY,
 
-      headers: {
-        apikey:
-          SUPABASE_SERVICE_ROLE_KEY,
+          Authorization:
+            `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
 
-        Authorization:
-          `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          "Content-Type":
+            "application/json",
 
-        "Content-Type":
-          "application/json",
-
-        ...(options.headers || {}),
-      },
-    }
-  );
+          ...(options.headers || {}),
+        },
+      }
+    );
 
   const text =
     await response.text();
@@ -66,16 +66,20 @@ async function supabaseRequest(
 
   if (text) {
     try {
-      data = JSON.parse(text);
+      data =
+        JSON.parse(text);
     } catch {
       data = text;
     }
   }
 
   if (!response.ok) {
-    const error = new Error(
-      "Erro ao comunicar com o Supabase."
-    );
+    const error =
+      new Error(
+        data?.message ||
+          data?.hint ||
+          "Erro ao comunicar com o Supabase."
+      );
 
     error.status =
       response.status;
@@ -88,12 +92,6 @@ async function supabaseRequest(
   return data;
 }
 
-/*
- * =========================================================
- * GERAR CÓDIGO ÚNICO DO BILHETE
- * =========================================================
- */
-
 function generateTicketCode() {
   const random =
     crypto
@@ -103,12 +101,6 @@ function generateTicketCode() {
 
   return `BLACKOUT-2026-${random}`;
 }
-
-/*
- * =========================================================
- * GERAR PDF
- * =========================================================
- */
 
 function createPdf({
   ticket,
@@ -153,12 +145,6 @@ function createPdf({
         reject
       );
 
-      /*
-       * -----------------------------------------------------
-       * CABEÇALHO
-       * -----------------------------------------------------
-       */
-
       doc
         .fontSize(26)
         .font("Helvetica-Bold")
@@ -189,16 +175,12 @@ function createPdf({
 
       doc.moveDown();
 
-      /*
-       * -----------------------------------------------------
-       * INFORMAÇÕES
-       * -----------------------------------------------------
-       */
-
       doc
         .fontSize(11)
         .font("Helvetica-Bold")
-        .text("DETALHES DO BILHETE");
+        .text(
+          "DETALHES DO BILHETE"
+        );
 
       doc.moveDown(0.5);
 
@@ -231,12 +213,6 @@ function createPdf({
 
       doc.moveDown();
 
-      /*
-       * -----------------------------------------------------
-       * STATUS
-       * -----------------------------------------------------
-       */
-
       doc
         .fontSize(13)
         .font("Helvetica-Bold")
@@ -249,12 +225,6 @@ function createPdf({
 
       doc.moveDown();
 
-      /*
-       * -----------------------------------------------------
-       * QR CODE
-       * -----------------------------------------------------
-       */
-
       doc.image(
         qrBuffer,
         {
@@ -264,12 +234,6 @@ function createPdf({
       );
 
       doc.moveDown();
-
-      /*
-       * -----------------------------------------------------
-       * CÓDIGO DO BILHETE
-       * -----------------------------------------------------
-       */
 
       doc
         .fontSize(9)
@@ -305,22 +269,10 @@ function createPdf({
   );
 }
 
-/*
- * =========================================================
- * HANDLER
- * =========================================================
- */
-
 export default async function handler(
   req,
   res
 ) {
-  /*
-   * -------------------------------------------------------
-   * SOMENTE POST
-   * -------------------------------------------------------
-   */
-
   if (req.method !== "POST") {
     return sendJson(res, 405, {
       success: false,
@@ -330,12 +282,6 @@ export default async function handler(
   }
 
   try {
-    /*
-     * -----------------------------------------------------
-     * CONFIGURAÇÕES OBRIGATÓRIAS
-     * -----------------------------------------------------
-     */
-
     if (!SITE_URL) {
       throw new Error(
         "SITE_URL não configurado."
@@ -347,15 +293,6 @@ export default async function handler(
         "TICKET_GENERATION_SECRET não configurado."
       );
     }
-
-    /*
-     * -----------------------------------------------------
-     * AUTORIZAÇÃO INTERNA
-     * -----------------------------------------------------
-     *
-     * Apenas o nosso webhook deve conseguir chamar
-     * esta função.
-     */
 
     const internalSecret =
       req.headers[
@@ -374,12 +311,6 @@ export default async function handler(
       });
     }
 
-    /*
-     * -----------------------------------------------------
-     * RECEBER ORDER REFERENCE
-     * -----------------------------------------------------
-     */
-
     const body =
       req.body || {};
 
@@ -396,12 +327,6 @@ export default async function handler(
           "orderReference é obrigatório.",
       });
     }
-
-    /*
-     * -----------------------------------------------------
-     * BUSCAR PEDIDO
-     * -----------------------------------------------------
-     */
 
     const orders =
       await supabaseRequest(
@@ -427,15 +352,6 @@ export default async function handler(
     const order =
       orders[0];
 
-    /*
-     * -----------------------------------------------------
-     * CONFIRMAR PAGAMENTO
-     * -----------------------------------------------------
-     *
-     * Nunca gerar bilhete para um pedido que não esteja
-     * realmente PAID.
-     */
-
     const paymentStatus =
       String(
         order.payment_status || ""
@@ -453,11 +369,10 @@ export default async function handler(
     }
 
     /*
-     * -----------------------------------------------------
-     * SE JÁ TEM BILHETE, NÃO GERAR OUTRO
-     * -----------------------------------------------------
+     * IDEMPOTÊNCIA:
+     * se já existe bilhete completo,
+     * simplesmente devolvemos o existente.
      */
-
     if (
       order.ticket_code &&
       order.pdf_path
@@ -465,23 +380,14 @@ export default async function handler(
       return sendJson(res, 200, {
         success: true,
         alreadyGenerated: true,
-
         ticketCode:
           order.ticket_code,
-
         pdfPath:
           order.pdf_path,
-
         qrData:
           order.qr_data || null,
       });
     }
-
-    /*
-     * -----------------------------------------------------
-     * GERAR CÓDIGO ÚNICO
-     * -----------------------------------------------------
-     */
 
     let ticketCode =
       order.ticket_code;
@@ -491,77 +397,40 @@ export default async function handler(
         generateTicketCode();
     }
 
-    /*
-     * -----------------------------------------------------
-     * URL DE VERIFICAÇÃO
-     * -----------------------------------------------------
-     */
-
     const verificationUrl =
       `${SITE_URL}/api/verify-ticket?code=${encodeURIComponent(
         ticketCode
       )}`;
-
-    /*
-     * -----------------------------------------------------
-     * GERAR QR CODE
-     * -----------------------------------------------------
-     */
 
     const qrBuffer =
       await QRCode.toBuffer(
         verificationUrl,
         {
           type: "png",
-
           width: 600,
-
           margin: 2,
-
-          errorCorrectionLevel:
-            "H",
+          errorCorrectionLevel: "H",
         }
       );
-
-    /*
-     * -----------------------------------------------------
-     * GERAR PDF
-     * -----------------------------------------------------
-     */
 
     const pdfBuffer =
       await createPdf({
         ticket: {
           ...order,
-
           ticket_code:
             ticketCode,
         },
-
         qrBuffer,
       });
 
-    /*
-     * -----------------------------------------------------
-     * CAMINHO DO PDF
-     * -----------------------------------------------------
-     */
-
     const pdfPath =
       `tickets/${ticketCode}.pdf`;
-
-    /*
-     * -----------------------------------------------------
-     * UPLOAD PARA SUPABASE STORAGE
-     * -----------------------------------------------------
-     */
 
     const uploadResponse =
       await fetch(
         `${SUPABASE_URL}/storage/v1/object/tickets/${ticketCode}.pdf`,
         {
           method: "POST",
-
           headers: {
             Authorization:
               `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
@@ -575,25 +444,20 @@ export default async function handler(
             "x-upsert":
               "false",
           },
-
           body: pdfBuffer,
         }
       );
 
-    if (
-      !uploadResponse.ok
-    ) {
+    if (!uploadResponse.ok) {
       const errorText =
         await uploadResponse.text();
 
       /*
-       * Se o arquivo já existir, não vamos criar
-       * outro arquivo com o mesmo nome.
+       * 409 significa que outro processo
+       * já criou o mesmo PDF.
        */
-
       if (
-        uploadResponse.status !==
-        409
+        uploadResponse.status !== 409
       ) {
         throw new Error(
           `Erro ao guardar PDF no Storage: ${errorText}`
@@ -602,11 +466,9 @@ export default async function handler(
     }
 
     /*
-     * -----------------------------------------------------
-     * ATUALIZAR PEDIDO
-     * -----------------------------------------------------
+     * Só o processo que encontrar ticket_code vazio
+     * pode gravar a emissão.
      */
-
     const updated =
       await supabaseRequest(
         `blackout_orders?order_reference=eq.${encodeURIComponent(
@@ -614,12 +476,10 @@ export default async function handler(
         )}&ticket_code=is.null`,
         {
           method: "PATCH",
-
           headers: {
             Prefer:
               "return=representation",
           },
-
           body: JSON.stringify({
             ticket_code:
               ticketCode,
@@ -640,23 +500,14 @@ export default async function handler(
         }
       );
 
-    /*
-     * -----------------------------------------------------
-     * VERIFICAR SE A ATUALIZAÇÃO ACONTECEU
-     * -----------------------------------------------------
-     */
-
     if (
       !Array.isArray(updated) ||
       updated.length === 0
     ) {
       /*
-       * Outro processo pode ter emitido o bilhete
-       * simultaneamente.
-       *
-       * Buscamos novamente o pedido.
+       * Outro webhook em paralelo ganhou a corrida.
+       * Recuperamos o bilhete verdadeiro.
        */
-
       const existing =
         await supabaseRequest(
           `blackout_orders?order_reference=eq.${encodeURIComponent(
@@ -677,13 +528,10 @@ export default async function handler(
         return sendJson(res, 200, {
           success: true,
           alreadyGenerated: true,
-
           ticketCode:
             existingOrder.ticket_code,
-
           pdfPath:
             existingOrder.pdf_path,
-
           qrData:
             existingOrder.qr_data ||
             null,
@@ -695,28 +543,16 @@ export default async function handler(
       );
     }
 
-    /*
-     * -----------------------------------------------------
-     * SUCESSO
-     * -----------------------------------------------------
-     */
-
     return sendJson(res, 200, {
       success: true,
-
       alreadyGenerated: false,
-
       ticketCode,
-
       pdfPath,
-
       qrData:
         verificationUrl,
-
       message:
         "Bilhete gerado com sucesso.",
     });
-
   } catch (error) {
     console.error(
       "GENERATE TICKET ERROR:",
@@ -725,7 +561,6 @@ export default async function handler(
 
     return sendJson(res, 500, {
       success: false,
-
       message:
         "Não foi possível gerar o bilhete.",
     });
