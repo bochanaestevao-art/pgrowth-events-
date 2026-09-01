@@ -339,3 +339,4 @@ export default async function handler(req, res) {
         "Não foi possível iniciar o pagamento. Tente novamente.",
     });
   }
+}
