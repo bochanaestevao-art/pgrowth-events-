@@ -378,7 +378,7 @@ export default async function handler(req, res) {
         ticket_status: "",
         qr_data: "",
         pdf_path: "",
-        paid_at: "",
+        paid_at: null,
       });
     }
 
