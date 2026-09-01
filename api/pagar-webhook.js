@@ -771,7 +771,7 @@ export default async function handler(
   } catch (error) {
     console.error(
       "PAGAR WEBHOOK ERROR:",
-      error.message
+      error
     );
 
     return json(res, 500, {
