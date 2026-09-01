@@ -178,7 +178,10 @@ async function supabase(path, options = {}) {
       "Variáveis do Supabase não configuradas"
     );
   }
-
+console.log(
+  "SUPABASE REQUEST:",
+  `${SUPABASE_URL}/rest/v1/${path}`
+);
   const response = await fetch(
     `${SUPABASE_URL}/rest/v1/${path}`,
     {
