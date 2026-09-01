@@ -76,57 +76,43 @@ function verifySignature(rawBody, header) {
 
   const parts = {};
 
-  for (const part of header.split(",")) {
+  for (const part of String(header).split(",")) {
     const index = part.indexOf("=");
 
     if (index === -1) continue;
 
-    const key = part
-      .slice(0, index)
-      .trim();
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
 
-    const value = part
-      .slice(index + 1)
-      .trim();
+    if (!parts[key]) {
+      parts[key] = [];
+    }
 
-    parts[key] = value;
+    parts[key].push(value);
   }
 
-  const timestamp = parts.t;
-  const receivedSignature = parts.v1;
+  const timestamp = parts.t?.[0];
+  const receivedSignatures = parts.v1 || [];
 
-  if (
-    !timestamp ||
-    !/^\d+$/.test(timestamp)
-  ) {
+  if (!timestamp || !/^\d+$/.test(timestamp)) {
     return {
       valid: false,
       reason: "Timestamp inválido",
     };
   }
 
-  if (
-    !receivedSignature ||
-    !/^[a-f0-9]{64}$/i.test(
-      receivedSignature
-    )
-  ) {
+  if (receivedSignatures.length === 0) {
     return {
       valid: false,
-      reason: "v1 da assinatura inválido",
+      reason: "v1 da assinatura ausente",
     };
   }
 
-  const timestampSeconds =
-    Number(timestamp);
-
-  const nowSeconds =
-    Math.floor(Date.now() / 1000);
+  const timestampSeconds = Number(timestamp);
+  const nowSeconds = Math.floor(Date.now() / 1000);
 
   if (
-    Math.abs(
-      nowSeconds - timestampSeconds
-    ) > 300
+    Math.abs(nowSeconds - timestampSeconds) > 300
   ) {
     return {
       valid: false,
@@ -134,51 +120,49 @@ function verifySignature(rawBody, header) {
     };
   }
 
-  const signedPayload =
-    `${timestamp}.${rawBody}`;
+  const signedPayload = `${timestamp}.${rawBody}`;
 
-  const expectedSignature =
-    crypto
-      .createHmac(
-        "sha256",
-        PAGAR_WEBHOOK_SECRET
-      )
-      .update(signedPayload)
-      .digest("hex");
+  const expectedSignature = crypto
+    .createHmac(
+      "sha256",
+      PAGAR_WEBHOOK_SECRET
+    )
+    .update(signedPayload)
+    .digest("hex");
 
-  const receivedBuffer =
-    Buffer.from(
+  const expectedBuffer = Buffer.from(
+    expectedSignature,
+    "hex"
+  );
+
+  for (const receivedSignature of receivedSignatures) {
+    if (!/^[a-f0-9]{64}$/i.test(receivedSignature)) {
+      continue;
+    }
+
+    const receivedBuffer = Buffer.from(
       receivedSignature,
       "hex"
     );
 
-  const expectedBuffer =
-    Buffer.from(
-      expectedSignature,
-      "hex"
-    );
-
-  if (
-    receivedBuffer.length !==
-    expectedBuffer.length
-  ) {
-    return {
-      valid: false,
-      reason: "Tamanho da assinatura diferente",
-    };
+    if (
+      receivedBuffer.length ===
+        expectedBuffer.length &&
+      crypto.timingSafeEqual(
+        receivedBuffer,
+        expectedBuffer
+      )
+    ) {
+      return {
+        valid: true,
+        reason: null,
+      };
+    }
   }
 
-  const valid =
-    crypto.timingSafeEqual(
-      receivedBuffer,
-      expectedBuffer
-    );
-
   return {
-    valid,
-    reason: valid
-      ? null
-      : "Assinatura HMAC não corresponde",
+    valid: false,
+    reason: "Assinatura HMAC não corresponde",
   };
 }
 
@@ -281,7 +265,7 @@ async function registerEvent(
  */
 async function markProcessed(eventId) {
   await supabase(
-    `pagar_webhook_events?event_id=eq.${encodeURIComponent(
+    `_webhook_events?event_id=eq.${encodeURIComponent(
       eventId
     )}`,
     {

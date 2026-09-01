@@ -269,7 +269,84 @@ function validateForm(){
 
 document.getElementById("minus").addEventListener("click",()=>setQuantity(quantity-1));
 document.getElementById("plus").addEventListener("click",()=>setQuantity(quantity+1));
-document.getElementById("buyButton").addEventListener("click",validateForm);
+async function startPayment(){
+
+  if(!validateForm()){
+    return;
+  }
+
+  const button = document.getElementById("buyButton");
+
+  const name = document.getElementById("fullName").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const bairro = document.getElementById("bairro").value.trim();
+
+  const total =
+    Number(selected.price) * Number(quantity);
+
+  button.disabled = true;
+  button.textContent = "A PROCESSAR...";
+
+  hideMessages();
+
+  try {
+
+    const response = await fetch("/api/create-payment", {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        fullName: name,
+        phone: phone,
+        bairro: bairro,
+
+        ticketType: selected.type,
+        ticketLot: selected.lot,
+        ticketPrice: Number(selected.price),
+
+        quantity: Number(quantity),
+        totalAmount: total,
+
+        paymentMethod: "EMOLA"
+      })
+    });
+
+    const data = await response.json();
+
+    if(!response.ok || !data.success){
+      throw new Error(
+        data.message ||
+        "Não foi possível iniciar o pagamento."
+      );
+    }
+
+    showSuccess(
+      data.message ||
+      "Pedido de pagamento enviado. Autorize o pagamento no e-Mola."
+    );
+
+    button.textContent = "PAGAMENTO ENVIADO";
+
+  } catch(error) {
+
+    console.error("ERRO AO INICIAR PAGAMENTO:", error);
+
+    showError(
+      error.message ||
+      "Não foi possível iniciar o pagamento."
+    );
+
+    button.disabled = false;
+    button.textContent = "CONTINUAR PARA COMPRA";
+  }
+}
+
+document
+  .getElementById("buyButton")
+  .addEventListener("click", startPayment);
 
 function init(){
   renderTickets("normal","normalLots");
