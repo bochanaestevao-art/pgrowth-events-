@@ -237,6 +237,7 @@ async function registerEvent(
   paymentId,
   payload
 ) {
+  try {
   const result =
     await supabase(
       "pagar_webhook_events",
@@ -263,6 +264,23 @@ async function registerEvent(
     Array.isArray(result) &&
     result.length > 0
   );
+
+} catch (error) {
+
+  if (
+    String(error.message || "")
+      .includes("duplicate key")
+  ) {
+    console.log(
+      "Webhook já registrado:",
+      eventId
+    );
+
+    return false;
+  }
+
+  throw error;
+  }
 }
 
 /**
@@ -270,7 +288,7 @@ async function registerEvent(
  */
 async function markProcessed(eventId) {
   await supabase(
-    `_webhook_events?event_id=eq.${encodeURIComponent(
+    `pagar_webhook_events?event_id=eq.${encodeURIComponent(
       eventId
     )}`,
     {
