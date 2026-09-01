@@ -605,6 +605,10 @@ export default async function handler(
 
     const payment =
       getPayment(event);
+    console.log(
+  "PAGAR PAYMENT:",
+  JSON.stringify(payment)
+);
 
     if (!payment) {
       return json(res, 400, {
