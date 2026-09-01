@@ -253,7 +253,7 @@ async function registerEvent(
           event_type:
             eventType || null,
           payment_id:
-            paymentId || null,
+            payment.paymentId || null,
           payload,
         }),
       }
@@ -301,7 +301,7 @@ async function markOrderPaid(payment) {
     payment?.reference;
 
   const paymentId =
-    payment?.id;
+    payment?.paymentId;
 
   if (!reference) {
     throw new Error(
@@ -628,7 +628,7 @@ export default async function handler(
       await registerEvent(
         eventId,
         eventType,
-        payment.id || null,
+        payment.paymentId || null,
         event
       );
 
@@ -673,7 +673,7 @@ export default async function handler(
                 "FAILED",
 
               payment_id:
-                payment.id || null,
+                payment.paymentId || null,
 
               payment_reference:
                 payment.reference,
@@ -771,7 +771,7 @@ export default async function handler(
       eventId,
       eventType,
       paymentId:
-        payment.id,
+        payment.paymentId,
       paymentStatus:
         payment.status,
       orderReference:
