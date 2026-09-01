@@ -6,8 +6,48 @@ const PAGAR_API_BASE_URL =
 const PAGAR_API_KEY = process.env.PAGAR_API_KEY;
 const PAGAR_SIGNING_SECRET = process.env.PAGAR_SIGNING_SECRET;
 
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
+
 function sendJson(res, status, data) {
   res.status(status).json(data);
+}
+
+async function supabaseRequest(path, options = {}) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Credenciais do Supabase não configuradas.");
+  }
+
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
+
+  const text = await response.text();
+  let data = null;
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+  }
+
+  if (!response.ok) {
+    const error = new Error("Erro ao comunicar com o Supabase.");
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  return data;
 }
 
 async function pagarPost(path, body, idempotencyKey) {
@@ -238,14 +278,45 @@ export default async function handler(req, res) {
       idempotencyKey
     );
 
-    const payment = result.payment;
+    const payment = result.payment || result;
+
+    const paymentId = payment?.paymentId || payment?.id || null;
+    const paymentStatus = payment?.status || "PROCESSING";
+
+    await supabaseRequest("blackout_orders", {
+      method: "POST",
+      headers: {
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        order_reference: reference,
+        full_name: name,
+        phone: contact,
+        bairro: neighborhood,
+        ticket_type: type,
+        ticket_lot: lot,
+        ticket_price: String(price),
+        quantity: String(qty),
+        total_amount: String(calculatedTotal),
+        payment_method: "EMOLA",
+        payment_status: paymentStatus,
+        payment_reference: reference,
+        payment_id: paymentId || "",
+        created_at: new Date().toISOString(),
+        ticket_code: "",
+        ticket_status: "",
+        qr_data: "",
+        pdf_path: "",
+        paid_at: paymentStatus === "PAID" ? new Date().toISOString() : "",
+      }),
+    });
 
     return sendJson(res, 202, {
       success: true,
 
       orderReference: reference,
 
-      paymentId: payment?.id || null,
+      paymentId: paymentId,
 
       status: payment?.status || "PROCESSING",
 
@@ -268,4 +339,3 @@ export default async function handler(req, res) {
         "Não foi possível iniciar o pagamento. Tente novamente.",
     });
   }
-      }
