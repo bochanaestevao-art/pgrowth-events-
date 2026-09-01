@@ -253,7 +253,7 @@ async function registerEvent(
           event_type:
             eventType || null,
           payment_id:
-            payment.paymentId || null,
+            paymentId || null,
           payload,
         }),
       }
