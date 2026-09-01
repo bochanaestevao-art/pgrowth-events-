@@ -253,7 +253,7 @@ async function registerEvent(
           event_id: eventId,
           event_type:
             eventType || null,
-          payment_id:
+          pagar_payment_id:
             paymentId || null,
           payload,
         }),
@@ -348,7 +348,7 @@ async function markOrderPaid(payment) {
 
         body: JSON.stringify({
           payment_status: "PAID",
-          payment_id: paymentId,
+          pagar_payment_id: paymentId,
           payment_reference:
             reference,
         }),
@@ -690,7 +690,7 @@ export default async function handler(
               payment_status:
                 "FAILED",
 
-              payment_id:
+              pagar_payment_id:
                 payment.paymentId || null,
 
               payment_reference:

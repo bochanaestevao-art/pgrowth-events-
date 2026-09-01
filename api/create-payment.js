@@ -301,7 +301,7 @@ export default async function handler(req, res) {
         payment_method: "EMOLA",
         payment_status: paymentStatus,
         payment_reference: reference,
-        payment_id: paymentId || "",
+        pagar_payment_id: paymentId || "",
         created_at: new Date().toISOString(),
         ticket_code: "",
         ticket_status: "",
