@@ -234,7 +234,8 @@ console.log(
 async function registerEvent(
   eventId,
   eventType,
-  paymentId
+  paymentId,
+  payload
 ) {
   const result =
     await supabase(
@@ -253,6 +254,7 @@ async function registerEvent(
             eventType || null,
           payment_id:
             paymentId || null,
+          payload,
         }),
       }
     );
@@ -622,7 +624,8 @@ export default async function handler(
       await registerEvent(
         eventId,
         eventType,
-        payment.id || null
+        payment.id || null,
+        event
       );
 
     if (!isNew) {
