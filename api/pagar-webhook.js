@@ -184,6 +184,7 @@ async function supabase(
     );
   }
 
+  console.log("GERANDO BILHETE PARA:", order.order_reference);
   const response = await fetch(
     `${SUPABASE_URL}/rest/v1/${path}`,
     {
@@ -200,6 +201,7 @@ async function supabase(
     }
   );
 
+  console.log("GENERATE-TICKET STATUS:", response.status);
   const text =
     await response.text();
 
@@ -395,6 +397,7 @@ async function generateTicket(order) {
     );
   }
 
+  console.log("GERANDO BILHETE PARA:", order.order_reference);
   const response =
     await fetch(
       `${SITE_URL}/api/generate-ticket`,
@@ -418,6 +421,7 @@ async function generateTicket(order) {
       }
     );
 
+  console.log("GENERATE-TICKET STATUS:", response.status);
   const text =
     await response.text();
 
