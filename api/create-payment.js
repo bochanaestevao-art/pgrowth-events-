@@ -374,10 +374,10 @@ export default async function handler(req, res) {
         payment_reference: reference,
         pagar_payment_id: "",
         created_at: new Date().toISOString(),
-        ticket_code: "",
-        ticket_status: "",
-        qr_data: "",
-        pdf_path: "",
+        ticket_code: null,
+        ticket_status: null,
+        qr_data: null,
+        pdf_path: null,
         paid_at: null,
       });
     }
