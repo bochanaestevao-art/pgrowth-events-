@@ -632,11 +632,13 @@ export default async function handler(
      * NÃO tratamos como duplicado definitivo.
      * Tentamos processar novamente.
      */
-    if (storedEvent.processed_at) {
+    if (
+      storedEvent.processed_at &&
+      eventType !== "payment.succeeded"
+    ) {
       return json(res, 200, {
         success: true,
         duplicate: true,
-        processed: true,
         eventId,
       });
     }
