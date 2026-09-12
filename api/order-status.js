@@ -61,9 +61,15 @@ async function createSignedPdfUrl(pdfPath) {
     return null;
   }
 
-  const cleanPath = String(pdfPath)
-    .replace(/^\/+/, "");
+  let cleanPath = String(pdfPath);
 
+  if (cleanPath.indexOf("tickets/") === 0) {
+    cleanPath = cleanPath.slice(8);
+  }
+
+  while (cleanPath.charAt(0) === "/") {
+    cleanPath = cleanPath.slice(1);
+  }
   const encodedPath = cleanPath
     .split("/")
     .map(encodeURIComponent)
