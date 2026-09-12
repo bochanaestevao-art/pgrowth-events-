@@ -294,7 +294,9 @@ export default async function handler(
     const orderReference =
       typeof body.orderReference === "string"
         ? body.orderReference.trim()
-        : "";
+        : typeof body.record?.order_reference === "string"
+          ? body.record.order_reference.trim()
+          : "";
 
     if (!orderReference) {
       return json(res, 400, {
