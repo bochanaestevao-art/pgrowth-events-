@@ -196,7 +196,11 @@ export default async function handler(req, res) {
     }
 
     const httpStatus =
-      result.success ? 200 : 409;
+      result.success
+    ? 200
+    : result.result === "ALREADY_INSIDE"
+      ? 409
+      : 400;
 
     return sendJson(res, httpStatus, {
       success: Boolean(result.success),
