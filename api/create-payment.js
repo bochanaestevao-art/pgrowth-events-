@@ -643,6 +643,7 @@ async function main(req, res) {
       amountMzn: calculatedTotal,
       method: "EMOLA",
       payerPhone: phone,
+      title: "BLACK OUT — AMAPIANO EDITION",
       description:
         `BLACK OUT — AMAPIANO EDITION | ${type} | ${lot} | ${qty} bilhete(s)`,
       reference,
