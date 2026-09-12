@@ -276,26 +276,20 @@ async function startPayment(){
   }
 
   const button = document.getElementById("buyButton");
-
   const name = document.getElementById("fullName").value.trim();
   const phone = document.getElementById("phone").value.trim();
   const bairro = document.getElementById("bairro").value.trim();
 
-  const total =
-    Number(selected.price) * Number(quantity);
+  const total = Number(selected.price) * Number(quantity);
 
   button.disabled = true;
   button.textContent = "A PROCESSAR...";
-
   hideMessages();
 
   try {
-
     const response = await fetch("/api/create-payment", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         fullName: name,
         phone: phone,
@@ -312,10 +306,7 @@ async function startPayment(){
     const data = await response.json();
 
     if(!response.ok || !data.success){
-      throw new Error(
-        data.message ||
-        "Não foi possível iniciar o pagamento."
-      );
+      throw new Error(data.message || "Não foi possível iniciar o pagamento.");
     }
 
     const orderReference = data.orderReference;
@@ -324,60 +315,86 @@ async function startPayment(){
       throw new Error("O pedido foi criado, mas não recebemos a referência.");
     }
 
-    showSuccess(
-      "Pagamento enviado. Autorize o pagamento no e-Mola. Estamos a confirmar..."
-    );
-
+    showSuccess("Pagamento enviado. Autorize o pagamento no e-Mola. Estamos a confirmar...");
     button.textContent = "A CONFIRMAR PAGAMENTO...";
 
     const startedAt = Date.now();
     const timeout = 5 * 60 * 1000;
+    let consecutiveErrors = 0;
 
     while(Date.now() - startedAt < timeout){
 
       await new Promise(resolve => setTimeout(resolve, 4000));
 
-      const statusResponse = await fetch(
-        "/api/order-status?reference=" + encodeURIComponent(orderReference),
-        { cache: "no-store" }
-      );
+      try {
+        const statusResponse = await fetch(
+          "/api/order-status?reference=" + encodeURIComponent(orderReference),
+          { cache: "no-store" }
+        );
 
-      const statusData = await statusResponse.json();
+        let statusData = null;
 
-      if(!statusResponse.ok || !statusData.success){
+        try {
+          statusData = await statusResponse.json();
+        } catch(error) {
+          consecutiveErrors++;
+          console.warn("RESPOSTA INVÁLIDA DO ORDER-STATUS:", error);
+          continue;
+        }
+
+        if(!statusResponse.ok || !statusData.success){
+          consecutiveErrors++;
+          console.warn("ORDER-STATUS TEMPORARIAMENTE INDISPONÍVEL:", statusResponse.status, statusData);
+
+          if(consecutiveErrors >= 3){
+            showSuccess("Estamos a verificar o seu pagamento. Não faça um novo pagamento...");
+          }
+
+          continue;
+        }
+
+        consecutiveErrors = 0;
+
+        if(String(statusData.paymentStatus || "").toUpperCase() === "FAILED"){
+          throw new Error("O pagamento não foi confirmado. Tente novamente.");
+        }
+
+        if(statusData.ready && statusData.pdfUrl){
+          const success = document.getElementById("successMessage");
+
+          success.innerHTML =
+            "Pagamento confirmado! Seu bilhete está pronto.<br><br>" +
+            "<a href=\"" + statusData.pdfUrl + "\" target=\"_blank\" rel=\"noopener\" " +
+            "style=\"display:inline-block;padding:14px 20px;background:#d4af37;color:#111;font-weight:800;text-decoration:none;border-radius:10px;\">" +
+            "BAIXAR BILHETE EM PDF" +
+            "</a>";
+
+          success.classList.add("show");
+          button.textContent = "BILHETE DISPONÍVEL";
+          return;
+        }
+
+        showSuccess(
+          statusData.message ||
+          "Pagamento enviado. Aguardando confirmação..."
+        );
+
+      } catch(error) {
+        consecutiveErrors++;
+        console.warn("FALHA TEMPORÁRIA AO CONSULTAR PAGAMENTO:", error);
+
+        showSuccess(
+          "Estamos a verificar o seu pagamento. " +
+          "Não faça um novo pagamento. Aguarde a confirmação..."
+        );
+
         continue;
       }
-
-      if(statusData.paymentStatus === "FAILED"){
-        throw new Error("O pagamento não foi confirmado. Tente novamente.");
-      }
-
-      if(statusData.ready && statusData.pdfUrl){
-
-        const success = document.getElementById("successMessage");
-
-        success.innerHTML =
-          "Pagamento confirmado! Seu bilhete está pronto.<br><br>" +
-          "<a href=\"" + statusData.pdfUrl + "\" target=\"_blank\" rel=\"noopener\" " +
-          "style=\"display:inline-block;padding:14px 20px;background:#d4af37;color:#111;font-weight:800;text-decoration:none;border-radius:10px;\">" +
-          "BAIXAR BILHETE EM PDF" +
-          "</a>";
-
-        success.classList.add("show");
-
-        button.textContent = "BILHETE DISPONÍVEL";
-
-        return;
-      }
-
-      showSuccess(
-        statusData.message ||
-        "Pagamento enviado. Aguardando confirmação..."
-      );
     }
 
     showSuccess(
-      "O pagamento ainda está sendo confirmado. Não faça um novo pagamento. " +
+      "O pagamento ainda está sendo confirmado. " +
+      "Não faça um novo pagamento. " +
       "Aguarde alguns minutos e consulte o seu pedido novamente."
     );
 
@@ -385,7 +402,6 @@ async function startPayment(){
     button.textContent = "CONTINUAR PARA COMPRA";
 
   } catch(error) {
-
     console.error("ERRO AO INICIAR PAGAMENTO:", error);
 
     showError(

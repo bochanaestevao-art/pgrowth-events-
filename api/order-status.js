@@ -117,7 +117,9 @@ async function createSignedPdfUrl(pdfPath) {
 
   const signedUrl = data.signedURL.startsWith("http")
     ? data.signedURL
-    : `${SUPABASE_URL}/storage/v1${data.signedURL}`;
+    : data.signedURL.startsWith("/storage/v1/")
+    ? `${SUPABASE_URL}${data.signedURL}`
+    : `${SUPABASE_URL}/storage/v1${data.signedURL.startsWith("/") ? data.signedURL : `/${data.signedURL}`}`;
 
   return signedUrl;
 }
