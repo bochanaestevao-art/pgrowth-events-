@@ -230,7 +230,7 @@ async function pagarPost(path, body, idempotencyKey) {
       "Pagar-Api-Key": PAGAR_API_KEY,
       "X-Pagar-Timestamp": timestamp,
       "X-Pagar-Nonce": nonce,
-      "X-Pagar-Signature": signature,
+      "X-Pagar-Signature": `v1=${signature}`,
       "Idempotency-Key": idempotencyKey,
     },
     body: rawBody,
