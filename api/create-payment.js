@@ -10,6 +10,131 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+/*
+ * ============================================================
+ * CATÁLOGO OFICIAL DE BILHETES
+ * ============================================================
+ *
+ * O preço usado no pagamento NÃO vem do navegador.
+ * O backend é a fonte de verdade.
+ */
+
+const TICKETS = [
+  {
+    type: "NORMAL",
+    lot: "1º LOTE",
+    id: "normal_lote_1",
+    price: 600,
+    start: "2026-08-10T00:00:00+02:00",
+    end: "2026-09-10T23:59:59+02:00",
+  },
+  {
+    type: "NORMAL",
+    lot: "2º LOTE",
+    id: "normal_lote_2",
+    price: 800,
+    start: "2026-09-11T00:00:00+02:00",
+    end: "2026-10-10T23:59:59+02:00",
+  },
+  {
+    type: "NORMAL",
+    lot: "3º LOTE",
+    id: "normal_lote_3",
+    price: 1000,
+    start: "2026-10-12T00:00:00+02:00",
+    end: "2026-10-16T23:59:59+02:00",
+  },
+  {
+    type: "NORMAL",
+    lot: "NO DIA",
+    id: "normal_dia",
+    price: 1500,
+    start: "2026-10-17T00:00:00+02:00",
+    end: "2026-10-17T23:59:59+02:00",
+  },
+  {
+    type: "VIP",
+    lot: "1º LOTE",
+    id: "vip_lote_1",
+    price: 1500,
+    start: "2026-08-10T00:00:00+02:00",
+    end: "2026-09-10T23:59:59+02:00",
+  },
+  {
+    type: "VIP",
+    lot: "2º LOTE",
+    id: "vip_lote_2",
+    price: 2000,
+    start: "2026-09-11T00:00:00+02:00",
+    end: "2026-10-10T23:59:59+02:00",
+  },
+  {
+    type: "VIP",
+    lot: "3º LOTE",
+    id: "vip_lote_3",
+    price: 2500,
+    start: "2026-10-12T00:00:00+02:00",
+    end: "2026-10-16T23:59:59+02:00",
+  },
+  {
+    type: "VIP",
+    lot: "NO DIA",
+    id: "vip_dia",
+    price: 3000,
+    start: "2026-10-17T00:00:00+02:00",
+    end: "2026-10-17T23:59:59+02:00",
+  },
+];
+
+function clean(value) {
+  return String(value ?? "").trim();
+}
+
+function normalizeTicketType(value) {
+  const normalized = clean(value).toUpperCase();
+
+  if (normalized === "NORMAL") {
+    return "NORMAL";
+  }
+
+  if (normalized === "VIP") {
+    return "VIP";
+  }
+
+  return normalized;
+}
+
+function normalizeLot(value) {
+  return clean(value)
+    .toUpperCase()
+    .replace(/\s+/g, " ");
+}
+
+function getOfficialTicket(type, lot) {
+  const normalizedType = normalizeTicketType(type);
+  const normalizedLot = normalizeLot(lot);
+
+  return (
+    TICKETS.find(
+      (ticket) =>
+        ticket.type === normalizedType &&
+        ticket.lot === normalizedLot
+    ) || null
+  );
+}
+
+function isTicketAvailable(ticket) {
+  if (!ticket) {
+    return false;
+  }
+
+  const now = Date.now();
+  const start = new Date(ticket.start).getTime();
+  const end = new Date(ticket.end).getTime();
+
+  return now >= start && now <= end;
+}
+
 function sendJson(res, status, data) {
   return res.status(status).json(data);
 }
@@ -19,15 +144,18 @@ async function supabaseRequest(path, options = {}) {
     throw new Error("Credenciais do Supabase não configuradas.");
   }
 
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    ...options,
-    headers: {
-      apikey: SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-  });
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/${path}`,
+    {
+      ...options,
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      },
+    }
+  );
 
   const text = await response.text();
 
@@ -65,7 +193,11 @@ async function pagarPost(path, body, idempotencyKey) {
   }
 
   const timestamp = Date.now().toString();
-  const nonce = crypto.randomBytes(18).toString("base64url");
+
+  const nonce = crypto
+    .randomBytes(18)
+    .toString("base64url");
+
   const rawBody = JSON.stringify(body);
 
   const bodyHash = crypto
@@ -74,6 +206,7 @@ async function pagarPost(path, body, idempotencyKey) {
     .digest("hex");
 
   const url = PAGAR_API_BASE_URL + path;
+
   const canonicalPath = new URL(url).pathname;
 
   const canonical = [
@@ -92,12 +225,13 @@ async function pagarPost(path, body, idempotencyKey) {
   const response = await fetch(url, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${PAGAR_API_KEY}`,
       "Content-Type": "application/json",
+      Authorization: `Bearer ${PAGAR_API_KEY}`,
+      "Pagar-Api-Key": PAGAR_API_KEY,
+      "Pagar-Timestamp": timestamp,
+      "Pagar-Nonce": nonce,
+      "Pagar-Signature": signature,
       "Idempotency-Key": idempotencyKey,
-      "X-Pagar-Timestamp": timestamp,
-      "X-Pagar-Nonce": nonce,
-      "X-Pagar-Signature": `v1=${signature}`,
     },
     body: rawBody,
   });
@@ -106,20 +240,23 @@ async function pagarPost(path, body, idempotencyKey) {
 
   let data = null;
 
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = text;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
   }
 
   if (!response.ok) {
     const error = new Error(
       data?.message ||
-        "Pedido rejeitado pela Pagar API."
+        data?.error ||
+        `Erro da Pagar: HTTP ${response.status}`
     );
 
-    error.code = data?.error;
-    error.requestId = data?.requestId;
+    error.status = response.status;
+    error.data = data;
 
     throw error;
   }
@@ -127,46 +264,23 @@ async function pagarPost(path, body, idempotencyKey) {
   return data;
 }
 
-function clean(value) {
-  if (typeof value !== "string") return "";
-  return value.trim();
-}
-
-function normalizePhone(phone) {
-  let value = clean(phone).replace(/\s+/g, "");
-
-  if (value.startsWith("+258")) {
-    value = value.substring(1);
-  }
-
-  if (value.startsWith("258")) {
-    return value;
-  }
-
-  if (/^8[2-7]\d{7}$/.test(value)) {
-    return `258${value}`;
-  }
-
-  return value;
-}
-
 async function findOrder(reference) {
-  const result = await supabaseRequest(
+  const data = await supabaseRequest(
     `blackout_orders?order_reference=eq.${encodeURIComponent(
       reference
-    )}&limit=1`,
+    )}&select=*&limit=1`,
     {
       method: "GET",
     }
   );
 
-  return Array.isArray(result) && result.length
-    ? result[0]
+  return Array.isArray(data) && data.length > 0
+    ? data[0]
     : null;
 }
 
 async function createOrder(order) {
-  const result = await supabaseRequest(
+  const data = await supabaseRequest(
     "blackout_orders",
     {
       method: "POST",
@@ -177,43 +291,27 @@ async function createOrder(order) {
     }
   );
 
-  return Array.isArray(result) ? result[0] : result;
+  return Array.isArray(data) ? data[0] : data;
 }
 
-async function updateOrderAfterPayment(
-  reference,
-  paymentId,
-  paymentStatus
-) {
-  const body = {
-    payment_reference: reference,
-  };
-
-  if (paymentId) {
-    body.pagar_payment_id = paymentId;
-  }
-
-  if (paymentStatus) {
-    body.payment_status = paymentStatus;
-  }
-
-  const result = await supabaseRequest(
+async function updateOrder(reference, patch) {
+  const data = await supabaseRequest(
     `blackout_orders?order_reference=eq.${encodeURIComponent(
       reference
-    )}&payment_status=neq.PAID`,
+    )}`,
     {
       method: "PATCH",
       headers: {
         Prefer: "return=representation",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(patch),
     }
   );
 
-  return Array.isArray(result) ? result[0] : null;
+  return Array.isArray(data) ? data[0] : data;
 }
 
-export default async function handler(req, res) {
+async function main(req, res) {
   if (req.method !== "POST") {
     return sendJson(res, 405, {
       success: false,
@@ -222,41 +320,99 @@ export default async function handler(req, res) {
   }
 
   try {
-    const {
-      orderReference,
-      fullName,
-      phone,
-      bairro,
-      ticketType,
-      ticketLot,
-      ticketPrice,
-      quantity,
-      totalAmount,
-      paymentMethod,
-    } = req.body || {};
+    if (!PAGAR_API_KEY || !PAGAR_SIGNING_SECRET) {
+      return sendJson(res, 500, {
+        success: false,
+        message:
+          "As credenciais da Pagar não estão configuradas no Vercel.",
+      });
+    }
 
-    const name = clean(fullName);
-    const contact = normalizePhone(phone);
-    const neighborhood = clean(bairro);
-    const type = clean(ticketType);
-    const lot = clean(ticketLot);
-    const method = clean(paymentMethod).toUpperCase();
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      return sendJson(res, 500, {
+        success: false,
+        message:
+          "As credenciais do Supabase não estão configuradas no Vercel.",
+      });
+    }
 
-    const qty = Number(quantity);
-    const price = Number(ticketPrice);
-    const total = Number(totalAmount);
+    const body =
+      typeof req.body === "string"
+        ? JSON.parse(req.body)
+        : req.body || {};
 
-    if (!name || name.length < 3) {
+    const fullName = clean(
+      body.fullName || body.name || body.nome
+    );
+
+    const phone = clean(
+      body.phone || body.payerPhone || body.telefone
+    );
+
+    const neighborhood = clean(
+      body.bairro ||
+        body.neighborhood ||
+        body.location
+    );
+
+    const type = normalizeTicketType(
+      body.ticketType ||
+        body.type ||
+        body.ticket_type
+    );
+
+    const lot = normalizeLot(
+      body.ticketLot ||
+        body.lot ||
+        body.ticket_lot
+    );
+
+    const method = clean(
+      body.paymentMethod ||
+        body.method ||
+        body.payment_method ||
+        "EMOLA"
+    ).toUpperCase();
+
+    const orderReference = clean(
+      body.orderReference ||
+        body.order_reference ||
+        body.reference
+    );
+
+    /*
+     * O frontend ainda pode enviar estes campos.
+     * Eles NÃO são usados como fonte do preço.
+     */
+    const browserPrice = Number(
+      body.ticketPrice ??
+        body.price ??
+        body.ticket_price
+    );
+
+    const browserTotal = Number(
+      body.totalAmount ??
+        body.total ??
+        body.total_amount
+    );
+
+    const qty = Number(
+      body.quantity ??
+        body.qty ??
+        1
+    );
+
+    if (!fullName) {
       return sendJson(res, 400, {
         success: false,
         message: "Informe o nome completo.",
       });
     }
 
-    if (!contact) {
+    if (!phone) {
       return sendJson(res, 400, {
         success: false,
-        message: "Informe um número de contacto válido.",
+        message: "Informe o número de telefone.",
       });
     }
 
@@ -270,189 +426,379 @@ export default async function handler(req, res) {
     if (!type || !lot) {
       return sendJson(res, 400, {
         success: false,
-        message: "Selecione o bilhete e o lote.",
+        message:
+          "Selecione o tipo de bilhete e o lote.",
       });
     }
 
     if (!Number.isInteger(qty) || qty < 1 || qty > 10) {
       return sendJson(res, 400, {
         success: false,
-        message: "A quantidade deve estar entre 1 e 10.",
-      });
-    }
-
-    if (!Number.isInteger(price) || price <= 0) {
-      return sendJson(res, 400, {
-        success: false,
-        message: "Preço de bilhete inválido.",
-      });
-    }
-
-    if (!Number.isInteger(total) || total <= 0) {
-      return sendJson(res, 400, {
-        success: false,
-        message: "Valor total inválido.",
+        message:
+          "A quantidade deve estar entre 1 e 10.",
       });
     }
 
     if (method !== "EMOLA") {
       return sendJson(res, 400, {
         success: false,
-        message: "Neste momento o pagamento disponível é e-Mola.",
+        message:
+          "Neste momento o pagamento disponível é e-Mola.",
       });
     }
 
-    const calculatedTotal = price * qty;
+    /*
+     * ========================================================
+     * PREÇO OFICIAL DO BACKEND
+     * ========================================================
+     */
 
-    if (calculatedTotal !== total) {
+    const officialTicket = getOfficialTicket(type, lot);
+
+    if (!officialTicket) {
       return sendJson(res, 400, {
         success: false,
         message:
-          "O valor total não corresponde à quantidade de bilhetes.",
+          "O tipo de bilhete ou lote selecionado não é válido.",
       });
     }
 
+    if (!isTicketAvailable(officialTicket)) {
+      return sendJson(res, 400, {
+        success: false,
+        message:
+          `O ${officialTicket.lot} para ${officialTicket.type} não está disponível neste momento.`,
+      });
+    }
+
+    const price = Number(officialTicket.price);
+
+    const calculatedTotal = price * qty;
+
+    /*
+     * O navegador não pode alterar o preço.
+     * Estes logs servem apenas para detectar tentativa
+     * de manipulação ou divergência do frontend.
+     */
+
+    if (
+      Number.isInteger(browserPrice) &&
+      browserPrice !== price
+    ) {
+      console.warn(
+        "Preço enviado pelo navegador diferente do preço oficial.",
+        {
+          browserPrice,
+          officialPrice: price,
+          type,
+          lot,
+        }
+      );
+    }
+
+    if (
+      Number.isInteger(browserTotal) &&
+      browserTotal !== calculatedTotal
+    ) {
+      console.warn(
+        "Total enviado pelo navegador diferente do total oficial.",
+        {
+          browserTotal,
+          calculatedTotal,
+          qty,
+          price,
+        }
+      );
+    }
+
     const reference =
-      clean(orderReference) ||
+      orderReference ||
       `PG-BLACKOUT-${Date.now()}-${crypto
         .randomBytes(3)
         .toString("hex")
         .toUpperCase()}`;
 
     /*
-     * Se este pedido já existe:
-     * - PAID/PROCESSING: não criar outro pagamento.
-     * - FAILED/CANCELLED: permite nova tentativa.
-     * - CREATED: continua a tentativa original.
+     * ========================================================
+     * VERIFICAR PEDIDO EXISTENTE
+     * ========================================================
      */
+
     const existing = await findOrder(reference);
 
     if (existing) {
-      const existingStatus = String(
-        existing.payment_status || ""
-      ).toUpperCase();
+      const existingType = normalizeTicketType(
+        existing.ticket_type
+      );
+
+      const existingLot = normalizeLot(
+        existing.ticket_lot
+      );
+
+      const existingPrice = Number(
+        existing.ticket_price
+      );
+
+      const existingQuantity = Number(
+        existing.quantity
+      );
+
+      const existingTotal = Number(
+        existing.total_amount
+      );
+
+      /*
+       * A mesma referência não pode ser usada para
+       * outro produto ou outro valor.
+       */
 
       if (
-        existingStatus === "PAID" ||
-        existingStatus === "PROCESSING"
+        existingType !== type ||
+        existingLot !== lot ||
+        existingPrice !== price ||
+        existingQuantity !== qty ||
+        existingTotal !== calculatedTotal
       ) {
-        return sendJson(res, 200, {
-          success: true,
-          existing: true,
-          orderReference: reference,
-          paymentId:
-            existing.pagar_payment_id || null,
-          status: existingStatus,
-          amountMzn: Number(existing.total_amount),
-          currency: "MZN",
-          method: "EMOLA",
+        return sendJson(res, 409, {
+          success: false,
           message:
-            existingStatus === "PAID"
-              ? "Pagamento já confirmado."
-              : "Pagamento já está em processamento.",
+            "A referência do pedido já está associada a outros dados.",
         });
       }
-    }
 
-    /*
-     * PRIMEIRO criamos o pedido.
-     * Assim o webhook nunca chega antes do pedido existir.
-     */
-    if (!existing) {
+      /*
+       * Se já está pago, não criar outro pagamento.
+       */
+
+      if (existing.payment_status === "PAID") {
+        return sendJson(res, 200, {
+          success: true,
+          alreadyPaid: true,
+          orderReference: reference,
+          paymentStatus: "PAID",
+          paymentReference:
+            existing.payment_reference || null,
+          paymentId:
+            existing.pagar_payment_id || null,
+          ticketCode:
+            existing.ticket_code || null,
+          pdfPath:
+            existing.pdf_path || null,
+        });
+      }
+
+      /*
+       * Se já está PROCESSING, devolver o pedido atual.
+       */
+
+      if (existing.payment_status === "PROCESSING") {
+        return sendJson(res, 200, {
+          success: true,
+          alreadyProcessing: true,
+          orderReference: reference,
+          paymentStatus: "PROCESSING",
+          paymentReference:
+            existing.payment_reference || null,
+          paymentId:
+            existing.pagar_payment_id || null,
+        });
+      }
+
+      /*
+       * FAILED/CANCELLED pode ser tentado novamente.
+       */
+    } else {
+      /*
+       * ======================================================
+       * CRIAR PEDIDO NO SUPABASE
+       * ======================================================
+       */
+
       await createOrder({
         order_reference: reference,
-        full_name: name,
-        phone: contact,
+        full_name: fullName,
+        phone,
         bairro: neighborhood,
         ticket_type: type,
         ticket_lot: lot,
-        ticket_price: String(price),
-        quantity: String(qty),
-        total_amount: String(calculatedTotal),
-        payment_method: "EMOLA",
+        ticket_price: price,
+        quantity: qty,
+        total_amount: calculatedTotal,
+        payment_method: method,
         payment_status: "CREATED",
         payment_reference: reference,
-        pagar_payment_id: "",
-        created_at: new Date().toISOString(),
-        ticket_code: null,
-        ticket_status: null,
-        qr_data: null,
-        pdf_path: null,
-        paid_at: null,
       });
     }
 
-    const paymentBody = {
-      reference,
-      title: "BLACK OUT — AMAPIANO EDITION",
-      description: `${qty} bilhete(s) ${type} — ${lot}`,
-      amountMzn: calculatedTotal,
-      method: "EMOLA",
-      payerPhone: contact,
-    };
+    /*
+     * ========================================================
+     * CRIAR PAGAMENTO NA PAGAR
+     * ========================================================
+     */
 
     const idempotencyKey =
-      existing &&
-      ["FAILED", "CANCELLED"].includes(
-        String(existing.payment_status || "").toUpperCase()
-      )
-        ? `payment:${reference}:${Date.now()}`
-        : `payment:${reference}`;
+      `blackout-${reference}`;
 
-    const result = await pagarPost(
+    const paymentBody = {
+      amountMzn: calculatedTotal,
+      method: "EMOLA",
+      payerPhone: phone,
+      description:
+        `BLACK OUT — AMAPIANO EDITION | ${type} | ${lot} | ${qty} bilhete(s)`,
+      reference,
+    };
+
+    const pagarResponse = await pagarPost(
       "/payments",
       paymentBody,
       idempotencyKey
     );
 
-    const payment = result?.payment || result;
+    const payment =
+      pagarResponse?.payment ||
+      pagarResponse;
 
-    /*
-     * A Pagar pode devolver "id" ou "paymentId".
-     * Aceitamos os dois formatos.
-     */
     const paymentId =
       payment?.id ||
       payment?.paymentId ||
       null;
 
+    const paymentReference =
+      payment?.reference ||
+      reference;
+
     const paymentStatus =
-      String(payment?.status || "PROCESSING").toUpperCase();
+      payment?.status ||
+      "PROCESSING";
 
     /*
-     * O webhook pode ter marcado PAID enquanto esta
-     * requisição estava em andamento.
+     * ========================================================
+     * ATUALIZAR PEDIDO
+     * ========================================================
      *
-     * Esta atualização nunca sobrescreve PAID.
+     * Nunca sobrescrever PAID com PROCESSING.
      */
-    await updateOrderAfterPayment(
-      reference,
-      paymentId,
-      paymentStatus === "PAID"
-        ? "PAID"
-        : "PROCESSING"
-    );
 
-    return sendJson(res, 202, {
+    const currentOrder = await findOrder(reference);
+
+    if (
+      currentOrder &&
+      currentOrder.payment_status === "PAID"
+    ) {
+      return sendJson(res, 200, {
+        success: true,
+        alreadyPaid: true,
+        orderReference: reference,
+        paymentStatus: "PAID",
+        paymentReference:
+          currentOrder.payment_reference ||
+          paymentReference,
+        paymentId:
+          currentOrder.pagar_payment_id ||
+          paymentId,
+        ticketCode:
+          currentOrder.ticket_code || null,
+        pdfPath:
+          currentOrder.pdf_path || null,
+      });
+    }
+
+    await updateOrder(reference, {
+      payment_status:
+        paymentStatus === "PAID"
+          ? "PAID"
+          : "PROCESSING",
+      payment_reference:
+        paymentReference,
+      pagar_payment_id:
+        paymentId,
+    });
+
+    /*
+     * ========================================================
+     * RESPOSTA
+     * ========================================================
+     */
+
+    return sendJson(res, 200, {
       success: true,
       orderReference: reference,
-      paymentId,
-      status: paymentStatus,
-      amountMzn: calculatedTotal,
-      currency: "MZN",
-      method: "EMOLA",
-      message:
+      paymentStatus:
         paymentStatus === "PAID"
-          ? "Pagamento confirmado. O bilhete será emitido."
-          : "Pedido de pagamento enviado. Autorize o pagamento no e-Mola.",
+          ? "PAID"
+          : "PROCESSING",
+      paymentReference,
+      paymentId,
+      amountMzn: calculatedTotal,
+      ticketType: type,
+      ticketLot: lot,
+      ticketPrice: price,
+      quantity: qty,
+      totalAmount: calculatedTotal,
     });
   } catch (error) {
-    console.error("PAGAR ERROR:", error);
+    console.error(
+      "CREATE PAYMENT ERROR:",
+      error
+    );
 
-    return sendJson(res, 500, {
+    /*
+     * Tentar marcar o pedido como FAILED.
+     */
+    try {
+      const body =
+        typeof req.body === "string"
+          ? JSON.parse(req.body)
+          : req.body || {};
+
+      const reference = clean(
+        body.orderReference ||
+          body.order_reference ||
+          body.reference
+      );
+
+      if (reference) {
+        const existing = await findOrder(
+          reference
+        );
+
+        /*
+         * Nunca alterar um pedido que já esteja PAID.
+         */
+        if (
+          existing &&
+          existing.payment_status !== "PAID"
+        ) {
+          await updateOrder(reference, {
+            payment_status: "FAILED",
+          });
+        }
+      }
+    } catch (updateError) {
+      console.error(
+        "Erro ao atualizar pedido após falha:",
+        updateError
+      );
+    }
+
+    const status =
+      Number.isInteger(error?.status) &&
+      error.status >= 400 &&
+      error.status < 600
+        ? error.status
+        : 500;
+
+    return sendJson(res, status, {
       success: false,
       message:
-        "Não foi possível iniciar o pagamento. Tente novamente.",
+        error?.message ||
+        "Não foi possível iniciar o pagamento.",
+      details:
+        process.env.NODE_ENV === "development"
+          ? error?.data || null
+          : undefined,
     });
   }
 }
+
+export default main;
