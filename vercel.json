@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/process-ticket-job.js": {
+      "maxDuration": 300
+    },
+    "api/generate-ticket.js": {
+      "maxDuration": 300
+    }
+  }
+}
