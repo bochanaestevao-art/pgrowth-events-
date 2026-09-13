@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"
+  >
+
+  <meta name="theme-color" content="#080808">
+
+  <title>BLACK OUT — Check-in</title>
+
+  <style>
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+    }
+
+    :root{
+      --gold:#f2a900;
+      --gold2:#ffbf19;
+      --bg:#050505;
+      --card:#141414;
+      --card2:#1b1b1b;
+      --line:#303030;
+      --muted:#999;
+      --ok:#46d77d;
+      --danger:#ff6565;
+      --blue:#58a6ff;
+    }
+
+    body{
+      font-family:Arial,Helvetica,sans-serif;
+      background:
+        radial-gradient(
+          circle at top,
+          rgba(242,169,0,.13),
+          transparent 35%
+        ),
+        var(--bg);
+      color:#fff;
+      min-height:100vh;
+    }
+
+    button,
+    input{
+      font:inherit;
+    }
+
+    .app{
+      width:min(100%,620px);
+      margin:auto;
+      padding-bottom:30px;
+    }
+
+    .header{
+      position:sticky;
+      top:0;
+      z-index:50;
+      background:rgba(5,5,5,.96);
+      backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--line);
+      padding:14px 16px;
+    }
+
+    .header-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .brand{
+      color:var(--gold);
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:2px;
+    }
+
+    .status{
+      display:flex;
+      align-items:center;
+      gap:7px;
+      font-size:10px;
+      font-weight:900;
+      color:var(--ok);
+      text-transform:uppercase;
+    }
+
+    .dot{
+      width:9px;
+      height:9px;
+      border-radius:50%;
+      background:var(--ok);
+      box-shadow:0 0 10px rgba(70,215,125,.7);
+    }
+
+    .section{
+      padding:16px;
+    }
+
+    .title{
+      font-size:22px;
+      font-weight:900;
+      margin-bottom:5px;
+    }
+
+    .subtitle{
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+    }
+
+    /* LOGIN */
+
+    .login-card{
+      background:linear-gradient(145deg,#191919,#0d0d0d);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:20px;
+      margin-top:18px;
+    }
+
+    .login-card h2{
+      font-size:18px;
+      margin-bottom:8px;
+    }
+
+    .field{
+      margin-top:16px;
+    }
+
+    label{
+      display:block;
+      font-size:12px;
+      font-weight:900;
+      margin-bottom:7px;
+    }
+
+    input{
+      width:100%;
+      padding:15px;
+      border-radius:11px;
+      border:1px solid #3a3a3a;
+      background:#080808;
+      color:#fff;
+      outline:none;
+    }
+
+    input:focus{
+      border-color:var(--gold);
+    }
+
+    .button{
+      width:100%;
+      border:0;
+      border-radius:12px;
+      padding:16px;
+      margin-top:14px;
+      font-weight:900;
+      cursor:pointer;
+      touch-action:manipulation;
+    }
+
+    .button:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
+    .primary{
+      background:linear-gradient(135deg,var(--gold),var(--gold2));
+      color:#090909;
+    }
+
+    .secondary{
+      background:#202020;
+      color:#fff;
+      border:1px solid #3b3b3b;
+    }
+
+    .danger{
+      background:rgba(255,101,101,.12);
+      border:1px solid rgba(255,101,101,.35);
+      color:#ffaaaa;
+    }
+
+    /* SCANNER */
+
+    .scanner-card{
+      background:#0d0d0d;
+      border:1px solid var(--line);
+      border-radius:18px;
+      overflow:hidden;
+      margin-top:16px;
+    }
+
+    .camera{
+      position:relative;
+      width:100%;
+      aspect-ratio:1/1;
+      background:#000;
+      overflow:hidden;
+    }
+
+    #reader{
+      width:100%;
+      height:100%;
+    }
+
+    #reader video{
+      width:100% !important;
+      height:100% !important;
+      object-fit:cover !important;
+    }
+
+    .scan-frame{
+      position:absolute;
+      left:15%;
+      top:15%;
+      width:70%;
+      height:70%;
+      border:3px solid var(--gold);
+      border-radius:18px;
+      box-shadow:
+        0 0 0 9999px rgba(0,0,0,.35);
+      pointer-events:none;
+    }
+
+    .scan-line{
+      position:absolute;
+      left:17%;
+      width:66%;
+      height:2px;
+      background:var(--gold2);
+      box-shadow:0 0 12px var(--gold2);
+      animation:scanline 2s linear infinite;
+    }
+
+    @keyframes scanline{
+      0%{top:18%}
+      50%{top:82%}
+      100%{top:18%}
+    }
+
+    .camera-status{
+      padding:13px;
+      text-align:center;
+      font-size:12px;
+      color:var(--muted);
+      background:#111;
+    }
+
+    .scan-controls{
+      padding:12px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:9px;
+    }
+
+    /* RESULT */
+
+    .result-card{
+      display:none;
+      background:linear-gradient(145deg,#191919,#0c0c0c);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:18px;
+      margin-top:16px;
+    }
+
+    .result-card.show{
+      display:block;
+    }
+
+    .result-header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:15px;
+    }
+
+    .result-title{
+      font-size:18px;
+      font-weight:900;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:10px;
+      font-weight:900;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .badge.green{
+      color:#aaf0c4;
+      background:rgba(70,215,125,.12);
+      border:1px solid rgba(70,215,125,.3);
+    }
+
+    .badge.orange{
+      color:#ffd780;
+      background:rgba(242,169,0,.12);
+      border:1px solid rgba(242,169,0,.3);
+    }
+
+    .badge.red{
+      color:#ffb0b0;
+      background:rgba(255,101,101,.12);
+      border:1px solid rgba(255,101,101,.3);
+    }
+
+    .person{
+      font-size:24px;
+      font-weight:900;
+      margin-bottom:14px;
+    }
+
+    .ticket-code{
+      color:var(--gold2);
+      font-size:12px;
+      font-weight:900;
+      word-break:break-all;
+      margin-bottom:14px;
+    }
+
+    .info-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:9px;
+    }
+
+    .info{
+      background:#101010;
+      border:1px solid #2a2a2a;
+      border-radius:11px;
+      padding:11px;
+    }
+
+    .info small{
+      display:block;
+      color:#777;
+      font-size:9px;
+      text-transform:uppercase;
+      margin-bottom:5px;
+    }
+
+    .info strong{
+      display:block;
+      font-size:13px;
+    }
+
+    .presence{
+      margin-top:12px;
+      padding:14px;
+      border-radius:12px;
+      text-align:center;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .presence.inside{
+      color:#aaf0c4;
+      background:rgba(70,215,125,.1);
+      border:1px solid rgba(70,215,125,.3);
+    }
+
+    .presence.outside{
+      color:#ffd780;
+      background:rgba(242,169,0,.1);
+      border:1px solid rgba(242,169,0,.3);
+    }
+
+    .actions{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:14px;
+    }
+
+    .action{
+      min-height:64px;
+      border:0;
+      border-radius:13px;
+      font-weight:900;
+      font-size:15px;
+      cursor:pointer;
+      touch-action:manipulation;
+    }
+
+    .entry{
+      background:linear-gradient(135deg,#38c86d,#69e394);
+      color:#07150c;
+    }
+
+    .exit{
+      background:linear-gradient(135deg,#f2a900,#ffca3d);
+      color:#100c00;
+    }
+
+    .action:disabled{
+      opacity:.4;
+      cursor:not-allowed;
+    }
+
+    /* MESSAGES */
+
+    .message{
+      display:none;
+      padding:14px;
+      border-radius:12px;
+      margin-top:14px;
+      font-size:13px;
+      line-height:1.5;
+      text-align:center;
+    }
+
+    .message.show{
+      display:block;
+    }
+
+    .message.success{
+      color:#aaf0c4;
+      background:rgba(70,215,125,.1);
+      border:1px solid rgba(70,215,125,.3);
+    }
+
+    .message.error{
+      color:#ffb0b0;
+      background:rgba(255,101,101,.1);
+      border:1px solid rgba(255,101,101,.3);
+    }
+
+    .message.warning{
+      color:#ffe09a;
+      background:rgba(242,169,0,.1);
+      border:1px solid rgba(242,169,0,.3);
+    }
+
+    .manual{
+      margin-top:14px;
+    }
+
+    .manual-row{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:8px;
+    }
+
+    .manual-row button{
+      width:auto;
+      min-width:110px;
+      margin-top:0;
+    }
+
+    .logout{
+      margin-top:18px;
+    }
+
+    .help{
+      margin-top:16px;
+      color:#777;
+      font-size:10px;
+      line-height:1.5;
+      text-align:center;
+    }
+
+    @media(max-width:390px){
+      .actions{
+        grid-template-columns:1fr;
+      }
+
+      .info-grid{
+        grid-template-columns:1fr 1fr;
+      }
+
+      .person{
+        font-size:21px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <header class="header">
+    <div class="header-row">
+      <div class="brand">PGROWTH • CHECK-IN</div>
+
+      <div class="status">
+        <span class="dot"></span>
+        <span id="connectionText">ONLINE</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="section">
+
+    <!-- LOGIN -->
+
+    <div id="loginScreen">
+
+      <div class="title">
+        Entrada do <span style="color:var(--gold)">BLACK OUT</span>
+      </div>
+
+      <div class="subtitle">
+        Área exclusiva da equipe de controlo de acesso.
+      </div>
+
+      <div class="login-card">
+
+        <h2>Acesso da equipe</h2>
+
+        <div class="subtitle">
+          Introduza o código de acesso para iniciar o scanner.
+        </div>
+
+        <div class="field">
+          <label for="accessSecret">
+            Código de acesso
+          </label>
+
+          <input
+            id="accessSecret"
+            type="password"
+            autocomplete="off"
+            placeholder="Código da equipe"
+          >
+        </div>
+
+        <button
+          class="button primary"
+          id="loginButton"
+          type="button"
+        >
+          ENTRAR NO CHECK-IN
+        </button>
+
+        <div
+          class="message error"
+          id="loginMessage"
+        ></div>
+
+      </div>
+
+    </div>
+
+    <!-- CHECK-IN -->
+
+    <div id="checkinScreen" style="display:none">
+
+      <div class="title">
+        Scanner de <span style="color:var(--gold)">QR</span>
+      </div>
+
+      <div class="subtitle">
+        Aponte a câmera para o QR Code do bilhete.
+        Depois do registo, o scanner volta automaticamente para o próximo participante.
+      </div>
+
+      <div class="scanner-card">
+
+        <div class="camera">
+
+          <div id="reader"></div>
+
+          <div class="scan-frame"></div>
+          <div class="scan-line"></div>
+
+        </div>
+
+        <div
+          class="camera-status"
+          id="cameraStatus"
+        >
+          Preparando câmera...
+        </div>
+
+        <div class="scan-controls">
+
+          <button
+            class="button secondary"
+            id="startScannerButton"
+            type="button"
+          >
+            INICIAR CÂMERA
+          </button>
+
+          <button
+            class="button secondary"
+            id="stopScannerButton"
+            type="button"
+          >
+            PARAR CÂMERA
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- RESULTADO -->
+
+      <div
+        class="result-card"
+        id="resultCard"
+      >
+
+        <div class="result-header">
+
+          <div class="result-title">
+            Bilhete identificado
+          </div>
+
+          <div
+            class="badge green"
+            id="validityBadge"
+          >
+            VÁLIDO
+          </div>
+
+        </div>
+
+        <div
+          class="person"
+          id="personName"
+        >
+          —
+        </div>
+
+        <div
+          class="ticket-code"
+          id="ticketCode"
+        >
+          —
+        </div>
+
+        <div class="info-grid">
+
+          <div class="info">
+            <small>Tipo</small>
+            <strong id="ticketType">—</strong>
+          </div>
+
+          <div class="info">
+            <small>Lote</small>
+            <strong id="ticketLot">—</strong>
+          </div>
+
+          <div class="info">
+            <small>Quantidade</small>
+            <strong id="ticketQuantity">—</strong>
+          </div>
+
+          <div class="info">
+            <small>Bilhete</small>
+            <strong id="ticketNumber">—</strong>
+          </div>
+
+        </div>
+
+        <div
+          class="presence outside"
+          id="presenceBox"
+        >
+          FORA DO EVENTO
+        </div>
+
+        <div
+          class="actions"
+          id="actionButtons"
+        >
+
+          <button
+            class="action entry"
+            id="entryButton"
+            type="button"
+          >
+            ✓ ENTRADA
+          </button>
+
+          <button
+            class="action exit"
+            id="exitButton"
+            type="button"
+          >
+            ↩ SAÍDA
+          </button>
+
+        </div>
+
+        <button
+          class="button secondary"
+          id="nextButton"
+          type="button"
+        >
+          PRÓXIMO BILHETE
+        </button>
+
+      </div>
+
+      <div
+        class="message"
+        id="operationMessage"
+      ></div>
+
+      <!-- LEITURA MANUAL -->
+
+      <div class="manual">
+
+        <div class="subtitle" style="margin-bottom:7px">
+          Se a câmera tiver dificuldade, digite o código manualmente:
+        </div>
+
+        <div class="manual-row">
+
+          <input
+            id="manualCode"
+            type="text"
+            autocomplete="off"
+            placeholder="BLACKOUT-2026-..."
+          >
+
+          <button
+            class="button secondary"
+            id="manualButton"
+            type="button"
+          >
+            CONSULTAR
+          </button>
+
+        </div>
+
+      </div>
+
+      <button
+        class="button danger logout"
+        id="logoutButton"
+        type="button"
+      >
+        SAIR DO CHECK-IN
+      </button>
+
+      <div class="help">
+        Após cada entrada ou saída, o scanner fica pronto novamente
+        para o próximo QR Code.
+      </div>
+
+    </div>
+
+  </main>
+
+</div>
+
+<!-- Scanner QR -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<script>
+"use strict";
+
+const state = {
+  scanner: null,
+  scanning: false,
+  processing: false,
+  currentCode: null,
+  currentTicket: null,
+  lastScannedCode: null,
+  lastScannedAt: 0
+};
+
+const loginScreen =
+  document.getElementById("loginScreen");
+
+const checkinScreen =
+  document.getElementById("checkinScreen");
+
+const loginButton =
+  document.getElementById("loginButton");
+
+const loginMessage =
+  document.getElementById("loginMessage");
+
+const cameraStatus =
+  document.getElementById("cameraStatus");
+
+const resultCard =
+  document.getElementById("resultCard");
+
+const operationMessage =
+  document.getElementById("operationMessage");
+
+const entryButton =
+  document.getElementById("entryButton");
+
+const exitButton =
+  document.getElementById("exitButton");
+
+const nextButton =
+  document.getElementById("nextButton");
+
+const startScannerButton =
+  document.getElementById("startScannerButton");
+
+const stopScannerButton =
+  document.getElementById("stopScannerButton");
+
+function showLoginError(message) {
+  loginMessage.textContent = message;
+  loginMessage.className = "message error show";
+}
+
+function clearLoginError() {
+  loginMessage.textContent = "";
+  loginMessage.className = "message error";
+}
+
+function showOperation(message, type) {
+  operationMessage.textContent = message;
+  operationMessage.className =
+    "message " + type + " show";
+}
+
+function clearOperation() {
+  operationMessage.textContent = "";
+  operationMessage.className = "message";
+}
+
+function setCameraStatus(message) {
+  cameraStatus.textContent = message;
+}
+
+async function checkSession() {
+  try {
+    const response =
+      await fetch("/api/checkin-session", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store"
+      });
+
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function login() {
+  clearLoginError();
+
+  const secret =
+    document
+      .getElementById("accessSecret")
+      .value
+      .trim();
+
+  if (!secret) {
+    showLoginError(
+      "Introduza o código de acesso."
+    );
+    return;
+  }
+
+  loginButton.disabled = true;
+  loginButton.textContent = "A VALIDAR...";
+
+  try {
+
+    const response =
+      await fetch("/api/checkin-session", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "x-checkin-secret": secret
+        },
+        body: JSON.stringify({
+          secret
+        })
+      });
+
+    let data = null;
+
+    try {
+      data = await response.json();
+    } catch {}
+
+    if (!response.ok || !data || !data.success) {
+      throw new Error(
+        data?.message ||
+        "Código de acesso inválido."
+      );
+    }
+
+    document
+      .getElementById("accessSecret")
+      .value = "";
+
+    loginScreen.style.display = "none";
+    checkinScreen.style.display = "block";
+
+    await startScanner();
+
+  } catch (error) {
+
+    showLoginError(
+      error.message ||
+      "Não foi possível iniciar o check-in."
+    );
+
+  } finally {
+
+    loginButton.disabled = false;
+    loginButton.textContent =
+      "ENTRAR NO CHECK-IN";
+  }
+}
+
+async function ensureScanner() {
+  if (state.scanner) {
+    return state.scanner;
+  }
+
+  if (typeof Html5Qrcode === "undefined") {
+    throw new Error(
+      "O módulo de leitura QR não foi carregado."
+    );
+  }
+
+  state.scanner =
+    new Html5Qrcode("reader");
+
+  return state.scanner;
+}
+
+async function startScanner() {
+
+  if (state.scanning || state.processing) {
+    return;
+  }
+
+  clearOperation();
+
+  try {
+
+    const authenticated =
+      await checkSession();
+
+    if (!authenticated) {
+
+      stopScanner();
+
+      loginScreen.style.display = "block";
+      checkinScreen.style.display = "none";
+
+      showLoginError(
+        "Sua sessão expirou. Entre novamente."
+      );
+
+      return;
+    }
+
+    const scanner =
+      await ensureScanner();
+
+    setCameraStatus(
+      "Solicitando acesso à câmera..."
+    );
+
+    await scanner.start(
+      {
+        facingMode: {
+          exact: "environment"
+        }
+      },
+      {
+        fps: 12,
+        qrbox: {
+          width: 250,
+          height: 250
+        },
+        aspectRatio: 1
+      },
+      onScanSuccess,
+      onScanFailure
+    );
+
+    state.scanning = true;
+
+    setCameraStatus(
+      "CÂMERA ATIVA • APONTE PARA O QR"
+    );
+
+  } catch (error) {
+
+    console.error(
+      "ERRO AO INICIAR CÂMERA:",
+      error
+    );
+
+    setCameraStatus(
+      "Não foi possível iniciar a câmera."
+    );
+
+    showOperation(
+      "Permita o acesso à câmera no navegador e tente novamente.",
+      "error"
+    );
+  }
+}
+
+async function stopScanner() {
+
+  if (!state.scanner) {
+    state.scanning = false;
+    return;
+  }
+
+  try {
+
+    if (state.scanning) {
+      await state.scanner.stop();
+    }
+
+  } catch (error) {
+
+    console.warn(
+      "ERRO AO PARAR SCANNER:",
+      error
+    );
+
+  } finally {
+
+    state.scanning = false;
+
+    setCameraStatus(
+      "CÂMERA PARADA"
+    );
+  }
+}
+
+function onScanFailure() {
+  // Intencionalmente silencioso.
+  // O scanner tenta continuamente.
+}
+
+async function onScanSuccess(decodedText) {
+
+  if (state.processing) {
+    return;
+  }
+
+  const code =
+    String(decodedText || "")
+      .trim()
+      .toUpperCase();
+
+  if (!code) {
+    return;
+  }
+
+  /*
+   * Evita que a câmera leia o mesmo QR
+   * dezenas de vezes enquanto ainda estamos
+   * processando a operação.
+   */
+  const now = Date.now();
+
+  if (
+    state.lastScannedCode === code &&
+    now - state.lastScannedAt < 2500
+  ) {
+    return;
+  }
+
+  state.lastScannedCode = code;
+  state.lastScannedAt = now;
+
+  state.processing = true;
+
+  await stopScanner();
+
+  await lookupTicket(code);
+}
+
+async function lookupTicket(code) {
+
+  clearOperation();
+
+  resultCard.classList.remove("show");
+
+  try {
+
+    setCameraStatus(
+      "QR LIDO • CONSULTANDO BILHETE..."
+    );
+
+    const response =
+      await fetch(
+        "/api/checkin-lookup?code=" +
+          encodeURIComponent(code),
+        {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store"
+        }
+      );
+
+    let data = null;
+
+    try {
+      data = await response.json();
+    } catch {}
+
+    if (response.status === 401) {
+
+      throw new Error(
+        "A sessão da equipe expirou."
+      );
+    }
+
+    if (!response.ok || !data || !data.success) {
+
+      throw new Error(
+        data?.message ||
+        "Bilhete não encontrado."
+      );
+    }
+
+    state.currentCode = code;
+    state.currentTicket = data.ticket;
+
+    renderTicket(data);
+
+  } catch (error) {
+
+    console.error(
+      "ERRO AO CONSULTAR BILHETE:",
+      error
+    );
+
+    state.currentCode = null;
+    state.currentTicket = null;
+
+    resultCard.classList.remove("show");
+
+    showOperation(
+      error.message ||
+      "Não foi possível consultar o bilhete.",
+      "error"
+    );
+
+    state.processing = false;
+
+    setCameraStatus(
+      "PRONTO PARA NOVA LEITURA"
+    );
+
+    setTimeout(() => {
+      startScanner();
+    }, 1000);
+  }
+}
+
+function renderTicket(data) {
+
+  const ticket = data.ticket;
+
+  document.getElementById("personName")
+    .textContent =
+      ticket.fullName || "Sem nome";
+
+  document.getElementById("ticketCode")
+    .textContent =
+      ticket.ticketCode || state.currentCode;
+
+  document.getElementById("ticketType")
+    .textContent =
+      ticket.ticketType || "—";
+
+  document.getElementById("ticketLot")
+    .textContent =
+      ticket.ticketLot || "—";
+
+  document.getElementById("ticketQuantity")
+    .textContent =
+      String(ticket.quantity || 1);
+
+  document.getElementById("ticketNumber")
+    .textContent =
+      ticket.ticketNumber
+        ? "Nº " + ticket.ticketNumber
+        : "—";
+
+  const validityBadge =
+    document.getElementById("validityBadge");
+
+  const presenceBox =
+    document.getElementById("presenceBox");
+
+  const entry =
+    document.getElementById("entryButton");
+
+  const exit =
+    document.getElementById("exitButton");
+
+  const validity =
+    String(data.validity || "").toUpperCase();
+
+  const presence =
+    String(ticket.presenceStatus || "").toUpperCase();
+
+  validityBadge.className =
+    "badge";
+
+  entry.disabled = true;
+  exit.disabled = true;
+
+  if (validity === "VALID") {
+
+    validityBadge.textContent =
+      "VÁLIDO";
+
+    validityBadge.classList.add("green");
+
+    if (presence === "INSIDE") {
+
+      presenceBox.textContent =
+        "● DENTRO DO EVENTO";
+
+      presenceBox.className =
+        "presence inside";
+
+      exit.disabled = false;
+
+      showOperation(
+        "Este participante está dentro. A próxima operação disponível é SAÍDA.",
+        "warning"
+      );
+
+    } else {
+
+      presenceBox.textContent =
+        "● FORA DO EVENTO";
+
+      presenceBox.className =
+        "presence outside";
+
+      entry.disabled = false;
+
+      showOperation(
+        "Bilhete válido. A entrada pode ser registada.",
+        "success"
+      );
+    }
+
+  } else {
+
+    validityBadge.textContent =
+      "NÃO VÁLIDO";
+
+    validityBadge.classList.add("red");
+
+    presenceBox.textContent =
+      ticket.paymentStatus !== "PAID"
+        ? "PAGAMENTO NÃO CONFIRMADO"
+        : "BILHETE NÃO AUTORIZADO";
+
+    presenceBox.className =
+      "presence outside";
+
+    showOperation(
+      ticket.paymentStatus !== "PAID"
+        ? "Este bilhete ainda não possui pagamento confirmado."
+        : "Este bilhete não está autorizado para entrada.",
+      "error"
+    );
+  }
+
+  resultCard.classList.add("show");
+
+  setCameraStatus(
+    "BILHETE IDENTIFICADO"
+  );
+
+  state.processing = false;
+}
+
+async function performAction(action) {
+
+  if (!state.currentCode) {
+    return;
+  }
+
+  if (state.processing) {
+    return;
+  }
+
+  state.processing = true;
+
+  entryButton.disabled = true;
+  exitButton.disabled = true;
+  nextButton.disabled = true;
+
+  clearOperation();
+
+  const actionLabel =
+    action === "ENTRY"
+      ? "REGISTANDO ENTRADA..."
+      : "REGISTANDO SAÍDA...";
+
+  setCameraStatus(actionLabel);
+
+  try {
+
+    const response =
+      await fetch(
+        "/api/checkin-ticket",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            ticketCode: state.currentCode,
+            action
+          })
+        }
+      );
+
+    let data = null;
+
+    try {
+      data = await response.json();
+    } catch {}
+
+    if (response.status === 401) {
+      throw new Error(
+        "A sessão da equipe expirou."
+      );
+    }
+
+    if (!data) {
+      throw new Error(
+        "Resposta inválida do servidor."
+      );
+    }
+
+    if (!response.ok || !data.success) {
+
+      const message =
+        data.message ||
+        (
+          data.result === "ALREADY_INSIDE"
+            ? "Este bilhete já está dentro do evento."
+            : "Operação não autorizada."
+        );
+
+      throw new Error(message);
+    }
+
+    const ticket =
+      data.ticket || {};
+
+    const isEntry =
+      action === "ENTRY";
+
+    showOperation(
+      isEntry
+        ? "✓ ENTRADA REGISTADA — " +
+          (ticket.fullName || "")
+        : "✓ SAÍDA REGISTADA — " +
+          (ticket.fullName || ""),
+      "success"
+    );
+
+    // Atualiza imediatamente o cartão.
+    if (ticket.presenceStatus) {
+
+      state.currentTicket = {
+        ...state.currentTicket,
+        ...ticket
+      };
+
+      const presence =
+        String(
+          ticket.presenceStatus
+        ).toUpperCase();
+
+      const presenceBox =
+        document.getElementById(
+          "presenceBox"
+        );
+
+      if (presence === "INSIDE") {
+
+        presenceBox.textContent =
+          "● DENTRO DO EVENTO";
+
+        presenceBox.className =
+          "presence inside";
+
+      } else {
+
+        presenceBox.textContent =
+          "● FORA DO EVENTO";
+
+        presenceBox.className =
+          "presence outside";
+      }
+    }
+
+    /*
+     * Após registrar, aguardamos um instante
+     * para a equipe visualizar a confirmação
+     * e voltamos automaticamente ao scanner.
+     */
+    setCameraStatus(
+      isEntry
+        ? "ENTRADA CONFIRMADA"
+        : "SAÍDA CONFIRMADA"
+    );
+
+    setTimeout(() => {
+
+      resetForNextScan();
+
+    }, 900);
+
+  } catch (error) {
+
+    console.error(
+      "CHECK-IN ACTION ERROR:",
+      error
+    );
+
+    showOperation(
+      error.message ||
+      "Não foi possível registrar a operação.",
+      "error"
+    );
+
+    state.processing = false;
+
+    nextButton.disabled = false;
+
+    setCameraStatus(
+      "VERIFIQUE O RESULTADO E TENTE NOVAMENTE"
+    );
+
+    /*
+     * Reconsulta o bilhete depois de um erro.
+     * Isso é importante para evitar uma segunda
+     * operação quando a primeira talvez tenha
+     * chegado ao servidor mas a resposta tenha
+     * falhado.
+     */
+    setTimeout(async () => {
+
+      if (state.currentCode) {
+        await lookupTicket(
+          state.currentCode
+        );
+      }
+
+    }, 1200);
+  }
+}
+
+function resetForNextScan() {
+
+  state.currentCode = null;
+  state.currentTicket = null;
+  state.processing = false;
+
+  resultCard.classList.remove("show");
+
+  entryButton.disabled = true;
+  exitButton.disabled = true;
+  nextButton.disabled = false;
+
+  clearOperation();
+
+  setCameraStatus(
+    "PRONTO PARA O PRÓXIMO QR"
+  );
+
+  setTimeout(() => {
+    startScanner();
+  }, 250);
+}
+
+async function manualLookup() {
+
+  if (state.processing) {
+    return;
+  }
+
+  const input =
+    document
+      .getElementById("manualCode");
+
+  const code =
+    input.value
+      .trim()
+      .toUpperCase();
+
+  if (!code) {
+    showOperation(
+      "Digite o código do bilhete.",
+      "error"
+    );
+    return;
+  }
+
+  await stopScanner();
+
+  state.processing = true;
+
+  await lookupTicket(code);
+
+  input.value = "";
+}
+
+async function logout() {
+
+  await stopScanner();
+
+  try {
+
+    await fetch(
+      "/api/checkin-session",
+      {
+        method: "DELETE",
+        credentials: "include",
+        cache: "no-store"
+      }
+    );
+
+  } catch {}
+
+  state.currentCode = null;
+  state.currentTicket = null;
+
+  checkinScreen.style.display = "none";
+  loginScreen.style.display = "block";
+
+  clearOperation();
+  clearLoginError();
+
+  document
+    .getElementById("accessSecret")
+    .value = "";
+
+  setCameraStatus(
+    "CÂMERA PARADA"
+  );
+}
+
+loginButton.addEventListener(
+  "click",
+  login
+);
+
+document
+  .getElementById("accessSecret")
+  .addEventListener(
+    "keydown",
+    event => {
+      if (event.key === "Enter") {
+        login();
+      }
+    }
+  );
+
+startScannerButton.addEventListener(
+  "click",
+  startScanner
+);
+
+stopScannerButton.addEventListener(
+  "click",
+  stopScanner
+);
+
+entryButton.addEventListener(
+  "click",
+  () => performAction("ENTRY")
+);
+
+exitButton.addEventListener(
+  "click",
+  () => performAction("EXIT")
+);
+
+nextButton.addEventListener(
+  "click",
+  resetForNextScan
+);
+
+document
+  .getElementById("manualButton")
+  .addEventListener(
+    "click",
+    manualLookup
+  );
+
+document
+  .getElementById("manualCode")
+  .addEventListener(
+    "keydown",
+    event => {
+      if (event.key === "Enter") {
+        manualLookup();
+      }
+    }
+  );
+
+document
+  .getElementById("logoutButton")
+  .addEventListener(
+    "click",
+    logout
+  );
+
+window.addEventListener(
+  "beforeunload",
+  () => {
+    stopScanner();
+  }
+);
+
+// Verificação inicial.
+(async function init() {
+
+  const authenticated =
+    await checkSession();
+
+  if (authenticated) {
+
+    loginScreen.style.display =
+      "none";
+
+    checkinScreen.style.display =
+      "block";
+
+    await startScanner();
+
+  } else {
+
+    loginScreen.style.display =
+      "block";
+
+    checkinScreen.style.display =
+      "none";
+  }
+
+})();
+</script>
+
+</body>
+</html>
