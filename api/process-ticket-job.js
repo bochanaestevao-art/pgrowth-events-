@@ -1,4 +1,5 @@
 const SUPABASE_URL = process.env.SUPABASE_URL;
+
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -152,6 +153,24 @@ async function getOrder(orderReference) {
   }
 
   return result[0];
+}
+
+async function getIndividualTickets(orderReference) {
+  const result =
+    await supabaseRequest(
+      `blackout_order_tickets?order_reference=eq.${encodeURIComponent(
+        orderReference
+      )}&select=id,ticket_number,ticket_code,ticket_status,presence_status,qr_data,pdf_path&order=ticket_number.asc`,
+      {
+        method: "GET",
+      }
+    );
+
+  if (!Array.isArray(result)) {
+    return [];
+  }
+
+  return result;
 }
 
 async function generateTicket(orderReference) {
@@ -331,11 +350,6 @@ export default async function handler(
           order.payment_status || ""
         ).toUpperCase();
 
-      const ticketStatus =
-        String(
-          order.ticket_status || ""
-        ).toUpperCase();
-
       if (paymentStatus !== "PAID") {
         throw new Error(
           "O pedido ainda não está PAID."
@@ -343,12 +357,56 @@ export default async function handler(
       }
 
       /*
-       * Se o bilhete já existe,
-       * não geramos novamente.
+       * IMPORTANTE:
+       *
+       * Não usamos mais:
+       *
+       * ticket_status === "ISSUED" &&
+       * pdf_path
+       *
+       * para considerar o trabalho concluído.
+       *
+       * O pedido pode possuir um PDF antigo de
+       * quando havia apenas um QR por compra.
+       *
+       * Agora a fonte dos bilhetes individuais é:
+       *
+       * public.blackout_order_tickets
+       *
+       * O generate-ticket.js verifica a quantidade
+       * comprada e cria os bilhetes que estiverem
+       * faltando.
        */
+
+      const existingTickets =
+        await getIndividualTickets(
+          orderReference
+        );
+
+      const quantity =
+        Math.max(
+          1,
+          Math.min(
+            10,
+            Number(order.quantity || 1)
+          )
+        );
+
+      /*
+       * Se já existem todos os bilhetes individuais
+       * e todos possuem código, podemos considerar
+       * o trabalho concluído.
+       */
+      const completeIndividualTickets =
+        existingTickets.filter(
+          (ticket) =>
+            ticket &&
+            ticket.ticket_code
+        );
+
       if (
-        ticketStatus === "ISSUED" &&
-        order.pdf_path
+        completeIndividualTickets.length >=
+        quantity
       ) {
         await completeJob(
           job.id
@@ -358,14 +416,46 @@ export default async function handler(
           success: true,
           completed: true,
           alreadyIssued: true,
+          individualTickets: true,
+          ticketCount:
+            completeIndividualTickets.length,
+          quantity,
           orderReference,
         });
       }
 
+      /*
+       * Ainda faltam bilhetes individuais.
+       * Chamamos o gerador novo.
+       */
       const ticket =
         await generateTicket(
           orderReference
         );
+
+      /*
+       * Depois da geração, confirmamos que os
+       * registros individuais realmente existem.
+       */
+      const generatedTickets =
+        await getIndividualTickets(
+          orderReference
+        );
+
+      const generatedCount =
+        generatedTickets.filter(
+          (item) =>
+            item &&
+            item.ticket_code
+        ).length;
+
+      if (
+        generatedCount < quantity
+      ) {
+        throw new Error(
+          `Geração incompleta: esperado ${quantity} bilhete(s), mas foram encontrados ${generatedCount}.`
+        );
+      }
 
       await completeJob(
         job.id
@@ -375,6 +465,9 @@ export default async function handler(
         success: true,
         completed: true,
         orderReference,
+        quantity,
+        ticketCount:
+          generatedCount,
         ticket,
       });
 

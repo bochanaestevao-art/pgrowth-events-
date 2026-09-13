@@ -3,7 +3,6 @@ import PDFDocument from "pdfkit";
 import QRCode from "qrcode";
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
-
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -16,20 +15,11 @@ const TICKET_GENERATION_SECRET =
 
 function sendJson(res, status, data) {
   res.status(status);
-  res.setHeader(
-    "Content-Type",
-    "application/json"
-  );
-
-  return res.end(
-    JSON.stringify(data)
-  );
+  res.setHeader("Content-Type", "application/json");
+  return res.end(JSON.stringify(data));
 }
 
-async function supabaseRequest(
-  path,
-  options = {}
-) {
+async function supabaseRequest(path, options = {}) {
   if (
     !SUPABASE_URL ||
     !SUPABASE_SERVICE_ROLE_KEY
@@ -39,51 +29,40 @@ async function supabaseRequest(
     );
   }
 
-  const response =
-    await fetch(
-      `${SUPABASE_URL}/rest/v1/${path}`,
-      {
-        ...options,
-        headers: {
-          apikey:
-            SUPABASE_SERVICE_ROLE_KEY,
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/${path}`,
+    {
+      ...options,
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization:
+          `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      },
+    }
+  );
 
-          Authorization:
-            `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-
-          "Content-Type":
-            "application/json",
-
-          ...(options.headers || {}),
-        },
-      }
-    );
-
-  const text =
-    await response.text();
+  const text = await response.text();
 
   let data = null;
 
   if (text) {
     try {
-      data =
-        JSON.parse(text);
+      data = JSON.parse(text);
     } catch {
       data = text;
     }
   }
 
   if (!response.ok) {
-    const error =
-      new Error(
-        data?.message ||
-          data?.hint ||
-          "Erro ao comunicar com o Supabase."
-      );
+    const error = new Error(
+      data?.message ||
+        data?.hint ||
+        "Erro ao comunicar com o Supabase."
+    );
 
-    error.status =
-      response.status;
-
+    error.status = response.status;
     error.data = data;
 
     throw error;
@@ -93,78 +72,62 @@ async function supabaseRequest(
 }
 
 function generateTicketCode() {
-  const random =
-    crypto
-      .randomBytes(10)
-      .toString("hex")
-      .toUpperCase();
+  const random = crypto
+    .randomBytes(10)
+    .toString("hex")
+    .toUpperCase();
 
   return `BLACKOUT-2026-${random}`;
 }
 
 function createPdf({
-  ticket,
-  qrBuffer,
+  tickets,
+  qrBuffers,
 }) {
-  return new Promise(
-    (resolve, reject) => {
-      const doc =
-        new PDFDocument({
-          size: "A5",
-          margin: 36,
-          info: {
-            Title:
-              "BLACK OUT — AMAPIANO EDITION",
-            Author:
-              "BLACK OUT",
-            Subject:
-              "Bilhete de entrada",
-          },
-        });
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({
+      size: "A5",
+      margin: 36,
+      info: {
+        Title:
+          "BLACK OUT — AMAPIANO EDITION",
+        Author: "BLACK OUT",
+        Subject:
+          "Bilhetes de entrada",
+      },
+    });
 
-      const chunks = [];
+    const chunks = [];
 
-      doc.on(
-        "data",
-        (chunk) => {
-          chunks.push(chunk);
-        }
-      );
+    doc.on("data", (chunk) => {
+      chunks.push(chunk);
+    });
 
-      doc.on(
-        "end",
-        () => {
-          resolve(
-            Buffer.concat(chunks)
-          );
-        }
-      );
+    doc.on("end", () => {
+      resolve(Buffer.concat(chunks));
+    });
 
-      doc.on(
-        "error",
-        reject
-      );
+    doc.on("error", reject);
+
+    tickets.forEach((ticket, index) => {
+      if (index > 0) {
+        doc.addPage();
+      }
 
       doc
         .fontSize(26)
         .font("Helvetica-Bold")
-        .text(
-          "BLACK OUT",
-          {
-            align: "center",
-          }
-        );
+        .text("BLACK OUT", {
+          align: "center",
+        });
 
       doc
         .moveDown(0.3)
         .fontSize(14)
         .font("Helvetica")
-        .text(
-          "AMAPIANO EDITION",
-          {
-            align: "center",
-          }
-        );
+        .text("AMAPIANO EDITION", {
+          align: "center",
+        });
 
       doc.moveDown();
 
@@ -178,37 +141,52 @@ function createPdf({
       doc
         .fontSize(11)
         .font("Helvetica-Bold")
-        .text(
-          "DETALHES DO BILHETE"
-        );
+        .text("DETALHES DO BILHETE");
 
       doc.moveDown(0.5);
 
       doc
         .font("Helvetica")
-        .fontSize(10)
-        .text(
-          `Nome: ${ticket.full_name || "-"}`
-        );
+        .fontSize(10);
 
       doc.text(
-        `Bilhete: ${ticket.ticket_type || "-"}`
+        `Nome: ${ticket.full_name || "-"}`
       );
 
       doc.text(
-        `Lote: ${ticket.ticket_lot || "-"}`
+        `Bilhete: ${
+          ticket.ticket_type || "-"
+        }`
       );
 
       doc.text(
-        `Quantidade: ${ticket.quantity || 1}`
+        `Lote: ${
+          ticket.ticket_lot || "-"
+        }`
       );
 
       doc.text(
-        `Valor pago: ${ticket.total_amount || 0} MZN`
+        `Bilhete ${
+          ticket.ticket_number
+        } de ${tickets.length}`
       );
 
       doc.text(
-        `Método: ${ticket.payment_method || "-"}`
+        `Valor deste bilhete: ${
+          ticket.ticket_price || 0
+        } MZN`
+      );
+
+      doc.text(
+        `Total da compra: ${
+          ticket.total_amount || 0
+        } MZN`
+      );
+
+      doc.text(
+        `Método: ${
+          ticket.payment_method || "-"
+        }`
       );
 
       doc.moveDown();
@@ -225,13 +203,10 @@ function createPdf({
 
       doc.moveDown();
 
-      doc.image(
-        qrBuffer,
-        {
-          fit: [190, 190],
-          align: "center",
-        }
-      );
+      doc.image(qrBuffers[index], {
+        fit: [190, 190],
+        align: "center",
+      });
 
       doc.moveDown();
 
@@ -263,8 +238,191 @@ function createPdf({
           align: "center",
         }
       );
+    });
 
-      doc.end();
+    doc.end();
+  });
+}
+
+async function getOrder(
+  orderReference
+) {
+  const orders =
+    await supabaseRequest(
+      `blackout_orders?order_reference=eq.${encodeURIComponent(
+        orderReference
+      )}&limit=1`,
+      {
+        method: "GET",
+      }
+    );
+
+  return Array.isArray(orders) &&
+    orders.length
+    ? orders[0]
+    : null;
+}
+
+async function getIndividualTickets(
+  orderReference
+) {
+  const rows =
+    await supabaseRequest(
+      `blackout_order_tickets?order_reference=eq.${encodeURIComponent(
+        orderReference
+      )}&order=ticket_number.asc`,
+      {
+        method: "GET",
+      }
+    );
+
+  return Array.isArray(rows)
+    ? rows
+    : [];
+}
+
+async function createIndividualTicket(
+  order,
+  ticketNumber
+) {
+  const ticketCode =
+    generateTicketCode();
+
+  const verificationUrl =
+    `${SITE_URL}/api/verify-ticket?code=` +
+    encodeURIComponent(ticketCode);
+
+  const row = {
+    order_reference:
+      order.order_reference,
+
+    ticket_code:
+      ticketCode,
+
+    ticket_number:
+      ticketNumber,
+
+    ticket_type:
+      order.ticket_type,
+
+    ticket_lot:
+      order.ticket_lot,
+
+    ticket_price:
+      Number(order.ticket_price),
+
+    ticket_status:
+      "ISSUED",
+
+    presence_status:
+      "OUTSIDE",
+
+    qr_data:
+      verificationUrl,
+  };
+
+  const inserted =
+    await supabaseRequest(
+      "blackout_order_tickets",
+      {
+        method: "POST",
+
+        headers: {
+          Prefer:
+            "return=representation",
+        },
+
+        body: JSON.stringify(row),
+      }
+    );
+
+  return Array.isArray(inserted)
+    ? inserted[0]
+    : inserted;
+}
+
+async function uploadPdf(
+  pdfBuffer,
+  pdfPath
+) {
+  const objectPath =
+    pdfPath.replace(
+      /^tickets\//,
+      ""
+    );
+
+  const response =
+    await fetch(
+      `${SUPABASE_URL}/storage/v1/object/tickets/${encodeURIComponent(
+        objectPath
+      )}`,
+      {
+        method: "POST",
+
+        headers: {
+          Authorization:
+            `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+
+          apikey:
+            SUPABASE_SERVICE_ROLE_KEY,
+
+          "Content-Type":
+            "application/pdf",
+
+          "x-upsert":
+            "false",
+        },
+
+        body: pdfBuffer,
+      }
+    );
+
+  if (
+    !response.ok &&
+    response.status !== 409
+  ) {
+    const text =
+      await response.text();
+
+    throw new Error(
+      `Erro ao guardar PDF no Storage: ${text}`
+    );
+  }
+}
+
+async function updateOrderTicketSummary(
+  orderReference,
+  firstTicket,
+  pdfPath
+) {
+  await supabaseRequest(
+    `blackout_orders?order_reference=eq.${encodeURIComponent(
+      orderReference
+    )}`,
+    {
+      method: "PATCH",
+
+      headers: {
+        Prefer:
+          "return=minimal",
+      },
+
+      body: JSON.stringify({
+        ticket_code:
+          firstTicket.ticket_code,
+
+        ticket_status:
+          "ISSUED",
+
+        qr_data:
+          firstTicket.qr_data,
+
+        pdf_path:
+          pdfPath,
+
+        paid_at:
+          new Date().toISOString(),
+      }),
     }
   );
 }
@@ -328,29 +486,18 @@ export default async function handler(
       });
     }
 
-    const orders =
-      await supabaseRequest(
-        `blackout_orders?order_reference=eq.${encodeURIComponent(
-          orderReference
-        )}&limit=1`,
-        {
-          method: "GET",
-        }
+    const order =
+      await getOrder(
+        orderReference
       );
 
-    if (
-      !Array.isArray(orders) ||
-      orders.length === 0
-    ) {
+    if (!order) {
       return sendJson(res, 404, {
         success: false,
         message:
           "Pedido não encontrado.",
       });
     }
-
-    const order =
-      orders[0];
 
     const paymentStatus =
       String(
@@ -368,190 +515,138 @@ export default async function handler(
       });
     }
 
-    /*
-     * IDEMPOTÊNCIA:
-     * se já existe bilhete completo,
-     * simplesmente devolvemos o existente.
-     */
-    if (
-      order.ticket_code &&
-      order.pdf_path
-    ) {
-      return sendJson(res, 200, {
-        success: true,
-        alreadyGenerated: true,
-        ticketCode:
-          order.ticket_code,
-        pdfPath:
-          order.pdf_path,
-        qrData:
-          order.qr_data || null,
-      });
-    }
+    const quantity = Math.max(
+      1,
+      Math.min(
+        10,
+        Number(order.quantity) || 1
+      )
+    );
 
-    let ticketCode =
-      order.ticket_code;
-
-    if (!ticketCode) {
-      ticketCode =
-        generateTicketCode();
-    }
-
-    const verificationUrl =
-      `${SITE_URL}/api/verify-ticket?code=${encodeURIComponent(
-        ticketCode
-      )}`;
-
-    const qrBuffer =
-      await QRCode.toBuffer(
-        verificationUrl,
-        {
-          type: "png",
-          width: 600,
-          margin: 2,
-          errorCorrectionLevel: "H",
-        }
+    let tickets =
+      await getIndividualTickets(
+        orderReference
       );
+
+    for (
+      let number =
+        tickets.length + 1;
+      number <= quantity;
+      number++
+    ) {
+      const created =
+        await createIndividualTicket(
+          order,
+          number
+        );
+
+      tickets.push(created);
+    }
+
+    tickets = tickets
+      .sort(
+        (a, b) =>
+          Number(
+            a.ticket_number
+          ) -
+          Number(
+            b.ticket_number
+          )
+      )
+      .slice(0, quantity);
+
+    if (
+      tickets.length !==
+      quantity
+    ) {
+      throw new Error(
+        "Não foi possível criar todos os bilhetes individuais."
+      );
+    }
+
+    const qrBuffers = [];
+
+    for (
+      const ticket of tickets
+    ) {
+      qrBuffers.push(
+        await QRCode.toBuffer(
+          ticket.qr_data,
+          {
+            type: "png",
+            width: 600,
+            margin: 2,
+            errorCorrectionLevel:
+              "H",
+          }
+        )
+      );
+    }
+
+    const pdfPath =
+      `tickets/${tickets[0].ticket_code}.pdf`;
 
     const pdfBuffer =
       await createPdf({
-        ticket: {
-          ...order,
-          ticket_code:
-            ticketCode,
-        },
-        qrBuffer,
+        tickets:
+          tickets.map(
+            (ticket) => ({
+              ...order,
+              ...ticket,
+
+              total_amount:
+                order.total_amount,
+
+              payment_method:
+                order.payment_method,
+            })
+          ),
+
+        qrBuffers,
       });
 
-    const pdfPath =
-      `tickets/${ticketCode}.pdf`;
+    await uploadPdf(
+      pdfBuffer,
+      pdfPath
+    );
 
-    const uploadResponse =
-      await fetch(
-        `${SUPABASE_URL}/storage/v1/object/tickets/${ticketCode}.pdf`,
-        {
-          method: "POST",
-          headers: {
-            Authorization:
-              `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-
-            apikey:
-              SUPABASE_SERVICE_ROLE_KEY,
-
-            "Content-Type":
-              "application/pdf",
-
-            "x-upsert":
-              "false",
-          },
-          body: pdfBuffer,
-        }
-      );
-
-    if (!uploadResponse.ok) {
-      const errorText =
-        await uploadResponse.text();
-
-      /*
-       * 409 significa que outro processo
-       * já criou o mesmo PDF.
-       */
-      if (
-        uploadResponse.status !== 409
-      ) {
-        throw new Error(
-          `Erro ao guardar PDF no Storage: ${errorText}`
-        );
-      }
-    }
-
-    /*
-     * Só o processo que encontrar ticket_code vazio
-     * pode gravar a emissão.
-     */
-    const updated =
-      await supabaseRequest(
-        `blackout_orders?order_reference=eq.${encodeURIComponent(
-          orderReference
-        )}&ticket_code=is.null`,
-        {
-          method: "PATCH",
-          headers: {
-            Prefer:
-              "return=representation",
-          },
-          body: JSON.stringify({
-            ticket_code:
-              ticketCode,
-
-            ticket_status:
-              "ISSUED",
-
-            qr_data:
-              verificationUrl,
-
-            pdf_path:
-              pdfPath,
-
-            paid_at:
-              order.paid_at ||
-              new Date().toISOString(),
-          }),
-        }
-      );
-
-    if (
-      !Array.isArray(updated) ||
-      updated.length === 0
-    ) {
-      /*
-       * Outro webhook em paralelo ganhou a corrida.
-       * Recuperamos o bilhete verdadeiro.
-       */
-      const existing =
-        await supabaseRequest(
-          `blackout_orders?order_reference=eq.${encodeURIComponent(
-            orderReference
-          )}&limit=1`,
-          {
-            method: "GET",
-          }
-        );
-
-      const existingOrder =
-        existing?.[0];
-
-      if (
-        existingOrder?.ticket_code &&
-        existingOrder?.pdf_path
-      ) {
-        return sendJson(res, 200, {
-          success: true,
-          alreadyGenerated: true,
-          ticketCode:
-            existingOrder.ticket_code,
-          pdfPath:
-            existingOrder.pdf_path,
-          qrData:
-            existingOrder.qr_data ||
-            null,
-        });
-      }
-
-      throw new Error(
-        "Não foi possível registrar o bilhete no pedido."
-      );
-    }
+    await updateOrderTicketSummary(
+      orderReference,
+      tickets[0],
+      pdfPath
+    );
 
     return sendJson(res, 200, {
       success: true,
-      alreadyGenerated: false,
-      ticketCode,
+
+      alreadyGenerated:
+        Boolean(
+          order.pdf_path
+        ),
+
+      orderReference,
+
+      quantity,
+
+      ticketCode:
+        tickets[0].ticket_code,
+
+      ticketCodes:
+        tickets.map(
+          (ticket) =>
+            ticket.ticket_code
+        ),
+
       pdfPath,
+
       qrData:
-        verificationUrl,
+        tickets.map(
+          (ticket) =>
+            ticket.qr_data
+        ),
+
       message:
-        "Bilhete gerado com sucesso.",
+        "Bilhetes gerados com sucesso.",
     });
   } catch (error) {
     console.error(
@@ -561,8 +656,10 @@ export default async function handler(
 
     return sendJson(res, 500, {
       success: false,
+
       message:
-        "Não foi possível gerar o bilhete.",
+        error?.message ||
+        "Não foi possível gerar os bilhetes.",
     });
   }
 }

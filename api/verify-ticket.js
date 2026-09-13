@@ -1,5 +1,3 @@
-import crypto from "node:crypto";
-
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -7,17 +5,7 @@ const SUPABASE_SERVICE_ROLE_KEY =
 function sendJson(res, status, data) {
   res.status(status);
   res.setHeader("Content-Type", "application/json");
-
   return res.end(JSON.stringify(data));
-}
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
 }
 
 async function supabaseRequest(path) {
@@ -69,6 +57,15 @@ async function supabaseRequest(path) {
   return data;
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function renderPage({
   valid,
   title,
@@ -91,11 +88,20 @@ function renderPage({
   const lot =
     ticket?.ticket_lot || "";
 
+  const ticketNumber =
+    ticket?.ticket_number || "";
+
   const quantity =
     ticket?.quantity || "";
 
   const paymentStatus =
     ticket?.payment_status || "";
+
+  const ticketStatus =
+    ticket?.ticket_status || "";
+
+  const presenceStatus =
+    ticket?.presence_status || "";
 
   const statusClass = valid
     ? "valid"
@@ -105,6 +111,7 @@ function renderPage({
 <html lang="pt">
 <head>
   <meta charset="utf-8">
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1"
@@ -158,6 +165,7 @@ function renderPage({
       text-align: center;
       margin-bottom: 24px;
       color: #555;
+      line-height: 1.5;
     }
 
     .row {
@@ -198,6 +206,7 @@ function renderPage({
 </head>
 
 <body>
+
   <main class="card">
 
     <div class="status ${statusClass}">
@@ -211,45 +220,62 @@ function renderPage({
     ${
       valid
         ? `
-          <div class="row">
-            <span class="label">Nome</span>
-            <span class="value">
-              ${escapeHtml(name)}
-            </span>
-          </div>
+    <div class="row">
+      <span class="label">Nome</span>
+      <span class="value">
+        ${escapeHtml(name)}
+      </span>
+    </div>
 
-          <div class="row">
-            <span class="label">Bilhete</span>
-            <span class="value">
-              ${escapeHtml(type)}
-            </span>
-          </div>
+    <div class="row">
+      <span class="label">Bilhete</span>
+      <span class="value">
+        ${escapeHtml(type)}
+      </span>
+    </div>
 
-          <div class="row">
-            <span class="label">Lote</span>
-            <span class="value">
-              ${escapeHtml(lot)}
-            </span>
-          </div>
+    <div class="row">
+      <span class="label">Lote</span>
+      <span class="value">
+        ${escapeHtml(lot)}
+      </span>
+    </div>
 
-          <div class="row">
-            <span class="label">Quantidade</span>
-            <span class="value">
-              ${escapeHtml(quantity)}
-            </span>
-          </div>
+    <div class="row">
+      <span class="label">Bilhete</span>
+      <span class="value">
+        ${escapeHtml(ticketNumber)}
+        ${quantity
+          ? ` de ${escapeHtml(quantity)}`
+          : ""}
+      </span>
+    </div>
 
-          <div class="row">
-            <span class="label">Pagamento</span>
-            <span class="value">
-              ${escapeHtml(paymentStatus)}
-            </span>
-          </div>
+    <div class="row">
+      <span class="label">Pagamento</span>
+      <span class="value">
+        ${escapeHtml(paymentStatus)}
+      </span>
+    </div>
 
-          <div class="code">
-            ${escapeHtml(ticketCode)}
-          </div>
-        `
+    <div class="row">
+      <span class="label">Estado</span>
+      <span class="value">
+        ${escapeHtml(ticketStatus)}
+      </span>
+    </div>
+
+    <div class="row">
+      <span class="label">Presença</span>
+      <span class="value">
+        ${escapeHtml(presenceStatus)}
+      </span>
+    </div>
+
+    <div class="code">
+      ${escapeHtml(ticketCode)}
+    </div>
+    `
         : ""
     }
 
@@ -258,6 +284,7 @@ function renderPage({
     </div>
 
   </main>
+
 </body>
 </html>`;
 }
@@ -269,7 +296,8 @@ export default async function handler(
   if (req.method !== "GET") {
     return sendJson(res, 405, {
       success: false,
-      message: "Método não permitido.",
+      message:
+        "Método não permitido.",
     });
   }
 
@@ -284,6 +312,7 @@ export default async function handler(
 
     if (!ticketCode) {
       res.status(400);
+
       res.setHeader(
         "Content-Type",
         "text/html; charset=utf-8"
@@ -299,18 +328,31 @@ export default async function handler(
       );
     }
 
-    const rows =
+    /*
+     * O QR agora pertence à tabela
+     * blackout_order_tickets.
+     *
+     * Cada bilhete comprado possui:
+     * - ticket_code próprio
+     * - ticket_number próprio
+     * - qr_data próprio
+     * - ticket_status próprio
+     * - presence_status próprio
+     */
+
+    const ticketRows =
       await supabaseRequest(
-        `blackout_orders?ticket_code=eq.${encodeURIComponent(
+        `blackout_order_tickets?ticket_code=eq.${encodeURIComponent(
           ticketCode
         )}&limit=1`
       );
 
     if (
-      !Array.isArray(rows) ||
-      rows.length === 0
+      !Array.isArray(ticketRows) ||
+      ticketRows.length === 0
     ) {
       res.status(404);
+
       res.setHeader(
         "Content-Type",
         "text/html; charset=utf-8"
@@ -326,32 +368,28 @@ export default async function handler(
       );
     }
 
-    const ticket =
-      rows[0];
-
-    const paymentStatus =
-      String(
-        ticket.payment_status || ""
-      ).toUpperCase();
-
-    const ticketStatus =
-      String(
-        ticket.ticket_status || ""
-      ).toUpperCase();
+    const individualTicket =
+      ticketRows[0];
 
     /*
-     * O bilhete só é válido quando:
-     *
-     * 1. pagamento = PAID
-     * 2. bilhete = ISSUED
+     * Procuramos também o pedido principal
+     * para confirmar o pagamento e obter
+     * nome/quantidade/método/etc.
      */
 
-    const valid =
-      paymentStatus === "PAID" &&
-      ticketStatus === "ISSUED";
+    const orderRows =
+      await supabaseRequest(
+        `blackout_orders?order_reference=eq.${encodeURIComponent(
+          individualTicket.order_reference
+        )}&limit=1`
+      );
 
-    if (!valid) {
-      res.status(409);
+    if (
+      !Array.isArray(orderRows) ||
+      orderRows.length === 0
+    ) {
+      res.status(404);
+
       res.setHeader(
         "Content-Type",
         "text/html; charset=utf-8"
@@ -362,13 +400,101 @@ export default async function handler(
           valid: false,
           title: "Bilhete inválido",
           message:
-            "O pagamento deste bilhete não está confirmado ou o bilhete ainda não foi emitido.",
+            "O pedido associado a este bilhete não foi encontrado.",
+          ticket: individualTicket,
+        })
+      );
+    }
+
+    const order =
+      orderRows[0];
+
+    const paymentStatus =
+      String(
+        order.payment_status || ""
+      ).toUpperCase();
+
+    const ticketStatus =
+      String(
+        individualTicket.ticket_status ||
+          ""
+      ).toUpperCase();
+
+    /*
+     * O QR é válido para consulta quando:
+     *
+     * 1. O pagamento está PAID
+     * 2. O bilhete individual está ISSUED
+     *
+     * A consulta do QR NÃO altera o estado.
+     */
+
+    const valid =
+      paymentStatus === "PAID" &&
+      ticketStatus === "ISSUED";
+
+    const ticket = {
+      ...individualTicket,
+
+      full_name:
+        order.full_name,
+
+      quantity:
+        order.quantity,
+
+      payment_status:
+        order.payment_status,
+
+      payment_method:
+        order.payment_method,
+
+      total_amount:
+        order.total_amount,
+
+      order_reference:
+        order.order_reference,
+    };
+
+    if (!valid) {
+      res.status(409);
+
+      res.setHeader(
+        "Content-Type",
+        "text/html; charset=utf-8"
+      );
+
+      let message =
+        "O pagamento deste bilhete não está confirmado ou o bilhete ainda não foi emitido.";
+
+      if (
+        paymentStatus !== "PAID"
+      ) {
+        message =
+          "O pagamento deste bilhete não está confirmado.";
+      } else if (
+        ticketStatus === "USED"
+      ) {
+        message =
+          "Este bilhete já foi utilizado na entrada.";
+      } else if (
+        ticketStatus === "CANCELLED"
+      ) {
+        message =
+          "Este bilhete foi cancelado.";
+      }
+
+      return res.end(
+        renderPage({
+          valid: false,
+          title: "Bilhete inválido",
+          message,
           ticket,
         })
       );
     }
 
     res.status(200);
+
     res.setHeader(
       "Content-Type",
       "text/html; charset=utf-8"
