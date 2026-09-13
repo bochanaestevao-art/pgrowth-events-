@@ -857,13 +857,13 @@ async function checkSession() {
 async function login() {
   clearLoginError();
 
-  const secret =
+  const pin =
     document
       .getElementById("accessSecret")
       .value
       .trim();
 
-  if (!secret) {
+  if (!pin) {
     showLoginError(
       "Introduza o código de acesso."
     );
@@ -874,17 +874,15 @@ async function login() {
   loginButton.textContent = "A VALIDAR...";
 
   try {
-
     const response =
       await fetch("/api/checkin-session", {
         method: "POST",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json",
-          "x-checkin-secret": secret
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          secret
+          pin
         })
       });
 
@@ -894,9 +892,9 @@ async function login() {
       data = await response.json();
     } catch {}
 
-    if (!response.ok || !data || !data.success) {
+    if (!response.ok || !data || !data.authenticated) {
       throw new Error(
-        data?.message ||
+        data?.error ||
         "Código de acesso inválido."
       );
     }
@@ -905,23 +903,18 @@ async function login() {
       .getElementById("accessSecret")
       .value = "";
 
-    loginScreen.style.display = "none";
-    checkinScreen.style.display = "block";
+    clearLoginError();
 
-    await startScanner();
+    await showScannerScreen();
 
   } catch (error) {
-
     showLoginError(
-      error.message ||
-      "Não foi possível iniciar o check-in."
+      error?.message ||
+      "Não foi possível iniciar a sessão."
     );
-
   } finally {
-
     loginButton.disabled = false;
-    loginButton.textContent =
-      "ENTRAR NO CHECK-IN";
+    loginButton.textContent = "ENTRAR";
   }
 }
 
