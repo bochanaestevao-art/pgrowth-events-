@@ -110,17 +110,37 @@ function normalizeLot(value) {
     .replace(/\s+/g, " ");
 }
 
-function getOfficialTicket(type, lot) {
+async function getOfficialTicket(type, lot) {
   const normalizedType = normalizeTicketType(type);
   const normalizedLot = normalizeLot(lot);
 
-  return (
-    TICKETS.find(
-      (ticket) =>
-        ticket.type === normalizedType &&
-        ticket.lot === normalizedLot
-    ) || null
-  );
+  const path =
+    `blackout_tickets` +
+    `?ticket_type=eq.${encodeURIComponent(normalizedType)}` +
+    `&ticket_lot=eq.${encodeURIComponent(normalizedLot)}` +
+    `&status=eq.ACTIVE` +
+    `&select=id,ticket_type,ticket_lot,price,starts_at,ends_at,status` +
+    `&limit=1`;
+
+  const data = await supabaseRequest(path, {
+    method: "GET",
+  });
+
+  if (!Array.isArray(data) || data.length === 0) {
+    return null;
+  }
+
+  const ticket = data[0];
+
+  return {
+    id: ticket.id,
+    type: normalizeTicketType(ticket.ticket_type),
+    lot: normalizeLot(ticket.ticket_lot),
+    price: Number(ticket.price),
+    start: ticket.starts_at,
+    end: ticket.ends_at,
+    status: ticket.status,
+  };
 }
 
 function isTicketAvailable(ticket) {
@@ -453,7 +473,7 @@ async function main(req, res) {
      * ========================================================
      */
 
-    const officialTicket = getOfficialTicket(type, lot);
+    const officialTicket = await getOfficialTicket(type, lot);
 
     if (!officialTicket) {
       return sendJson(res, 400, {
