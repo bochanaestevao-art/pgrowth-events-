@@ -460,7 +460,48 @@
       min-width:110px;
       margin-top:0;
     }
+.search-result-card{
+  margin-top:10px;
+  padding:12px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:12px;
+  background:rgba(255,255,255,.04);
+}
 
+.search-result-name{
+  font-weight:700;
+  font-size:15px;
+  margin-bottom:5px;
+}
+
+.search-result-info{
+  font-size:13px;
+  line-height:1.5;
+  opacity:.9;
+}
+
+.search-presence{
+  margin-top:8px;
+  margin-bottom:9px;
+  padding:7px 9px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.search-presence-inside{
+  background:rgba(255,180,0,.12);
+}
+
+.search-presence-outside{
+  background:rgba(0,180,90,.12);
+}
+
+.search-select-buyer,
+.search-select-ticket{
+  width:100%;
+  margin-top:10px;
+}
     .logout{
       margin-top:18px;
     }
@@ -740,6 +781,54 @@
           </button>
 
         </div>
+
+      </div>
+
+      <!-- PESQUISA DE COMPRADOR -->
+
+      <div class="manual" id="buyerSearchBox">
+
+        <div
+          class="subtitle"
+          style="margin-bottom:7px"
+        >
+          Se o QR Code e o código do bilhete não estiverem disponíveis,
+          pesquise o comprador pelo nome ou telefone:
+        </div>
+
+        <div class="manual-row">
+
+          <input
+            id="buyerSearch"
+            type="text"
+            autocomplete="off"
+            placeholder="Nome ou telefone"
+          >
+
+          <button
+            class="button secondary"
+            id="buyerSearchButton"
+            type="button"
+          >
+            PESQUISAR
+          </button>
+
+        </div>
+
+        <div
+          class="message"
+          id="buyerSearchMessage"
+        ></div>
+
+        <div
+          id="buyerSearchResults"
+          style="display:none;margin-top:12px"
+        ></div>
+
+        <div
+          id="buyerTicketResults"
+          style="display:none;margin-top:12px"
+        ></div>
 
       </div>
 
@@ -1533,7 +1622,622 @@ async function manualLookup() {
 
   input.value = "";
 }
+/* ============================================================
+ * PESQUISA DE COMPRADOR POR NOME OU TELEFONE
+ * ============================================================
+ */
 
+const buyerSearchInput =
+  document.getElementById("buyerSearch");
+
+const buyerSearchButton =
+  document.getElementById("buyerSearchButton");
+
+const buyerSearchMessage =
+  document.getElementById("buyerSearchMessage");
+
+const buyerSearchResults =
+  document.getElementById("buyerSearchResults");
+
+const buyerTicketResults =
+  document.getElementById("buyerTicketResults");
+
+state.searchResults = [];
+state.selectedSearchBuyer = null;
+
+function clearBuyerSearch() {
+
+  buyerSearchMessage.textContent = "";
+  buyerSearchMessage.className = "message";
+
+  buyerSearchResults.innerHTML = "";
+  buyerSearchResults.style.display = "none";
+
+  buyerTicketResults.innerHTML = "";
+  buyerTicketResults.style.display = "none";
+
+  state.searchResults = [];
+  state.selectedSearchBuyer = null;
+}
+
+function showBuyerSearchMessage(
+  message,
+  type = ""
+) {
+
+  buyerSearchMessage.textContent = message;
+  buyerSearchMessage.className =
+    "message" + (type ? " " + type : "");
+}
+
+function escapeHtml(value) {
+
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function renderBuyerResults(results) {
+
+  buyerSearchResults.innerHTML = "";
+  buyerTicketResults.innerHTML = "";
+
+  buyerTicketResults.style.display = "none";
+
+  if (!results.length) {
+
+    buyerSearchResults.innerHTML = `
+      <div class="message error">
+        Nenhum comprador pago foi encontrado.
+      </div>
+    `;
+
+    buyerSearchResults.style.display = "block";
+
+    return;
+  }
+
+  const title = document.createElement("div");
+
+  title.className = "subtitle";
+
+  title.style.marginBottom = "8px";
+
+  title.textContent =
+    results.length === 1
+      ? "COMPRADOR ENCONTRADO"
+      : `${results.length} COMPRADORES ENCONTRADOS`;
+
+  buyerSearchResults.appendChild(title);
+
+  results.forEach((result, index) => {
+
+    const buyer = result.buyer || {};
+    const purchase = result.purchase || {};
+
+    const card =
+      document.createElement("div");
+
+    card.className = "search-result-card";
+
+    card.innerHTML = `
+      <div class="search-result-name">
+        ${escapeHtml(
+          buyer.fullName || "Sem nome"
+        )}
+      </div>
+
+      <div class="search-result-info">
+        📱 ${escapeHtml(
+          buyer.phone || "Sem telefone"
+        )}
+      </div>
+
+      <div class="search-result-info">
+        Bairro: ${escapeHtml(
+          buyer.bairro || "—"
+        )}
+      </div>
+
+      <div class="search-result-info">
+        ${escapeHtml(
+          purchase.ticketType || "—"
+        )}
+        •
+        ${escapeHtml(
+          purchase.ticketLot || "—"
+        )}
+        •
+        ${Number(
+          purchase.quantity || 0
+        )} bilhete(s)
+      </div>
+
+      <button
+        class="button secondary search-select-buyer"
+        type="button"
+        data-search-index="${index}"
+      >
+        SELECIONAR COMPRADOR
+      </button>
+    `;
+
+    buyerSearchResults.appendChild(card);
+  });
+
+  buyerSearchResults
+    .querySelectorAll(
+      ".search-select-buyer"
+    )
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const index =
+            Number(
+              button.dataset.searchIndex
+            );
+
+          selectSearchBuyer(index);
+        }
+      );
+    });
+
+  buyerSearchResults.style.display = "block";
+}
+
+function selectSearchBuyer(index) {
+
+  const result =
+    state.searchResults[index];
+
+  if (!result) {
+    return;
+  }
+
+  state.selectedSearchBuyer =
+    result;
+
+  const buyer =
+    result.buyer || {};
+
+  const tickets =
+    Array.isArray(result.tickets)
+      ? result.tickets
+      : [];
+
+  buyerTicketResults.innerHTML = "";
+
+  const title =
+    document.createElement("div");
+
+  title.className = "subtitle";
+
+  title.style.marginBottom = "8px";
+
+  title.textContent =
+    "SELECIONE O BILHETE";
+
+  buyerTicketResults.appendChild(title);
+
+  const buyerInfo =
+    document.createElement("div");
+
+  buyerInfo.className =
+    "message success";
+
+  buyerInfo.textContent =
+    `${buyer.fullName || "Sem nome"} • ` +
+    `${buyer.phone || "Sem telefone"}`;
+
+  buyerTicketResults.appendChild(
+    buyerInfo
+  );
+
+  if (!tickets.length) {
+
+    const empty =
+      document.createElement("div");
+
+    empty.className =
+      "message error";
+
+    empty.style.marginTop = "8px";
+
+    empty.textContent =
+      "Este comprador não possui bilhetes individuais disponíveis.";
+
+    buyerTicketResults.appendChild(
+      empty
+    );
+
+  } else {
+
+    tickets.forEach(
+      (ticket, ticketIndex) => {
+
+        const card =
+          document.createElement("div");
+
+        card.className =
+          "search-result-card";
+
+        const presence =
+          String(
+            ticket.presenceStatus ||
+            "OUTSIDE"
+          ).toUpperCase();
+
+        const nextAction =
+          presence === "INSIDE"
+            ? "SAÍDA"
+            : "ENTRADA";
+
+        const presenceLabel =
+          presence === "INSIDE"
+            ? "DENTRO DO EVENTO"
+            : "FORA DO EVENTO";
+
+        const statusClass =
+          presence === "INSIDE"
+            ? "search-presence-inside"
+            : "search-presence-outside";
+
+        card.innerHTML = `
+          <div class="search-result-name">
+            Bilhete ${
+              Number(
+                ticket.ticketNumber || 0
+              )
+            } de ${
+              Number(
+                result.purchase?.quantity || 0
+              )
+            }
+          </div>
+
+          <div class="search-result-info">
+            Código:
+            ${escapeHtml(
+              ticket.ticketCode || "—"
+            )}
+          </div>
+
+          <div class="search-result-info">
+            ${escapeHtml(
+              ticket.ticketType || "—"
+            )}
+            •
+            ${escapeHtml(
+              ticket.ticketLot || "—"
+            )}
+          </div>
+
+          <div
+            class="search-presence ${statusClass}"
+          >
+            ${presenceLabel}
+            • PRÓXIMA OPERAÇÃO:
+            ${nextAction}
+          </div>
+
+          <button
+            class="button secondary search-select-ticket"
+            type="button"
+            data-ticket-index="${ticketIndex}"
+          >
+            SELECIONAR ESTE BILHETE
+          </button>
+        `;
+
+        buyerTicketResults.appendChild(
+          card
+        );
+      }
+    );
+
+    buyerTicketResults
+      .querySelectorAll(
+        ".search-select-ticket"
+      )
+      .forEach(button => {
+
+        button.addEventListener(
+          "click",
+          () => {
+
+            const ticketIndex =
+              Number(
+                button.dataset.ticketIndex
+              );
+
+            selectSearchTicket(
+              ticketIndex
+            );
+          }
+        );
+      });
+  }
+
+  buyerTicketResults.style.display =
+    "block";
+
+  buyerTicketResults.scrollIntoView({
+    behavior: "smooth",
+    block: "nearest"
+  });
+}
+
+function selectSearchTicket(
+  ticketIndex
+) {
+
+  const result =
+    state.selectedSearchBuyer;
+
+  if (!result) {
+    return;
+  }
+
+  const tickets =
+    Array.isArray(result.tickets)
+      ? result.tickets
+      : [];
+
+  const ticket =
+    tickets[ticketIndex];
+
+  if (!ticket) {
+    return;
+  }
+
+  state.currentCode =
+    ticket.ticketCode || null;
+
+  state.currentTicket = {
+
+    ticketCode:
+      ticket.ticketCode || "",
+
+    fullName:
+      result.buyer?.fullName || "",
+
+    phone:
+      result.buyer?.phone || "",
+
+    bairro:
+      result.buyer?.bairro || "",
+
+    ticketType:
+      ticket.ticketType ||
+      result.purchase?.ticketType ||
+      "",
+
+    ticketLot:
+      ticket.ticketLot ||
+      result.purchase?.ticketLot ||
+      "",
+
+    ticketPrice:
+      ticket.ticketPrice ??
+      result.purchase?.ticketPrice ??
+      null,
+
+    quantity:
+      Number(
+        result.purchase?.quantity || 1
+      ),
+
+    ticketNumber:
+      Number(
+        ticket.ticketNumber || 0
+      ),
+
+    ticketStatus:
+      ticket.ticketStatus || "",
+
+    presenceStatus:
+      ticket.presenceStatus ||
+      "OUTSIDE",
+
+    paymentStatus:
+      result.purchase?.paymentStatus ||
+      "PAID"
+  };
+
+  resultCard.classList.remove(
+    "show"
+  );
+
+  clearOperation();
+
+  renderTicket({
+
+    success: true,
+
+    validity:
+      ticket.ticketStatus === "ISSUED" ||
+      ticket.ticketStatus === "USED"
+        ? "VALID"
+        : "INVALID",
+
+    ticket:
+      state.currentTicket
+  });
+
+  buyerTicketResults.style.display =
+    "none";
+
+  buyerSearchResults.style.display =
+    "none";
+
+  buyerSearchInput.value = "";
+
+  setCameraStatus(
+    "BILHETE SELECIONADO"
+  );
+
+  showOperation(
+    state.currentTicket.presenceStatus ===
+      "INSIDE"
+      ? "Bilhete selecionado. A próxima operação é SAÍDA."
+      : "Bilhete selecionado. A próxima operação é ENTRADA.",
+    "success"
+  );
+}
+
+async function searchBuyer() {
+
+  if (state.processing) {
+    return;
+  }
+
+  const search =
+    buyerSearchInput.value.trim();
+
+  if (!search) {
+
+    showBuyerSearchMessage(
+      "Introduza o nome ou telefone do comprador.",
+      "error"
+    );
+
+    return;
+  }
+
+  if (search.length < 3) {
+
+    showBuyerSearchMessage(
+      "Introduza pelo menos 3 caracteres.",
+      "error"
+    );
+
+    return;
+  }
+
+  await stopScanner();
+
+  state.processing = true;
+
+  clearBuyerSearch();
+
+  buyerSearchButton.disabled =
+    true;
+
+  buyerSearchButton.textContent =
+    "A PESQUISAR...";
+
+  showBuyerSearchMessage(
+    "A pesquisar compradores pagos..."
+  );
+
+  try {
+
+    const response =
+      await fetch(
+        "/api/checkin-search?search=" +
+          encodeURIComponent(search),
+        {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store"
+        }
+      );
+
+    let data = null;
+
+    try {
+      data = await response.json();
+    } catch {}
+
+    if (response.status === 401) {
+
+      throw new Error(
+        "A sessão da equipe expirou."
+      );
+    }
+
+    if (
+      !response.ok ||
+      !data ||
+      !data.ok
+    ) {
+
+      throw new Error(
+        data?.error ||
+        "Não foi possível pesquisar o comprador."
+      );
+    }
+
+    state.searchResults =
+      Array.isArray(data.results)
+        ? data.results
+        : [];
+
+    showBuyerSearchMessage(
+      state.searchResults.length
+        ? "Compradores encontrados. Selecione um comprador."
+        : (
+            data.message ||
+            "Nenhum comprador encontrado."
+          ),
+      state.searchResults.length
+        ? "success"
+        : "error"
+    );
+
+    renderBuyerResults(
+      state.searchResults
+    );
+
+  } catch (error) {
+
+    console.error(
+      "ERRO AO PESQUISAR COMPRADOR:",
+      error
+    );
+
+    showBuyerSearchMessage(
+      error?.message ||
+      "Não foi possível pesquisar o comprador.",
+      "error"
+    );
+
+  } finally {
+
+    state.processing = false;
+
+    buyerSearchButton.disabled =
+      false;
+
+    buyerSearchButton.textContent =
+      "PESQUISAR";
+
+    setCameraStatus(
+      "PESQUISA DE COMPRADOR"
+    );
+  }
+}
+
+buyerSearchButton.addEventListener(
+  "click",
+  searchBuyer
+);
+
+buyerSearchInput.addEventListener(
+  "keydown",
+  event => {
+
+    if (event.key === "Enter") {
+      searchBuyer();
+    }
+  }
+);
 async function logout() {
 
   await stopScanner();
