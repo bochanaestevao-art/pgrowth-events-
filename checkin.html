@@ -853,7 +853,16 @@ async function checkSession() {
     return false;
   }
 }
+async function showScannerScreen() {
+  loginScreen.style.display = "none";
+  checkinScreen.style.display = "block";
 
+  clearOperation();
+
+  setCameraStatus("PREPARANDO CÂMERA...");
+
+  await startScanner();
+}
 async function login() {
   clearLoginError();
 
