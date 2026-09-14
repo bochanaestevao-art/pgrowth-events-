@@ -56,7 +56,7 @@ function verifySession(token, secret) {
 
   const expected = crypto
     .createHmac("sha256", secret)
-    .update("CHECKIN_SESSION:" + timestamp)
+    .update("checkin:" + timestamp)
     .digest("hex");
 
   return safeEqual(signature, expected);
