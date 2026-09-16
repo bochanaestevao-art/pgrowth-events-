@@ -1225,7 +1225,7 @@ async function startScanner() {
     state.scanning = false;
 
     setCameraStatus(
-      "Não foi possível iniciar a câmera."
+      "ERRO REAL: " + (error?.name || "SEM_NOME") + " — " + (error?.message || error)
     );
 
     showOperation(
