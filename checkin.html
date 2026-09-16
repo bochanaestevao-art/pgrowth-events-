@@ -891,12 +891,21 @@
 const state = {
   scanner: null,
   scanning: false,
+  starting: false,
   processing: false,
   currentCode: null,
   currentTicket: null,
   lastScannedCode: null,
   lastScannedAt: 0
 };
+  scanner: null,
+  scanning: false,
+  starting: false,
+  processing: false,
+  currentCode: null,
+  currentTicket: null,
+  lastScannedCode: null,
+  lastScannedAt: 0
 
 const loginScreen =
   document.getElementById("loginScreen");
@@ -1131,74 +1140,90 @@ async function ensureScanner() {
  */
 async function startScanner() {
 
-  if (
-    state.scanning ||
-    state.processing
-  ) {
+  if (state.scanning || state.processing || state.starting) {
     return;
   }
 
+  state.starting = true;
   clearOperation();
 
   try {
-
-    const authenticated =
-      await checkSession();
+    const authenticated = await checkSession();
 
     if (!authenticated) {
-
+      state.starting = false;
       await stopScanner();
-
-      loginScreen.style.display =
-        "block";
-
-      checkinScreen.style.display =
-        "none";
-
+      loginScreen.style.display = "block";
+      checkinScreen.style.display = "none";
       showLoginError(
         "Sua sessão expirou. Entre novamente."
       );
-
       return;
     }
 
-    const scanner =
-      await ensureScanner();
+    const scanner = await ensureScanner();
 
     setCameraStatus(
-      "Solicitando acesso à câmera..."
+      "PREPARANDO CÂMERA..."
     );
 
-    const qrBox = (
-      viewfinderWidth,
-      viewfinderHeight
-    ) => {
+    let cameras = [];
 
-      const minDimension = Math.min(
-        viewfinderWidth,
-        viewfinderHeight
+    try {
+      cameras = await Html5Qrcode.getCameras();
+    } catch (cameraListError) {
+      console.warn(
+        "Não foi possível listar as câmeras:",
+        cameraListError
+      );
+    }
+
+    if (!Array.isArray(cameras) || cameras.length === 0) {
+      throw new Error(
+        "Nenhuma câmera disponível neste aparelho."
+      );
+    }
+
+    const normalizedCameras = cameras.map((camera, index) => ({
+      id: camera.id,
+      label: String(camera.label || "").toLowerCase(),
+      index
+    }));
+
+    let selectedCamera =
+      normalizedCameras.find(camera =>
+        /back|rear|environment|trás|traseira/.test(camera.label)
       );
 
-      const size = Math.floor(
-        minDimension * 0.75
-      );
+    if (!selectedCamera) {
+      selectedCamera = normalizedCameras.length > 1
+        ? normalizedCameras[normalizedCameras.length - 1]
+        : normalizedCameras[0];
+    }
 
-      return {
-        width: size,
-        height: size
-      };
-    };
+    setCameraStatus(
+      "INICIANDO CÂMERA..."
+    );
 
     await scanner.start(
-      {
-        facingMode: {
-          ideal: "environment"
-        }
-      },
+      selectedCamera.id,
       {
         fps: 10,
-        qrbox: qrBox,
-        aspectRatio: 4 / 3,
+        qrbox: (viewfinderWidth, viewfinderHeight) => {
+          const minDimension = Math.min(
+            viewfinderWidth,
+            viewfinderHeight
+          );
+
+          const size = Math.floor(
+            minDimension * 0.78
+          );
+
+          return {
+            width: size,
+            height: size
+          };
+        },
         disableFlip: true
       },
       onScanSuccess,
@@ -1206,30 +1231,44 @@ async function startScanner() {
     );
 
     state.scanning = true;
-
-    setTimeout(() => {
-      improveCameraFocus(scanner);
-    }, 300);
+    state.starting = false;
 
     setCameraStatus(
-      "CÂMERA ATIVA • APONTE PARA O QR"
+      "CÂMERA ATIVA • APONTE O QR PARA A ÁREA DE LEITURA"
     );
+
+    setTimeout(() => {
+      if (state.scanning) {
+        improveCameraFocus(scanner);
+      }
+    }, 400);
 
   } catch (error) {
 
     console.error(
-      "ERRO AO INICIAR CÂMERA:",
+      "ERRO REAL AO INICIAR CÂMERA:",
       error
     );
 
     state.scanning = false;
+    state.starting = false;
+
+    const errorName =
+      error && error.name
+        ? error.name
+        : "SEM_NOME";
+
+    const errorMessage =
+      error && error.message
+        ? error.message
+        : String(error || "Erro desconhecido");
 
     setCameraStatus(
-      "ERRO REAL: " + (error?.name || "SEM_NOME") + " — " + (error?.message || error)
+      "ERRO: " + errorName + " — " + errorMessage
     );
 
     showOperation(
-      "Permita o acesso à câmera no navegador e tente novamente.",
+      "Não foi possível iniciar a câmera. Verifique a permissão da câmera e tente novamente.",
       "error"
     );
   }
@@ -1237,212 +1276,56 @@ async function startScanner() {
 
 async function improveCameraFocus(scanner) {
 
-  if (
-    !scanner ||
-    typeof scanner.getRunningTrackCapabilities !==
-      "function"
-  ) {
+  if (!scanner) {
+    return;
+  }
+
+  if (typeof scanner.applyVideoConstraints !== "function") {
     return;
   }
 
   try {
+
+    if (typeof scanner.getRunningTrackCapabilities !== "function") {
+      return;
+    }
 
     const capabilities =
       scanner.getRunningTrackCapabilities();
 
     if (!capabilities || !capabilities.focusMode) {
-      console.log(
-        "Controle de foco não disponível."
-      );
       return;
     }
 
-    const focusModes =
-      Array.isArray(capabilities.focusMode)
-        ? capabilities.focusMode
-        : [];
+    const focusModes = Array.isArray(
+      capabilities.focusMode
+    )
+      ? capabilities.focusMode
+      : [];
 
     if (focusModes.includes("continuous")) {
-
       await scanner.applyVideoConstraints({
         advanced: [
-          {
-            focusMode: "continuous"
-          }
+          { focusMode: "continuous" }
         ]
       });
-
-      console.log(
-        "Foco contínuo ativado."
-      );
-
       return;
     }
 
     if (focusModes.includes("single-shot")) {
-
       await scanner.applyVideoConstraints({
         advanced: [
-          {
-            focusMode: "single-shot"
-          }
+          { focusMode: "single-shot" }
         ]
       });
-
-      console.log(
-        "Foco single-shot ativado."
-      );
     }
 
   } catch (error) {
-
     console.warn(
-      "Não foi possível ajustar o foco:",
+      "Foco automático não suportado neste aparelho:",
       error
     );
   }
-}
-
-async function stopScanner() {
-
-  if (!state.scanner) {
-
-    state.scanning =
-      false;
-
-    return;
-  }
-
-  try {
-
-    if (state.scanning) {
-
-      await state.scanner.stop();
-    }
-
-  } catch (error) {
-
-    console.warn(
-      "ERRO AO PARAR SCANNER:",
-      error
-    );
-
-  } finally {
-
-    state.scanning =
-      false;
-
-    setCameraStatus(
-      "CÂMERA PARADA"
-    );
-  }
-}
-
-function onScanFailure() {
-
-  /*
-   * Intencionalmente silencioso.
-   * O scanner tenta continuamente.
-   */
-}
-
-/*
- * IMPORTANTE:
- * O QR dos bilhetes pode conter uma URL como:
- *
- * https://pgrowth-events.vercel.app/
- * api/verify-ticket?code=BLACKOUT-2026-XXXXXXXX
- *
- * Esta função extrai apenas:
- *
- * BLACKOUT-2026-XXXXXXXX
- *
- * antes de enviar para o servidor.
- */
-function extractTicketCode(
-  decodedText
-) {
-
-  const raw =
-    String(
-      decodedText || ""
-    ).trim();
-
-  if (!raw) {
-    return "";
-  }
-
-  /*
-   * 1. QR contém uma URL completa.
-   */
-  try {
-
-    const url =
-      new URL(raw);
-
-    const urlCode =
-      url.searchParams.get(
-        "code"
-      );
-
-    if (urlCode) {
-
-      return String(urlCode)
-        .trim()
-        .toUpperCase();
-    }
-
-  } catch {
-
-    /*
-     * Não é uma URL completa.
-     * Continuamos tentando outras formas.
-     */
-  }
-
-  /*
-   * 2. Caso contenha code= mesmo
-   * sem ser uma URL válida.
-   */
-  const matchFromParameter =
-    raw.match(
-      /(?:^|[?&])code=([^&#\s]+)/i
-    );
-
-  if (matchFromParameter) {
-
-    try {
-
-      return decodeURIComponent(
-        matchFromParameter[1]
-      )
-        .trim()
-        .toUpperCase();
-
-    } catch {}
-  }
-
-  /*
-   * 3. Procura diretamente pelo
-   * padrão oficial do bilhete.
-   */
-  const matchTicket =
-    raw.match(
-      /\bBLACKOUT-2026-[A-Z0-9]+\b/i
-    );
-
-  if (matchTicket) {
-
-    return matchTicket[0]
-      .trim()
-      .toUpperCase();
-  }
-
-  /*
-   * 4. Último recurso:
-   * assume que já é o código.
-   */
-  return raw.toUpperCase();
 }
 
 async function onScanSuccess(
