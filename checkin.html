@@ -1119,7 +1119,7 @@ async function ensureScanner() {
   }
 
   state.scanner =
-    new Html5Qrcode("reader");
+    new Html5Qrcode("reader", { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] });
 
   return state.scanner;
 }
@@ -1169,6 +1169,26 @@ async function startScanner() {
       "Solicitando acesso à câmera..."
     );
 
+    const qrBox = (
+      viewfinderWidth,
+      viewfinderHeight
+    ) => {
+
+      const minDimension = Math.min(
+        viewfinderWidth,
+        viewfinderHeight
+      );
+
+      const size = Math.floor(
+        minDimension * 0.75
+      );
+
+      return {
+        width: size,
+        height: size
+      };
+    };
+
     await scanner.start(
       {
         facingMode: {
@@ -1176,44 +1196,20 @@ async function startScanner() {
         }
       },
       {
-        fps: 12,
-
-        qrbox: {
-          width: 280,
-          height: 280
-        },
-
-        disableFlip: true,
-
-        videoConstraints: {
-          facingMode: {
-            ideal: "environment"
-          },
-
-          width: {
-            ideal: 1920
-          },
-
-          height: {
-            ideal: 1080
-          },
-
-          frameRate: {
-            ideal: 30
-          }
-        }
+        fps: 10,
+        qrbox: qrBox,
+        aspectRatio: 4 / 3,
+        disableFlip: true
       },
-
       onScanSuccess,
       onScanFailure
     );
 
-    state.scanning =
-      true;
+    state.scanning = true;
 
-    await improveCameraFocus(
-      scanner
-    );
+    setTimeout(() => {
+      improveCameraFocus(scanner);
+    }, 300);
 
     setCameraStatus(
       "CÂMERA ATIVA • APONTE PARA O QR"
@@ -1226,6 +1222,8 @@ async function startScanner() {
       error
     );
 
+    state.scanning = false;
+
     setCameraStatus(
       "Não foi possível iniciar a câmera."
     );
@@ -1237,17 +1235,11 @@ async function startScanner() {
   }
 }
 
-/*
- * Tentativa de ativar foco contínuo.
- * Nem todos os celulares suportam.
- */
-async function improveCameraFocus(
-  scanner
-) {
+async function improveCameraFocus(scanner) {
 
   if (
     !scanner ||
-    typeof scanner.applyVideoConstraints !==
+    typeof scanner.getRunningTrackCapabilities !==
       "function"
   ) {
     return;
@@ -1255,19 +1247,57 @@ async function improveCameraFocus(
 
   try {
 
-    await scanner.applyVideoConstraints({
-      advanced: [
-        {
-          focusMode:
-            "continuous"
-        }
-      ]
-    });
+    const capabilities =
+      scanner.getRunningTrackCapabilities();
+
+    if (!capabilities || !capabilities.focusMode) {
+      console.log(
+        "Controle de foco não disponível."
+      );
+      return;
+    }
+
+    const focusModes =
+      Array.isArray(capabilities.focusMode)
+        ? capabilities.focusMode
+        : [];
+
+    if (focusModes.includes("continuous")) {
+
+      await scanner.applyVideoConstraints({
+        advanced: [
+          {
+            focusMode: "continuous"
+          }
+        ]
+      });
+
+      console.log(
+        "Foco contínuo ativado."
+      );
+
+      return;
+    }
+
+    if (focusModes.includes("single-shot")) {
+
+      await scanner.applyVideoConstraints({
+        advanced: [
+          {
+            focusMode: "single-shot"
+          }
+        ]
+      });
+
+      console.log(
+        "Foco single-shot ativado."
+      );
+    }
 
   } catch (error) {
 
     console.warn(
-      "Foco contínuo não suportado neste aparelho:",
+      "Não foi possível ajustar o foco:",
       error
     );
   }
