@@ -1,6 +1,6 @@
 "use strict";
 
-const crypto = require("crypto");
+import crypto from "node:crypto";
 
 function getSecret() {
   return String(process.env.CHECKIN_SECRET || "").trim();
@@ -134,7 +134,7 @@ function cleanCode(value) {
     .toUpperCase();
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
   if (req.method !== "GET") {
@@ -273,8 +273,3 @@ module.exports = async function handler(req, res) {
   }
 };
 
-module.exports.config = {
-  api: {
-    bodyParser: false
-  }
-};

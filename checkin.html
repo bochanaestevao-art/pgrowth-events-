@@ -200,7 +200,7 @@
     .camera{
       position:relative;
       width:100%;
-      aspect-ratio:1/1;
+      aspect-ratio:4/3;
       background:#000;
       overflow:hidden;
     }
@@ -460,48 +460,50 @@
       min-width:110px;
       margin-top:0;
     }
-.search-result-card{
-  margin-top:10px;
-  padding:12px;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:12px;
-  background:rgba(255,255,255,.04);
-}
 
-.search-result-name{
-  font-weight:700;
-  font-size:15px;
-  margin-bottom:5px;
-}
+    .search-result-card{
+      margin-top:10px;
+      padding:12px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:12px;
+      background:rgba(255,255,255,.04);
+    }
 
-.search-result-info{
-  font-size:13px;
-  line-height:1.5;
-  opacity:.9;
-}
+    .search-result-name{
+      font-weight:700;
+      font-size:15px;
+      margin-bottom:5px;
+    }
 
-.search-presence{
-  margin-top:8px;
-  margin-bottom:9px;
-  padding:7px 9px;
-  border-radius:8px;
-  font-size:12px;
-  font-weight:700;
-}
+    .search-result-info{
+      font-size:13px;
+      line-height:1.5;
+      opacity:.9;
+    }
 
-.search-presence-inside{
-  background:rgba(255,180,0,.12);
-}
+    .search-presence{
+      margin-top:8px;
+      margin-bottom:9px;
+      padding:7px 9px;
+      border-radius:8px;
+      font-size:12px;
+      font-weight:700;
+    }
 
-.search-presence-outside{
-  background:rgba(0,180,90,.12);
-}
+    .search-presence-inside{
+      background:rgba(255,180,0,.12);
+    }
 
-.search-select-buyer,
-.search-select-ticket{
-  width:100%;
-  margin-top:10px;
-}
+    .search-presence-outside{
+      background:rgba(0,180,90,.12);
+    }
+
+    .search-select-buyer,
+    .search-select-ticket{
+      width:100%;
+      margin-top:10px;
+    }
+
     .logout{
       margin-top:18px;
     }
@@ -536,12 +538,16 @@
 
   <header class="header">
     <div class="header-row">
-      <div class="brand">PGROWTH • CHECK-IN</div>
+
+      <div class="brand">
+        PGROWTH • CHECK-IN
+      </div>
 
       <div class="status">
         <span class="dot"></span>
         <span id="connectionText">ONLINE</span>
       </div>
+
     </div>
   </header>
 
@@ -552,7 +558,10 @@
     <div id="loginScreen">
 
       <div class="title">
-        Entrada do <span style="color:var(--gold)">BLACK OUT</span>
+        Entrada do
+        <span style="color:var(--gold)">
+          BLACK OUT
+        </span>
       </div>
 
       <div class="subtitle">
@@ -568,6 +577,7 @@
         </div>
 
         <div class="field">
+
           <label for="accessSecret">
             Código de acesso
           </label>
@@ -578,6 +588,7 @@
             autocomplete="off"
             placeholder="Código da equipe"
           >
+
         </div>
 
         <button
@@ -599,15 +610,22 @@
 
     <!-- CHECK-IN -->
 
-    <div id="checkinScreen" style="display:none">
+    <div
+      id="checkinScreen"
+      style="display:none"
+    >
 
       <div class="title">
-        Scanner de <span style="color:var(--gold)">QR</span>
+        Scanner de
+        <span style="color:var(--gold)">
+          QR
+        </span>
       </div>
 
       <div class="subtitle">
         Aponte a câmera para o QR Code do bilhete.
-        Depois do registo, o scanner volta automaticamente para o próximo participante.
+        Depois do registo, o scanner volta automaticamente
+        para o próximo participante.
       </div>
 
       <div class="scanner-card">
@@ -617,6 +635,7 @@
           <div id="reader"></div>
 
           <div class="scan-frame"></div>
+
           <div class="scan-line"></div>
 
         </div>
@@ -759,8 +778,12 @@
 
       <div class="manual">
 
-        <div class="subtitle" style="margin-bottom:7px">
-          Se a câmera tiver dificuldade, digite o código manualmente:
+        <div
+          class="subtitle"
+          style="margin-bottom:7px"
+        >
+          Se a câmera tiver dificuldade,
+          digite o código manualmente:
         </div>
 
         <div class="manual-row">
@@ -786,14 +809,18 @@
 
       <!-- PESQUISA DE COMPRADOR -->
 
-      <div class="manual" id="buyerSearchBox">
+      <div
+        class="manual"
+        id="buyerSearchBox"
+      >
 
         <div
           class="subtitle"
           style="margin-bottom:7px"
         >
-          Se o QR Code e o código do bilhete não estiverem disponíveis,
-          pesquise o comprador pelo nome ou telefone:
+          Se o QR Code e o código do bilhete
+          não estiverem disponíveis, pesquise
+          o comprador pelo nome ou telefone:
         </div>
 
         <div class="manual-row">
@@ -841,7 +868,8 @@
       </button>
 
       <div class="help">
-        Após cada entrada ou saída, o scanner fica pronto novamente
+        Após cada entrada ou saída,
+        o scanner fica pronto novamente
         para o próximo QR Code.
       </div>
 
@@ -852,7 +880,10 @@
 </div>
 
 <!-- Scanner QR -->
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script
+  src="https://unpkg.com/html5-qrcode"
+  type="text/javascript"
+></script>
 
 <script>
 "use strict";
@@ -904,55 +935,87 @@ const stopScannerButton =
   document.getElementById("stopScannerButton");
 
 function showLoginError(message) {
+
   loginMessage.textContent = message;
-  loginMessage.className = "message error show";
+
+  loginMessage.className =
+    "message error show";
 }
 
 function clearLoginError() {
+
   loginMessage.textContent = "";
-  loginMessage.className = "message error";
+
+  loginMessage.className =
+    "message error";
 }
 
 function showOperation(message, type) {
-  operationMessage.textContent = message;
+
+  operationMessage.textContent =
+    message;
+
   operationMessage.className =
-    "message " + type + " show";
+    "message " +
+    type +
+    " show";
 }
 
 function clearOperation() {
+
   operationMessage.textContent = "";
-  operationMessage.className = "message";
+
+  operationMessage.className =
+    "message";
 }
 
 function setCameraStatus(message) {
-  cameraStatus.textContent = message;
+
+  cameraStatus.textContent =
+    message;
 }
 
 async function checkSession() {
+
   try {
+
     const response =
-      await fetch("/api/checkin-session", {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store"
-      });
+      await fetch(
+        "/api/checkin-session",
+        {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store"
+        }
+      );
 
     return response.ok;
+
   } catch {
+
     return false;
   }
 }
+
 async function showScannerScreen() {
-  loginScreen.style.display = "none";
-  checkinScreen.style.display = "block";
+
+  loginScreen.style.display =
+    "none";
+
+  checkinScreen.style.display =
+    "block";
 
   clearOperation();
 
-  setCameraStatus("PREPARANDO CÂMERA...");
+  setCameraStatus(
+    "PREPARANDO CÂMERA..."
+  );
 
   await startScanner();
 }
+
 async function login() {
+
   clearLoginError();
 
   const pin =
@@ -962,35 +1025,52 @@ async function login() {
       .trim();
 
   if (!pin) {
+
     showLoginError(
       "Introduza o código de acesso."
     );
+
     return;
   }
 
   loginButton.disabled = true;
-  loginButton.textContent = "A VALIDAR...";
+
+  loginButton.textContent =
+    "A VALIDAR...";
 
   try {
+
     const response =
-      await fetch("/api/checkin-session", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          pin
-        })
-      });
+      await fetch(
+        "/api/checkin-session",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          body: JSON.stringify({
+            pin
+          })
+        }
+      );
 
     let data = null;
 
     try {
-      data = await response.json();
+
+      data =
+        await response.json();
+
     } catch {}
 
-    if (!response.ok || !data || !data.authenticated) {
+    if (
+      !response.ok ||
+      !data ||
+      !data.authenticated
+    ) {
+
       throw new Error(
         data?.error ||
         "Código de acesso inválido."
@@ -1006,22 +1086,33 @@ async function login() {
     await showScannerScreen();
 
   } catch (error) {
+
     showLoginError(
       error?.message ||
       "Não foi possível iniciar a sessão."
     );
+
   } finally {
-    loginButton.disabled = false;
-    loginButton.textContent = "ENTRAR";
+
+    loginButton.disabled =
+      false;
+
+    loginButton.textContent =
+      "ENTRAR";
   }
 }
 
 async function ensureScanner() {
+
   if (state.scanner) {
     return state.scanner;
   }
 
-  if (typeof Html5Qrcode === "undefined") {
+  if (
+    typeof Html5Qrcode ===
+    "undefined"
+  ) {
+
     throw new Error(
       "O módulo de leitura QR não foi carregado."
     );
@@ -1033,9 +1124,17 @@ async function ensureScanner() {
   return state.scanner;
 }
 
+/*
+ * Melhoria da câmera:
+ * tenta utilizar a câmera traseira,
+ * resolução maior e foco contínuo.
+ */
 async function startScanner() {
 
-  if (state.scanning || state.processing) {
+  if (
+    state.scanning ||
+    state.processing
+  ) {
     return;
   }
 
@@ -1048,10 +1147,13 @@ async function startScanner() {
 
     if (!authenticated) {
 
-      stopScanner();
+      await stopScanner();
 
-      loginScreen.style.display = "block";
-      checkinScreen.style.display = "none";
+      loginScreen.style.display =
+        "block";
+
+      checkinScreen.style.display =
+        "none";
 
       showLoginError(
         "Sua sessão expirou. Entre novamente."
@@ -1070,22 +1172,48 @@ async function startScanner() {
     await scanner.start(
       {
         facingMode: {
-          exact: "environment"
+          ideal: "environment"
         }
       },
       {
         fps: 12,
+
         qrbox: {
-          width: 250,
-          height: 250
+          width: 280,
+          height: 280
         },
-        aspectRatio: 1
+
+        disableFlip: true,
+
+        videoConstraints: {
+          facingMode: {
+            ideal: "environment"
+          },
+
+          width: {
+            ideal: 1920
+          },
+
+          height: {
+            ideal: 1080
+          },
+
+          frameRate: {
+            ideal: 30
+          }
+        }
       },
+
       onScanSuccess,
       onScanFailure
     );
 
-    state.scanning = true;
+    state.scanning =
+      true;
+
+    await improveCameraFocus(
+      scanner
+    );
 
     setCameraStatus(
       "CÂMERA ATIVA • APONTE PARA O QR"
@@ -1109,16 +1237,56 @@ async function startScanner() {
   }
 }
 
+/*
+ * Tentativa de ativar foco contínuo.
+ * Nem todos os celulares suportam.
+ */
+async function improveCameraFocus(
+  scanner
+) {
+
+  if (
+    !scanner ||
+    typeof scanner.applyVideoConstraints !==
+      "function"
+  ) {
+    return;
+  }
+
+  try {
+
+    await scanner.applyVideoConstraints({
+      advanced: [
+        {
+          focusMode:
+            "continuous"
+        }
+      ]
+    });
+
+  } catch (error) {
+
+    console.warn(
+      "Foco contínuo não suportado neste aparelho:",
+      error
+    );
+  }
+}
+
 async function stopScanner() {
 
   if (!state.scanner) {
-    state.scanning = false;
+
+    state.scanning =
+      false;
+
     return;
   }
 
   try {
 
     if (state.scanning) {
+
       await state.scanner.stop();
     }
 
@@ -1131,7 +1299,8 @@ async function stopScanner() {
 
   } finally {
 
-    state.scanning = false;
+    state.scanning =
+      false;
 
     setCameraStatus(
       "CÂMERA PARADA"
@@ -1140,54 +1309,179 @@ async function stopScanner() {
 }
 
 function onScanFailure() {
-  // Intencionalmente silencioso.
-  // O scanner tenta continuamente.
+
+  /*
+   * Intencionalmente silencioso.
+   * O scanner tenta continuamente.
+   */
 }
 
-async function onScanSuccess(decodedText) {
+/*
+ * IMPORTANTE:
+ * O QR dos bilhetes pode conter uma URL como:
+ *
+ * https://pgrowth-events.vercel.app/
+ * api/verify-ticket?code=BLACKOUT-2026-XXXXXXXX
+ *
+ * Esta função extrai apenas:
+ *
+ * BLACKOUT-2026-XXXXXXXX
+ *
+ * antes de enviar para o servidor.
+ */
+function extractTicketCode(
+  decodedText
+) {
+
+  const raw =
+    String(
+      decodedText || ""
+    ).trim();
+
+  if (!raw) {
+    return "";
+  }
+
+  /*
+   * 1. QR contém uma URL completa.
+   */
+  try {
+
+    const url =
+      new URL(raw);
+
+    const urlCode =
+      url.searchParams.get(
+        "code"
+      );
+
+    if (urlCode) {
+
+      return String(urlCode)
+        .trim()
+        .toUpperCase();
+    }
+
+  } catch {
+
+    /*
+     * Não é uma URL completa.
+     * Continuamos tentando outras formas.
+     */
+  }
+
+  /*
+   * 2. Caso contenha code= mesmo
+   * sem ser uma URL válida.
+   */
+  const matchFromParameter =
+    raw.match(
+      /(?:^|[?&])code=([^&#\s]+)/i
+    );
+
+  if (matchFromParameter) {
+
+    try {
+
+      return decodeURIComponent(
+        matchFromParameter[1]
+      )
+        .trim()
+        .toUpperCase();
+
+    } catch {}
+  }
+
+  /*
+   * 3. Procura diretamente pelo
+   * padrão oficial do bilhete.
+   */
+  const matchTicket =
+    raw.match(
+      /\bBLACKOUT-2026-[A-Z0-9]+\b/i
+    );
+
+  if (matchTicket) {
+
+    return matchTicket[0]
+      .trim()
+      .toUpperCase();
+  }
+
+  /*
+   * 4. Último recurso:
+   * assume que já é o código.
+   */
+  return raw.toUpperCase();
+}
+
+async function onScanSuccess(
+  decodedText
+) {
 
   if (state.processing) {
     return;
   }
 
+  /*
+   * Aqui está uma das principais
+   * correções do sistema.
+   *
+   * Em vez de usar diretamente
+   * decodedText, primeiro extraímos
+   * o código real do bilhete.
+   */
   const code =
-    String(decodedText || "")
-      .trim()
-      .toUpperCase();
+    extractTicketCode(
+      decodedText
+    );
 
   if (!code) {
     return;
   }
 
   /*
-   * Evita que a câmera leia o mesmo QR
-   * dezenas de vezes enquanto ainda estamos
-   * processando a operação.
+   * Evita múltiplas leituras
+   * do mesmo QR.
    */
-  const now = Date.now();
+  const now =
+    Date.now();
 
   if (
-    state.lastScannedCode === code &&
-    now - state.lastScannedAt < 2500
+    state.lastScannedCode ===
+      code &&
+    now -
+      state.lastScannedAt <
+      2500
   ) {
     return;
   }
 
-  state.lastScannedCode = code;
-  state.lastScannedAt = now;
+  state.lastScannedCode =
+    code;
 
-  state.processing = true;
+  state.lastScannedAt =
+    now;
+
+  state.processing =
+    true;
 
   await stopScanner();
 
-  await lookupTicket(code);
+  await lookupTicket(
+    code
+  );
 }
 
-async function lookupTicket(code) {
+async function lookupTicket(
+  code
+) {
 
   clearOperation();
 
-  resultCard.classList.remove("show");
+  resultCard.classList.remove(
+    "show"
+  );
 
   try {
 
@@ -1198,7 +1492,9 @@ async function lookupTicket(code) {
     const response =
       await fetch(
         "/api/checkin-lookup?code=" +
-          encodeURIComponent(code),
+          encodeURIComponent(
+            code
+          ),
         {
           method: "GET",
           credentials: "include",
@@ -1209,17 +1505,27 @@ async function lookupTicket(code) {
     let data = null;
 
     try {
-      data = await response.json();
+
+      data =
+        await response.json();
+
     } catch {}
 
-    if (response.status === 401) {
+    if (
+      response.status ===
+      401
+    ) {
 
       throw new Error(
         "A sessão da equipe expirou."
       );
     }
 
-    if (!response.ok || !data || !data.success) {
+    if (
+      !response.ok ||
+      !data ||
+      !data.success
+    ) {
 
       throw new Error(
         data?.message ||
@@ -1227,10 +1533,15 @@ async function lookupTicket(code) {
       );
     }
 
-    state.currentCode = code;
-    state.currentTicket = data.ticket;
+    state.currentCode =
+      code;
 
-    renderTicket(data);
+    state.currentTicket =
+      data.ticket;
+
+    renderTicket(
+      data
+    );
 
   } catch (error) {
 
@@ -1239,10 +1550,15 @@ async function lookupTicket(code) {
       error
     );
 
-    state.currentCode = null;
-    state.currentTicket = null;
+    state.currentCode =
+      null;
 
-    resultCard.classList.remove("show");
+    state.currentTicket =
+      null;
+
+    resultCard.classList.remove(
+      "show"
+    );
 
     showOperation(
       error.message ||
@@ -1250,80 +1566,138 @@ async function lookupTicket(code) {
       "error"
     );
 
-    state.processing = false;
+    state.processing =
+      false;
 
     setCameraStatus(
       "PRONTO PARA NOVA LEITURA"
     );
 
-    setTimeout(() => {
-      startScanner();
-    }, 1000);
+    setTimeout(
+      () => {
+        startScanner();
+      },
+      1000
+    );
   }
 }
 
-function renderTicket(data) {
+function renderTicket(
+  data
+) {
 
-  const ticket = data.ticket;
+  const ticket =
+    data.ticket;
 
-  document.getElementById("personName")
+  document
+    .getElementById(
+      "personName"
+    )
     .textContent =
-      ticket.fullName || "Sem nome";
+      ticket.fullName ||
+      "Sem nome";
 
-  document.getElementById("ticketCode")
+  document
+    .getElementById(
+      "ticketCode"
+    )
     .textContent =
-      ticket.ticketCode || state.currentCode;
+      ticket.ticketCode ||
+      state.currentCode;
 
-  document.getElementById("ticketType")
+  document
+    .getElementById(
+      "ticketType"
+    )
     .textContent =
-      ticket.ticketType || "—";
+      ticket.ticketType ||
+      "—";
 
-  document.getElementById("ticketLot")
+  document
+    .getElementById(
+      "ticketLot"
+    )
     .textContent =
-      ticket.ticketLot || "—";
+      ticket.ticketLot ||
+      "—";
 
-  document.getElementById("ticketQuantity")
+  document
+    .getElementById(
+      "ticketQuantity"
+    )
     .textContent =
-      String(ticket.quantity || 1);
+      String(
+        ticket.quantity ||
+        1
+      );
 
-  document.getElementById("ticketNumber")
+  document
+    .getElementById(
+      "ticketNumber"
+    )
     .textContent =
       ticket.ticketNumber
-        ? "Nº " + ticket.ticketNumber
+        ? "Nº " +
+          ticket.ticketNumber
         : "—";
 
   const validityBadge =
-    document.getElementById("validityBadge");
+    document.getElementById(
+      "validityBadge"
+    );
 
   const presenceBox =
-    document.getElementById("presenceBox");
+    document.getElementById(
+      "presenceBox"
+    );
 
   const entry =
-    document.getElementById("entryButton");
+    document.getElementById(
+      "entryButton"
+    );
 
   const exit =
-    document.getElementById("exitButton");
+    document.getElementById(
+      "exitButton"
+    );
 
   const validity =
-    String(data.validity || "").toUpperCase();
+    String(
+      data.validity ||
+      ""
+    ).toUpperCase();
 
   const presence =
-    String(ticket.presenceStatus || "").toUpperCase();
+    String(
+      ticket.presenceStatus ||
+      ""
+    ).toUpperCase();
 
   validityBadge.className =
     "badge";
 
-  entry.disabled = true;
-  exit.disabled = true;
+  entry.disabled =
+    true;
 
-  if (validity === "VALID") {
+  exit.disabled =
+    true;
+
+  if (
+    validity ===
+    "VALID"
+  ) {
 
     validityBadge.textContent =
       "VÁLIDO";
 
-    validityBadge.classList.add("green");
+    validityBadge.classList.add(
+      "green"
+    );
 
-    if (presence === "INSIDE") {
+    if (
+      presence ===
+      "INSIDE"
+    ) {
 
       presenceBox.textContent =
         "● DENTRO DO EVENTO";
@@ -1331,7 +1705,8 @@ function renderTicket(data) {
       presenceBox.className =
         "presence inside";
 
-      exit.disabled = false;
+      exit.disabled =
+        false;
 
       showOperation(
         "Este participante está dentro. A próxima operação disponível é SAÍDA.",
@@ -1346,7 +1721,8 @@ function renderTicket(data) {
       presenceBox.className =
         "presence outside";
 
-      entry.disabled = false;
+      entry.disabled =
+        false;
 
       showOperation(
         "Bilhete válido. A entrada pode ser registada.",
@@ -1359,10 +1735,13 @@ function renderTicket(data) {
     validityBadge.textContent =
       "NÃO VÁLIDO";
 
-    validityBadge.classList.add("red");
+    validityBadge.classList.add(
+      "red"
+    );
 
     presenceBox.textContent =
-      ticket.paymentStatus !== "PAID"
+      ticket.paymentStatus !==
+      "PAID"
         ? "PAGAMENTO NÃO CONFIRMADO"
         : "BILHETE NÃO AUTORIZADO";
 
@@ -1370,46 +1749,65 @@ function renderTicket(data) {
       "presence outside";
 
     showOperation(
-      ticket.paymentStatus !== "PAID"
+      ticket.paymentStatus !==
+        "PAID"
         ? "Este bilhete ainda não possui pagamento confirmado."
         : "Este bilhete não está autorizado para entrada.",
       "error"
     );
   }
 
-  resultCard.classList.add("show");
+  resultCard.classList.add(
+    "show"
+  );
 
   setCameraStatus(
     "BILHETE IDENTIFICADO"
   );
 
-  state.processing = false;
+  state.processing =
+    false;
 }
 
-async function performAction(action) {
+async function performAction(
+  action
+) {
 
-  if (!state.currentCode) {
+  if (
+    !state.currentCode
+  ) {
     return;
   }
 
-  if (state.processing) {
+  if (
+    state.processing
+  ) {
     return;
   }
 
-  state.processing = true;
+  state.processing =
+    true;
 
-  entryButton.disabled = true;
-  exitButton.disabled = true;
-  nextButton.disabled = true;
+  entryButton.disabled =
+    true;
+
+  exitButton.disabled =
+    true;
+
+  nextButton.disabled =
+    true;
 
   clearOperation();
 
   const actionLabel =
-    action === "ENTRY"
+    action ===
+    "ENTRY"
       ? "REGISTANDO ENTRADA..."
       : "REGISTANDO SAÍDA...";
 
-  setCameraStatus(actionLabel);
+  setCameraStatus(
+    actionLabel
+  );
 
   try {
 
@@ -1420,10 +1818,12 @@ async function performAction(action) {
           method: "POST",
           credentials: "include",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type":
+              "application/json"
           },
           body: JSON.stringify({
-            ticketCode: state.currentCode,
+            ticketCode:
+              state.currentCode,
             action
           })
         }
@@ -1432,56 +1832,84 @@ async function performAction(action) {
     let data = null;
 
     try {
-      data = await response.json();
+
+      data =
+        await response.json();
+
     } catch {}
 
-    if (response.status === 401) {
+    if (
+      response.status ===
+      401
+    ) {
+
       throw new Error(
         "A sessão da equipe expirou."
       );
     }
 
     if (!data) {
+
       throw new Error(
         "Resposta inválida do servidor."
       );
     }
 
-    if (!response.ok || !data.success) {
+    if (
+      !response.ok ||
+      !data.success
+    ) {
 
       const message =
         data.message ||
         (
-          data.result === "ALREADY_INSIDE"
+          data.result ===
+          "ALREADY_INSIDE"
             ? "Este bilhete já está dentro do evento."
             : "Operação não autorizada."
         );
 
-      throw new Error(message);
+      throw new Error(
+        message
+      );
     }
 
     const ticket =
-      data.ticket || {};
+      data.ticket ||
+      {};
 
     const isEntry =
-      action === "ENTRY";
+      action ===
+      "ENTRY";
 
     showOperation(
       isEntry
         ? "✓ ENTRADA REGISTADA — " +
-          (ticket.fullName || "")
+          (
+            ticket.fullName ||
+            ""
+          )
         : "✓ SAÍDA REGISTADA — " +
-          (ticket.fullName || ""),
+          (
+            ticket.fullName ||
+            ""
+          ),
       "success"
     );
 
-    // Atualiza imediatamente o cartão.
-    if (ticket.presenceStatus) {
+    /*
+     * Atualiza imediatamente
+     * o estado visual.
+     */
+    if (
+      ticket.presenceStatus
+    ) {
 
-      state.currentTicket = {
-        ...state.currentTicket,
-        ...ticket
-      };
+      state.currentTicket =
+        {
+          ...state.currentTicket,
+          ...ticket
+        };
 
       const presence =
         String(
@@ -1493,7 +1921,10 @@ async function performAction(action) {
           "presenceBox"
         );
 
-      if (presence === "INSIDE") {
+      if (
+        presence ===
+        "INSIDE"
+      ) {
 
         presenceBox.textContent =
           "● DENTRO DO EVENTO";
@@ -1512,9 +1943,8 @@ async function performAction(action) {
     }
 
     /*
-     * Após registrar, aguardamos um instante
-     * para a equipe visualizar a confirmação
-     * e voltamos automaticamente ao scanner.
+     * Mostra confirmação
+     * durante alguns instantes.
      */
     setCameraStatus(
       isEntry
@@ -1522,11 +1952,14 @@ async function performAction(action) {
         : "SAÍDA CONFIRMADA"
     );
 
-    setTimeout(() => {
+    setTimeout(
+      () => {
 
-      resetForNextScan();
+        resetForNextScan();
 
-    }, 900);
+      },
+      900
+    );
 
   } catch (error) {
 
@@ -1541,44 +1974,65 @@ async function performAction(action) {
       "error"
     );
 
-    state.processing = false;
+    state.processing =
+      false;
 
-    nextButton.disabled = false;
+    nextButton.disabled =
+      false;
 
     setCameraStatus(
       "VERIFIQUE O RESULTADO E TENTE NOVAMENTE"
     );
 
     /*
-     * Reconsulta o bilhete depois de um erro.
-     * Isso é importante para evitar uma segunda
-     * operação quando a primeira talvez tenha
-     * chegado ao servidor mas a resposta tenha
-     * falhado.
+     * Reconsulta depois de erro.
+     *
+     * Isso evita registrar uma segunda
+     * operação caso a primeira tenha
+     * chegado ao servidor mas a resposta
+     * tenha falhado.
      */
-    setTimeout(async () => {
+    setTimeout(
+      async () => {
 
-      if (state.currentCode) {
-        await lookupTicket(
+        if (
           state.currentCode
-        );
-      }
+        ) {
 
-    }, 1200);
+          await lookupTicket(
+            state.currentCode
+          );
+        }
+
+      },
+      1200
+    );
   }
 }
 
 function resetForNextScan() {
 
-  state.currentCode = null;
-  state.currentTicket = null;
-  state.processing = false;
+  state.currentCode =
+    null;
 
-  resultCard.classList.remove("show");
+  state.currentTicket =
+    null;
 
-  entryButton.disabled = true;
-  exitButton.disabled = true;
-  nextButton.disabled = false;
+  state.processing =
+    false;
+
+  resultCard.classList.remove(
+    "show"
+  );
+
+  entryButton.disabled =
+    true;
+
+  exitButton.disabled =
+    true;
+
+  nextButton.disabled =
+    false;
 
   clearOperation();
 
@@ -1586,78 +2040,123 @@ function resetForNextScan() {
     "PRONTO PARA O PRÓXIMO QR"
   );
 
-  setTimeout(() => {
-    startScanner();
-  }, 250);
+  setTimeout(
+    () => {
+      startScanner();
+    },
+    250
+  );
 }
 
 async function manualLookup() {
 
-  if (state.processing) {
+  if (
+    state.processing
+  ) {
     return;
   }
 
   const input =
-    document
-      .getElementById("manualCode");
+    document.getElementById(
+      "manualCode"
+    );
 
+  /*
+   * Também usamos extractTicketCode
+   * na entrada manual.
+   *
+   * Assim, se alguém colar a URL
+   * completa, também funciona.
+   */
   const code =
-    input.value
-      .trim()
-      .toUpperCase();
+    extractTicketCode(
+      input.value
+    );
 
   if (!code) {
+
     showOperation(
       "Digite o código do bilhete.",
       "error"
     );
+
     return;
   }
 
   await stopScanner();
 
-  state.processing = true;
+  state.processing =
+    true;
 
-  await lookupTicket(code);
+  await lookupTicket(
+    code
+  );
 
-  input.value = "";
+  input.value =
+    "";
 }
+
 /* ============================================================
  * PESQUISA DE COMPRADOR POR NOME OU TELEFONE
  * ============================================================
  */
 
 const buyerSearchInput =
-  document.getElementById("buyerSearch");
+  document.getElementById(
+    "buyerSearch"
+  );
 
 const buyerSearchButton =
-  document.getElementById("buyerSearchButton");
+  document.getElementById(
+    "buyerSearchButton"
+  );
 
 const buyerSearchMessage =
-  document.getElementById("buyerSearchMessage");
+  document.getElementById(
+    "buyerSearchMessage"
+  );
 
 const buyerSearchResults =
-  document.getElementById("buyerSearchResults");
+  document.getElementById(
+    "buyerSearchResults"
+  );
 
 const buyerTicketResults =
-  document.getElementById("buyerTicketResults");
+  document.getElementById(
+    "buyerTicketResults"
+  );
 
-state.searchResults = [];
-state.selectedSearchBuyer = null;
+state.searchResults =
+  [];
+
+state.selectedSearchBuyer =
+  null;
 
 function clearBuyerSearch() {
 
-  buyerSearchMessage.textContent = "";
-  buyerSearchMessage.className = "message";
+  buyerSearchMessage.textContent =
+    "";
 
-  buyerSearchResults.innerHTML = "";
-  buyerSearchResults.style.display = "none";
+  buyerSearchMessage.className =
+    "message";
 
-  buyerTicketResults.innerHTML = "";
-  buyerTicketResults.style.display = "none";
+  buyerSearchResults.innerHTML =
+    "";
 
-  state.searchResults = [];
-  state.selectedSearchBuyer = null;
+  buyerSearchResults.style.display =
+    "none";
+
+  buyerTicketResults.innerHTML =
+    "";
+
+  buyerTicketResults.style.display =
+    "none";
+
+  state.searchResults =
+    [];
+
+  state.selectedSearchBuyer =
+    null;
 }
 
 function showBuyerSearchMessage(
@@ -1665,29 +2164,61 @@ function showBuyerSearchMessage(
   type = ""
 ) {
 
-  buyerSearchMessage.textContent = message;
+  buyerSearchMessage.textContent =
+    message;
+
   buyerSearchMessage.className =
-    "message" + (type ? " " + type : "");
+    "message" +
+    (
+      type
+        ? " " + type
+        : ""
+    );
 }
 
 function escapeHtml(value) {
 
-  return String(value || "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  return String(
+    value || ""
+  )
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 }
 
-function renderBuyerResults(results) {
+function renderBuyerResults(
+  results
+) {
 
-  buyerSearchResults.innerHTML = "";
-  buyerTicketResults.innerHTML = "";
+  buyerSearchResults.innerHTML =
+    "";
 
-  buyerTicketResults.style.display = "none";
+  buyerTicketResults.innerHTML =
+    "";
 
-  if (!results.length) {
+  buyerTicketResults.style.display =
+    "none";
+
+  if (
+    !results.length
+  ) {
 
     buyerSearchResults.innerHTML = `
       <div class="message error">
@@ -1695,106 +2226,146 @@ function renderBuyerResults(results) {
       </div>
     `;
 
-    buyerSearchResults.style.display = "block";
+    buyerSearchResults.style.display =
+      "block";
 
     return;
   }
 
-  const title = document.createElement("div");
+  const title =
+    document.createElement(
+      "div"
+    );
 
-  title.className = "subtitle";
+  title.className =
+    "subtitle";
 
-  title.style.marginBottom = "8px";
+  title.style.marginBottom =
+    "8px";
 
   title.textContent =
     results.length === 1
       ? "COMPRADOR ENCONTRADO"
       : `${results.length} COMPRADORES ENCONTRADOS`;
 
-  buyerSearchResults.appendChild(title);
+  buyerSearchResults.appendChild(
+    title
+  );
 
-  results.forEach((result, index) => {
+  results.forEach(
+    (
+      result,
+      index
+    ) => {
 
-    const buyer = result.buyer || {};
-    const purchase = result.purchase || {};
+      const buyer =
+        result.buyer ||
+        {};
 
-    const card =
-      document.createElement("div");
+      const purchase =
+        result.purchase ||
+        {};
 
-    card.className = "search-result-card";
+      const card =
+        document.createElement(
+          "div"
+        );
 
-    card.innerHTML = `
-      <div class="search-result-name">
-        ${escapeHtml(
-          buyer.fullName || "Sem nome"
-        )}
-      </div>
+      card.className =
+        "search-result-card";
 
-      <div class="search-result-info">
-        📱 ${escapeHtml(
-          buyer.phone || "Sem telefone"
-        )}
-      </div>
+      card.innerHTML = `
+        <div class="search-result-name">
+          ${escapeHtml(
+            buyer.fullName ||
+            "Sem nome"
+          )}
+        </div>
 
-      <div class="search-result-info">
-        Bairro: ${escapeHtml(
-          buyer.bairro || "—"
-        )}
-      </div>
+        <div class="search-result-info">
+          📱 ${escapeHtml(
+            buyer.phone ||
+            "Sem telefone"
+          )}
+        </div>
 
-      <div class="search-result-info">
-        ${escapeHtml(
-          purchase.ticketType || "—"
-        )}
-        •
-        ${escapeHtml(
-          purchase.ticketLot || "—"
-        )}
-        •
-        ${Number(
-          purchase.quantity || 0
-        )} bilhete(s)
-      </div>
+        <div class="search-result-info">
+          Bairro: ${escapeHtml(
+            buyer.bairro ||
+            "—"
+          )}
+        </div>
 
-      <button
-        class="button secondary search-select-buyer"
-        type="button"
-        data-search-index="${index}"
-      >
-        SELECIONAR COMPRADOR
-      </button>
-    `;
+        <div class="search-result-info">
+          ${escapeHtml(
+            purchase.ticketType ||
+            "—"
+          )}
+          •
+          ${escapeHtml(
+            purchase.ticketLot ||
+            "—"
+          )}
+          •
+          ${Number(
+            purchase.quantity ||
+            0
+          )}
+          bilhete(s)
+        </div>
 
-    buyerSearchResults.appendChild(card);
-  });
+        <button
+          class="button secondary search-select-buyer"
+          type="button"
+          data-search-index="${index}"
+        >
+          SELECIONAR COMPRADOR
+        </button>
+      `;
+
+      buyerSearchResults.appendChild(
+        card
+      );
+    }
+  );
 
   buyerSearchResults
     .querySelectorAll(
       ".search-select-buyer"
     )
-    .forEach(button => {
+    .forEach(
+      button => {
 
-      button.addEventListener(
-        "click",
-        () => {
+        button.addEventListener(
+          "click",
+          () => {
 
-          const index =
-            Number(
-              button.dataset.searchIndex
+            const index =
+              Number(
+                button.dataset
+                  .searchIndex
+              );
+
+            selectSearchBuyer(
+              index
             );
+          }
+        );
+      }
+    );
 
-          selectSearchBuyer(index);
-        }
-      );
-    });
-
-  buyerSearchResults.style.display = "block";
+  buyerSearchResults.style.display =
+    "block";
 }
 
-function selectSearchBuyer(index) {
+function selectSearchBuyer(
+  index
+) {
 
   const result =
-    state.searchResults[index];
+    state.searchResults[
+      index
+    ];
 
   if (!result) {
     return;
@@ -1804,50 +2375,74 @@ function selectSearchBuyer(index) {
     result;
 
   const buyer =
-    result.buyer || {};
+    result.buyer ||
+    {};
 
   const tickets =
-    Array.isArray(result.tickets)
+    Array.isArray(
+      result.tickets
+    )
       ? result.tickets
       : [];
 
-  buyerTicketResults.innerHTML = "";
+  buyerTicketResults.innerHTML =
+    "";
 
   const title =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
-  title.className = "subtitle";
+  title.className =
+    "subtitle";
 
-  title.style.marginBottom = "8px";
+  title.style.marginBottom =
+    "8px";
 
   title.textContent =
     "SELECIONE O BILHETE";
 
-  buyerTicketResults.appendChild(title);
+  buyerTicketResults.appendChild(
+    title
+  );
 
   const buyerInfo =
-    document.createElement("div");
+    document.createElement(
+      "div"
+    );
 
   buyerInfo.className =
     "message success";
 
   buyerInfo.textContent =
-    `${buyer.fullName || "Sem nome"} • ` +
-    `${buyer.phone || "Sem telefone"}`;
+    (
+      buyer.fullName ||
+      "Sem nome"
+    ) +
+    " • " +
+    (
+      buyer.phone ||
+      "Sem telefone"
+    );
 
   buyerTicketResults.appendChild(
     buyerInfo
   );
 
-  if (!tickets.length) {
+  if (
+    !tickets.length
+  ) {
 
     const empty =
-      document.createElement("div");
+      document.createElement(
+        "div"
+      );
 
     empty.className =
       "message error";
 
-    empty.style.marginTop = "8px";
+    empty.style.marginTop =
+      "8px";
 
     empty.textContent =
       "Este comprador não possui bilhetes individuais disponíveis.";
@@ -1859,10 +2454,15 @@ function selectSearchBuyer(index) {
   } else {
 
     tickets.forEach(
-      (ticket, ticketIndex) => {
+      (
+        ticket,
+        ticketIndex
+      ) => {
 
         const card =
-          document.createElement("div");
+          document.createElement(
+            "div"
+          );
 
         card.className =
           "search-result-card";
@@ -1874,17 +2474,20 @@ function selectSearchBuyer(index) {
           ).toUpperCase();
 
         const nextAction =
-          presence === "INSIDE"
+          presence ===
+          "INSIDE"
             ? "SAÍDA"
             : "ENTRADA";
 
         const presenceLabel =
-          presence === "INSIDE"
+          presence ===
+          "INSIDE"
             ? "DENTRO DO EVENTO"
             : "FORA DO EVENTO";
 
         const statusClass =
-          presence === "INSIDE"
+          presence ===
+          "INSIDE"
             ? "search-presence-inside"
             : "search-presence-outside";
 
@@ -1892,11 +2495,13 @@ function selectSearchBuyer(index) {
           <div class="search-result-name">
             Bilhete ${
               Number(
-                ticket.ticketNumber || 0
+                ticket.ticketNumber ||
+                0
               )
             } de ${
               Number(
-                result.purchase?.quantity || 0
+                result.purchase?.quantity ||
+                0
               )
             }
           </div>
@@ -1904,17 +2509,20 @@ function selectSearchBuyer(index) {
           <div class="search-result-info">
             Código:
             ${escapeHtml(
-              ticket.ticketCode || "—"
+              ticket.ticketCode ||
+              "—"
             )}
           </div>
 
           <div class="search-result-info">
             ${escapeHtml(
-              ticket.ticketType || "—"
+              ticket.ticketType ||
+              "—"
             )}
             •
             ${escapeHtml(
-              ticket.ticketLot || "—"
+              ticket.ticketLot ||
+              "—"
             )}
           </div>
 
@@ -1945,23 +2553,26 @@ function selectSearchBuyer(index) {
       .querySelectorAll(
         ".search-select-ticket"
       )
-      .forEach(button => {
+      .forEach(
+        button => {
 
-        button.addEventListener(
-          "click",
-          () => {
+          button.addEventListener(
+            "click",
+            () => {
 
-            const ticketIndex =
-              Number(
-                button.dataset.ticketIndex
+              const ticketIndex =
+                Number(
+                  button.dataset
+                    .ticketIndex
+                );
+
+              selectSearchTicket(
+                ticketIndex
               );
-
-            selectSearchTicket(
-              ticketIndex
-            );
-          }
-        );
-      });
+            }
+          );
+        }
+      );
   }
 
   buyerTicketResults.style.display =
@@ -1985,33 +2596,42 @@ function selectSearchTicket(
   }
 
   const tickets =
-    Array.isArray(result.tickets)
+    Array.isArray(
+      result.tickets
+    )
       ? result.tickets
       : [];
 
   const ticket =
-    tickets[ticketIndex];
+    tickets[
+      ticketIndex
+    ];
 
   if (!ticket) {
     return;
   }
 
   state.currentCode =
-    ticket.ticketCode || null;
+    ticket.ticketCode ||
+    null;
 
   state.currentTicket = {
 
     ticketCode:
-      ticket.ticketCode || "",
+      ticket.ticketCode ||
+      "",
 
     fullName:
-      result.buyer?.fullName || "",
+      result.buyer?.fullName ||
+      "",
 
     phone:
-      result.buyer?.phone || "",
+      result.buyer?.phone ||
+      "",
 
     bairro:
-      result.buyer?.bairro || "",
+      result.buyer?.bairro ||
+      "",
 
     ticketType:
       ticket.ticketType ||
@@ -2030,16 +2650,19 @@ function selectSearchTicket(
 
     quantity:
       Number(
-        result.purchase?.quantity || 1
+        result.purchase?.quantity ||
+        1
       ),
 
     ticketNumber:
       Number(
-        ticket.ticketNumber || 0
+        ticket.ticketNumber ||
+        0
       ),
 
     ticketStatus:
-      ticket.ticketStatus || "",
+      ticket.ticketStatus ||
+      "",
 
     presenceStatus:
       ticket.presenceStatus ||
@@ -2058,11 +2681,14 @@ function selectSearchTicket(
 
   renderTicket({
 
-    success: true,
+    success:
+      true,
 
     validity:
-      ticket.ticketStatus === "ISSUED" ||
-      ticket.ticketStatus === "USED"
+      ticket.ticketStatus ===
+        "ISSUED" ||
+      ticket.ticketStatus ===
+        "USED"
         ? "VALID"
         : "INVALID",
 
@@ -2076,14 +2702,16 @@ function selectSearchTicket(
   buyerSearchResults.style.display =
     "none";
 
-  buyerSearchInput.value = "";
+  buyerSearchInput.value =
+    "";
 
   setCameraStatus(
     "BILHETE SELECIONADO"
   );
 
   showOperation(
-    state.currentTicket.presenceStatus ===
+    state.currentTicket
+      .presenceStatus ===
       "INSIDE"
       ? "Bilhete selecionado. A próxima operação é SAÍDA."
       : "Bilhete selecionado. A próxima operação é ENTRADA.",
@@ -2093,12 +2721,16 @@ function selectSearchTicket(
 
 async function searchBuyer() {
 
-  if (state.processing) {
+  if (
+    state.processing
+  ) {
     return;
   }
 
   const search =
-    buyerSearchInput.value.trim();
+    buyerSearchInput
+      .value
+      .trim();
 
   if (!search) {
 
@@ -2110,7 +2742,10 @@ async function searchBuyer() {
     return;
   }
 
-  if (search.length < 3) {
+  if (
+    search.length <
+    3
+  ) {
 
     showBuyerSearchMessage(
       "Introduza pelo menos 3 caracteres.",
@@ -2122,7 +2757,8 @@ async function searchBuyer() {
 
   await stopScanner();
 
-  state.processing = true;
+  state.processing =
+    true;
 
   clearBuyerSearch();
 
@@ -2141,7 +2777,9 @@ async function searchBuyer() {
     const response =
       await fetch(
         "/api/checkin-search?search=" +
-          encodeURIComponent(search),
+          encodeURIComponent(
+            search
+          ),
         {
           method: "GET",
           credentials: "include",
@@ -2152,10 +2790,16 @@ async function searchBuyer() {
     let data = null;
 
     try {
-      data = await response.json();
+
+      data =
+        await response.json();
+
     } catch {}
 
-    if (response.status === 401) {
+    if (
+      response.status ===
+      401
+    ) {
 
       throw new Error(
         "A sessão da equipe expirou."
@@ -2175,7 +2819,9 @@ async function searchBuyer() {
     }
 
     state.searchResults =
-      Array.isArray(data.results)
+      Array.isArray(
+        data.results
+      )
         ? data.results
         : [];
 
@@ -2210,7 +2856,8 @@ async function searchBuyer() {
 
   } finally {
 
-    state.processing = false;
+    state.processing =
+      false;
 
     buyerSearchButton.disabled =
       false;
@@ -2233,11 +2880,16 @@ buyerSearchInput.addEventListener(
   "keydown",
   event => {
 
-    if (event.key === "Enter") {
+    if (
+      event.key ===
+      "Enter"
+    ) {
+
       searchBuyer();
     }
   }
 );
+
 async function logout() {
 
   await stopScanner();
@@ -2255,17 +2907,26 @@ async function logout() {
 
   } catch {}
 
-  state.currentCode = null;
-  state.currentTicket = null;
+  state.currentCode =
+    null;
 
-  checkinScreen.style.display = "none";
-  loginScreen.style.display = "block";
+  state.currentTicket =
+    null;
+
+  checkinScreen.style.display =
+    "none";
+
+  loginScreen.style.display =
+    "block";
 
   clearOperation();
+
   clearLoginError();
 
   document
-    .getElementById("accessSecret")
+    .getElementById(
+      "accessSecret"
+    )
     .value = "";
 
   setCameraStatus(
@@ -2279,11 +2940,18 @@ loginButton.addEventListener(
 );
 
 document
-  .getElementById("accessSecret")
+  .getElementById(
+    "accessSecret"
+  )
   .addEventListener(
     "keydown",
     event => {
-      if (event.key === "Enter") {
+
+      if (
+        event.key ===
+        "Enter"
+      ) {
+
         login();
       }
     }
@@ -2301,12 +2969,18 @@ stopScannerButton.addEventListener(
 
 entryButton.addEventListener(
   "click",
-  () => performAction("ENTRY")
+  () =>
+    performAction(
+      "ENTRY"
+    )
 );
 
 exitButton.addEventListener(
   "click",
-  () => performAction("EXIT")
+  () =>
+    performAction(
+      "EXIT"
+    )
 );
 
 nextButton.addEventListener(
@@ -2315,25 +2989,36 @@ nextButton.addEventListener(
 );
 
 document
-  .getElementById("manualButton")
+  .getElementById(
+    "manualButton"
+  )
   .addEventListener(
     "click",
     manualLookup
   );
 
 document
-  .getElementById("manualCode")
+  .getElementById(
+    "manualCode"
+  )
   .addEventListener(
     "keydown",
     event => {
-      if (event.key === "Enter") {
+
+      if (
+        event.key ===
+        "Enter"
+      ) {
+
         manualLookup();
       }
     }
   );
 
 document
-  .getElementById("logoutButton")
+  .getElementById(
+    "logoutButton"
+  )
   .addEventListener(
     "click",
     logout
@@ -2342,17 +3027,22 @@ document
 window.addEventListener(
   "beforeunload",
   () => {
+
     stopScanner();
   }
 );
 
-// Verificação inicial.
+/*
+ * Verificação inicial.
+ */
 (async function init() {
 
   const authenticated =
     await checkSession();
 
-  if (authenticated) {
+  if (
+    authenticated
+  ) {
 
     loginScreen.style.display =
       "none";
