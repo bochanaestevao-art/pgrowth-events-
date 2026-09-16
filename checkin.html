@@ -1119,7 +1119,7 @@ async function ensureScanner() {
   }
 
   state.scanner =
-    new Html5Qrcode("reader", { formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE] });
+    new Html5Qrcode("reader");
 
   return state.scanner;
 }
