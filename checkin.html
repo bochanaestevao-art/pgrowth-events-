@@ -2948,31 +2948,26 @@ window.addEventListener(
 /*
  * Verificação inicial.
  */
+// Verificação inicial.
+//
+// O Staff deve sempre começar pelo LOGIN.
+// A sessão anterior não deve abrir o scanner
+// automaticamente ao carregar a página.
 (async function init() {
 
-  const authenticated =
-    await checkSession();
+  // Estado visual inicial seguro.
+  loginScreen.style.display = "block";
+  checkinScreen.style.display = "none";
 
-  if (
-    authenticated
-  ) {
+  clearOperation();
+  clearLoginError();
 
-    loginScreen.style.display =
-      "none";
+  state.scanning = false;
+  state.processing = false;
+  state.currentCode = null;
+  state.currentTicket = null;
 
-    checkinScreen.style.display =
-      "block";
-
-    await startScanner();
-
-  } else {
-
-    loginScreen.style.display =
-      "block";
-
-    checkinScreen.style.display =
-      "none";
-  }
+  setCameraStatus("CÂMERA PARADA");
 
 })();
 </script>
