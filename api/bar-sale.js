@@ -1,31 +1,30 @@
 import { createClient } from "@supabase/supabase-js";
-import crypto from "node:crypto";
+import crypto from "crypto";
 
 const COOKIE_NAME = "bar_session";
 
 function sendJson(res, status, data) {
-  return res.status(status).json(data);
+  res.statusCode = status;
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+  res.end(JSON.stringify(data));
 }
 
 function getHeader(req, name) {
-  const value = req.headers?.[name];
-
-  if (Array.isArray(value)) {
-    return value[0];
-  }
-
-  return value;
+  const value = req.headers?.[name.toLowerCase()];
+  if (Array.isArray(value)) return value[0];
+  return value || "";
 }
 
 function timingSafeEqualString(a, b) {
-  const aBuffer = Buffer.from(String(a || ""));
-  const bBuffer = Buffer.from(String(b || ""));
+  const aa = Buffer.from(String(a || ""), "utf8");
+  const bb = Buffer.from(String(b || ""), "utf8");
 
-  if (aBuffer.length !== bBuffer.length) {
+  if (aa.length !== bb.length) {
     return false;
   }
 
-  return crypto.timingSafeEqual(aBuffer, bBuffer);
+  return crypto.timingSafeEqual(aa, bb);
 }
 
 function parseCookies(req) {
@@ -44,11 +43,21 @@ function parseCookies(req) {
       continue;
     }
 
-    const key = part.slice(0, index).trim();
-    const value = part.slice(index + 1).trim();
+    const key = part
+      .slice(0, index)
+      .trim();
+
+    const value = part
+      .slice(index + 1)
+      .trim();
+
+    if (!key) {
+      continue;
+    }
 
     try {
-      cookies[key] = decodeURIComponent(value);
+      cookies[key] =
+        decodeURIComponent(value);
     } catch {
       cookies[key] = value;
     }
@@ -58,43 +67,34 @@ function parseCookies(req) {
 }
 
 function readBarSession(req) {
-  const sessionSecret =
-    String(
-      process.env.BAR_SESSION_SECRET || ""
-    ).trim();
-
-  if (!sessionSecret) {
-    throw new Error(
-      "BAR_SESSION_SECRET_MISSING"
-    );
-  }
-
   const cookies = parseCookies(req);
-  const session = cookies[COOKIE_NAME];
+  const raw = cookies[COOKIE_NAME];
 
-  if (!session) {
+  if (!raw) {
     return null;
   }
 
-  const separator = session.lastIndexOf(".");
+  const separator = raw.lastIndexOf(".");
 
   if (separator <= 0) {
     return null;
   }
 
-  const encodedPayload =
-    session.slice(0, separator);
-
+  const payload = raw.slice(0, separator);
   const receivedSignature =
-    session.slice(separator + 1);
+    raw.slice(separator + 1);
+
+  const secret =
+    process.env.BAR_SESSION_SECRET;
+
+  if (!secret) {
+    return null;
+  }
 
   const expectedSignature =
     crypto
-      .createHmac(
-        "sha256",
-        sessionSecret
-      )
-      .update(encodedPayload)
+      .createHmac("sha256", secret)
+      .update(payload)
       .digest("hex");
 
   if (
@@ -106,37 +106,40 @@ function readBarSession(req) {
     return null;
   }
 
-  let payload;
+  let data;
 
   try {
-    payload = JSON.parse(
+    data = JSON.parse(
       Buffer
-        .from(
-          encodedPayload,
-          "base64url"
-        )
+        .from(payload, "base64url")
         .toString("utf8")
     );
   } catch {
     return null;
   }
 
+  if (!data || typeof data !== "object") {
+    return null;
+  }
+
+  if (!data.staff_id) {
+    return null;
+  }
+
   if (
-    !payload ||
-    !payload.staff_id ||
-    !payload.exp
+    !data.expires_at ||
+    Number(data.expires_at) < Date.now()
   ) {
     return null;
   }
 
-  const now =
-    Math.floor(Date.now() / 1000);
+  return data;
+}
 
-  if (payload.exp <= now) {
-    return null;
-  }
-
-  return payload;
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(value || "")
+  );
 }
 
 function normalizeItems(items) {
@@ -144,34 +147,28 @@ function normalizeItems(items) {
     return null;
   }
 
-  if (items.length === 0) {
+  if (items.length < 1) {
+    return null;
+  }
+
+  if (items.length > 100) {
     return null;
   }
 
   const normalized = [];
 
-  const productIds =
-    new Set();
-
   for (const item of items) {
-    if (
-      !item ||
-      typeof item !== "object"
-    ) {
+    if (!item || typeof item !== "object") {
       return null;
     }
 
     const productId =
-      String(
-        item.product_id ||
-        item.productId ||
-        ""
-      ).trim();
+      String(item.product_id || "").trim();
 
     const quantity =
       Number(item.quantity);
 
-    if (!productId) {
+    if (!isUuid(productId)) {
       return null;
     }
 
@@ -183,12 +180,6 @@ function normalizeItems(items) {
       return null;
     }
 
-    if (productIds.has(productId)) {
-      return null;
-    }
-
-    productIds.add(productId);
-
     normalized.push({
       product_id: productId,
       quantity
@@ -198,82 +189,321 @@ function normalizeItems(items) {
   return normalized;
 }
 
-export default async function handler(
-  req,
-  res
-) {
-  if (req.method !== "POST") {
-    res.setHeader(
-      "Allow",
-      "POST"
-    );
+async function handleGet(req, res) {
+  const session =
+    readBarSession(req);
 
-    return sendJson(res, 405, {
+  if (!session) {
+    return sendJson(res, 401, {
       success: false,
-      error: "METHOD_NOT_ALLOWED"
+      error: "UNAUTHORIZED"
     });
   }
 
   const supabaseUrl =
-    String(
-      process.env.SUPABASE_URL || ""
-    ).trim();
+    process.env.SUPABASE_URL;
 
   const serviceRoleKey =
-    String(
-      process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      ""
-    ).trim();
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (
     !supabaseUrl ||
     !serviceRoleKey
   ) {
     console.error(
-      "BAR SALE: configuração Supabase ausente."
+      "BAR DATA: missing Supabase environment variables"
     );
 
     return sendJson(res, 500, {
       success: false,
-      error: "SERVER_CONFIGURATION_ERROR"
+      error: "SERVER_CONFIG_ERROR"
     });
   }
 
-  let session;
+  const supabase =
+    createClient(
+      supabaseUrl,
+      serviceRoleKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
 
-  try {
-    session =
-      readBarSession(req);
-  } catch (error) {
+  const url =
+    new URL(
+      req.url || "/api/bar-sale",
+      "https://localhost"
+    );
+
+  const eventId =
+    String(
+      url.searchParams.get("event_id") || ""
+    ).trim();
+
+  const shortCode =
+    String(
+      url.searchParams.get("short_code") || ""
+    ).trim()
+    .toUpperCase();
+
+  if (!isUuid(eventId)) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_EVENT_ID"
+    });
+  }
+
+  const {
+    data: event,
+    error: eventError
+  } = await supabase
+    .from("events")
+    .select(
+      "id,name,status,currency"
+    )
+    .eq("id", eventId)
+    .maybeSingle();
+
+  if (eventError) {
     console.error(
-      "BAR SALE SESSION ERROR:",
-      error.message
+      "BAR DATA EVENT ERROR:",
+      eventError.message
     );
 
     return sendJson(res, 500, {
       success: false,
-      error: "SERVER_CONFIGURATION_ERROR"
+      error: "EVENT_LOOKUP_FAILED"
     });
   }
+
+  if (!event) {
+    return sendJson(res, 404, {
+      success: false,
+      error: "EVENT_NOT_FOUND"
+    });
+  }
+
+  if (event.status !== "OPEN") {
+    return sendJson(res, 409, {
+      success: false,
+      error: "EVENT_CLOSED"
+    });
+  }
+
+  const {
+    data: products,
+    error: productsError
+  } = await supabase
+    .from("bar_products")
+    .select(
+      "id,name,category,price,status"
+    )
+    .eq("event_id", eventId)
+    .eq("status", "ACTIVE")
+    .order("category", {
+      ascending: true
+    })
+    .order("name", {
+      ascending: true
+    });
+
+  if (productsError) {
+    console.error(
+      "BAR DATA PRODUCTS ERROR:",
+      productsError.message
+    );
+
+    return sendJson(res, 500, {
+      success: false,
+      error: "PRODUCT_LOOKUP_FAILED"
+    });
+  }
+
+  let participant = null;
+
+  if (shortCode) {
+    const {
+      data: participantRow,
+      error: participantError
+    } = await supabase
+      .from("event_participants")
+      .select(
+        "id,full_name,phone,short_code,status"
+      )
+      .eq("event_id", eventId)
+      .eq("short_code", shortCode)
+      .eq("status", "ACTIVE")
+      .maybeSingle();
+
+    if (participantError) {
+      console.error(
+        "BAR DATA PARTICIPANT ERROR:",
+        participantError.message
+      );
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "PARTICIPANT_LOOKUP_FAILED"
+      });
+    }
+
+    if (!participantRow) {
+      return sendJson(res, 404, {
+        success: false,
+        error: "PARTICIPANT_NOT_FOUND"
+      });
+    }
+
+    const {
+      data: wallet,
+      error: walletError
+    } = await supabase
+      .from("wallet_accounts")
+      .select(
+        "id,balance,status"
+      )
+      .eq("event_id", eventId)
+      .eq(
+        "participant_id",
+        participantRow.id
+      )
+      .maybeSingle();
+
+    if (walletError) {
+      console.error(
+        "BAR DATA WALLET ERROR:",
+        walletError.message
+      );
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "WALLET_LOOKUP_FAILED"
+      });
+    }
+
+    if (!wallet) {
+      return sendJson(res, 404, {
+        success: false,
+        error: "WALLET_NOT_FOUND"
+      });
+    }
+
+    participant = {
+      id: participantRow.id,
+      full_name:
+        participantRow.full_name,
+      phone:
+        participantRow.phone,
+      short_code:
+        participantRow.short_code,
+      wallet_id:
+        wallet.id,
+      balance:
+        Number(wallet.balance || 0),
+      wallet_status:
+        wallet.status
+    };
+  }
+
+  return sendJson(res, 200, {
+    success: true,
+    staff_id:
+      session.staff_id,
+    event: {
+      id: event.id,
+      name: event.name,
+      status: event.status,
+      currency: event.currency
+    },
+    participant,
+    products:
+      (products || []).map(
+        product => ({
+          id: product.id,
+          name: product.name,
+          category:
+            product.category,
+          price:
+            Number(product.price || 0),
+          status:
+            product.status
+        })
+      )
+  });
+}
+
+async function handlePost(req, res) {
+  const session =
+    readBarSession(req);
 
   if (!session) {
     return sendJson(res, 401, {
       success: false,
-      error: "NOT_AUTHENTICATED"
+      error: "UNAUTHORIZED"
     });
   }
 
-  let body = req.body;
+  const supabaseUrl =
+    process.env.SUPABASE_URL;
 
-  if (typeof body === "string") {
-    try {
-      body = JSON.parse(body);
-    } catch {
-      return sendJson(res, 400, {
-        success: false,
-        error: "INVALID_JSON"
-      });
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (
+    !supabaseUrl ||
+    !serviceRoleKey
+  ) {
+    console.error(
+      "BAR SALE: missing Supabase environment variables"
+    );
+
+    return sendJson(res, 500, {
+      success: false,
+      error: "SERVER_CONFIG_ERROR"
+    });
+  }
+
+  let body;
+
+  try {
+    if (
+      req.body &&
+      typeof req.body === "object"
+    ) {
+      body = req.body;
+    } else {
+      const chunks = [];
+
+      for await (const chunk of req) {
+        chunks.push(
+          Buffer.isBuffer(chunk)
+            ? chunk
+            : Buffer.from(chunk)
+        );
+      }
+
+      const raw =
+        Buffer
+          .concat(chunks)
+          .toString("utf8");
+
+      body = raw
+        ? JSON.parse(raw)
+        : null;
     }
+  } catch (error) {
+    console.error(
+      "BAR SALE BODY ERROR:",
+      error.message
+    );
+
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_JSON"
+    });
   }
 
   if (
@@ -282,29 +512,25 @@ export default async function handler(
   ) {
     return sendJson(res, 400, {
       success: false,
-      error: "INVALID_JSON"
+      error: "INVALID_BODY"
     });
   }
 
   const eventId =
     String(
-      body.event_id ||
-      body.eventId ||
-      ""
+      body.event_id || ""
     ).trim();
 
   const shortCode =
     String(
-      body.short_code ||
-      body.shortCode ||
-      ""
+      body.short_code || ""
     ).trim()
     .toUpperCase();
 
   const items =
     normalizeItems(body.items);
 
-  if (!eventId) {
+  if (!isUuid(eventId)) {
     return sendJson(res, 400, {
       success: false,
       error: "INVALID_EVENT_ID"
@@ -340,16 +566,22 @@ export default async function handler(
   const staffId =
     session.staff_id;
 
-  const { data, error } =
-    await supabase.rpc(
-      "process_bar_sale",
-      {
-        p_event_id: eventId,
-        p_short_code: shortCode,
-        p_items: items,
-        p_staff_id: staffId
-      }
-    );
+  const {
+    data,
+    error
+  } = await supabase.rpc(
+    "process_bar_sale",
+    {
+      p_event_id:
+        eventId,
+      p_short_code:
+        shortCode,
+      p_items:
+        items,
+      p_staff_id:
+        staffId
+    }
+  );
 
   if (error) {
     console.error(
@@ -425,7 +657,8 @@ export default async function handler(
 
   return sendJson(res, 200, {
     success: true,
-    staff_id: staffId,
+    staff_id:
+      staffId,
     transaction_id:
       data?.transaction_id || null,
     participant_id:
@@ -433,10 +666,30 @@ export default async function handler(
     wallet_id:
       data?.wallet_id || null,
     total:
-      data?.total || 0,
+      Number(data?.total || 0),
     balance_before:
-      data?.balance_before || 0,
+      Number(data?.balance_before || 0),
     balance_after:
-      data?.balance_after || 0
+      Number(data?.balance_after || 0)
+  });
+}
+
+export default async function handler(req, res) {
+  if (req.method === "GET") {
+    return handleGet(req, res);
+  }
+
+  if (req.method === "POST") {
+    return handlePost(req, res);
+  }
+
+  res.setHeader(
+    "Allow",
+    "GET, POST"
+  );
+
+  return sendJson(res, 405, {
+    success: false,
+    error: "METHOD_NOT_ALLOWED"
   });
 }
