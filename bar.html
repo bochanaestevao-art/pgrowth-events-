@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#080808"
+  >
+
+  <title>BLACK OUT — BAR</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #080808;
+      color: #f5f5f5;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .app {
+      width: min(100%, 720px);
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .brand {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .event-name {
+      color: #c9a227;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .logout {
+      border: 1px solid #333;
+      background: #151515;
+      color: #fff;
+      border-radius: 10px;
+      padding: 9px 12px;
+      cursor: pointer;
+    }
+
+    .card {
+      background: #111;
+      border: 1px solid #292929;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .login-card {
+      margin-top: 60px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin-top: 0;
+    }
+
+    h1 {
+      font-size: 25px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #aaa;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      background: #080808;
+      border: 1px solid #333;
+      border-radius: 11px;
+      color: #fff;
+      padding: 13px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #c9a227;
+    }
+
+    .field {
+      margin-bottom: 12px;
+    }
+
+    .primary {
+      width: 100%;
+      border: 0;
+      background: #c9a227;
+      color: #050505;
+      border-radius: 11px;
+      padding: 14px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .primary:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .message {
+      margin-top: 10px;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .error {
+      color: #ff7777;
+    }
+
+    .success {
+      color: #76e39a;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .customer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .customer-name {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .customer-code {
+      color: #c9a227;
+      font-size: 14px;
+      margin-top: 4px;
+      letter-spacing: 1px;
+    }
+
+    .balance-box {
+      text-align: right;
+    }
+
+    .balance-label {
+      color: #999;
+      font-size: 12px;
+    }
+
+    .balance {
+      font-size: 25px;
+      font-weight: 900;
+      color: #76e39a;
+      margin-top: 3px;
+    }
+
+    .products {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .product {
+      background: #171717;
+      border: 1px solid #2c2c2c;
+      border-radius: 14px;
+      padding: 13px;
+    }
+
+    .product-name {
+      font-weight: 800;
+      min-height: 38px;
+    }
+
+    .product-category {
+      color: #888;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .product-price {
+      color: #c9a227;
+      font-weight: 900;
+      margin-top: 9px;
+    }
+
+    .product-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 7px;
+      margin-top: 11px;
+    }
+
+    .qty-btn {
+      width: 38px;
+      height: 38px;
+      border: 1px solid #333;
+      background: #0c0c0c;
+      color: #fff;
+      border-radius: 9px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .qty {
+      min-width: 25px;
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .cart-row {
+      display: grid;
+      grid-template-columns:
+        1fr auto auto;
+      gap: 10px;
+      align-items: center;
+      border-bottom: 1px solid #222;
+      padding: 10px 0;
+    }
+
+    .cart-row:last-child {
+      border-bottom: 0;
+    }
+
+    .cart-name {
+      font-weight: 700;
+    }
+
+    .cart-qty {
+      color: #aaa;
+    }
+
+    .cart-total {
+      font-weight: 900;
+    }
+
+    .total-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 15px;
+      padding-top: 14px;
+      border-top: 1px solid #333;
+    }
+
+    .total-label {
+      color: #aaa;
+    }
+
+    .total {
+      color: #c9a227;
+      font-size: 26px;
+      font-weight: 900;
+    }
+
+    .result {
+      text-align: center;
+      padding: 15px;
+    }
+
+    .result-total {
+      font-size: 30px;
+      font-weight: 900;
+      color: #c9a227;
+    }
+
+    .result-balance {
+      font-size: 22px;
+      font-weight: 900;
+      color: #76e39a;
+      margin-top: 8px;
+    }
+
+    .small {
+      color: #888;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 460px) {
+      .products {
+        grid-template-columns: 1fr;
+      }
+
+      .balance-box {
+        width: 100%;
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="app">
+
+    <section
+      id="loginScreen"
+      class="card login-card"
+    >
+      <h1>BAR</h1>
+
+      <p class="small">
+        Acesso exclusivo para funcionários.
+      </p>
+
+      <div class="field">
+        <label for="staffId">
+          Funcionário
+        </label>
+
+        <input
+          id="staffId"
+          type="text"
+          autocomplete="username"
+          placeholder="Ex.: BAR-001"
+        >
+      </div>
+
+      <div class="field">
+        <label for="staffPin">
+          PIN
+        </label>
+
+        <input
+          id="staffPin"
+          type="password"
+          inputmode="numeric"
+          autocomplete="current-password"
+          placeholder="PIN"
+        >
+      </div>
+
+      <button
+        id="loginBtn"
+        class="primary"
+      >
+        ENTRAR
+      </button>
+
+      <div
+        id="loginMessage"
+        class="message"
+      ></div>
+    </section>
+
+
+    <section
+      id="barScreen"
+      class="hidden"
+    >
+
+      <header class="header">
+
+        <div>
+          <div class="brand">
+            BLACK OUT — BAR
+          </div>
+
+          <div
+            id="eventName"
+            class="event-name"
+          >
+            —
+          </div>
+        </div>
+
+        <button
+          id="logoutBtn"
+          class="logout"
+        >
+          Sair
+        </button>
+
+      </header>
+
+
+      <section class="card">
+
+        <h2>
+          Identificar cliente
+        </h2>
+
+        <div class="field">
+
+          <label for="shortCode">
+            Código curto
+          </label>
+
+          <input
+            id="shortCode"
+            type="text"
+            maxlength="20"
+            autocomplete="off"
+            autocapitalize="characters"
+            placeholder="Ex.: B7K4P9"
+          >
+
+        </div>
+
+        <button
+          id="lookupBtn"
+          class="primary"
+        >
+          CONSULTAR
+        </button>
+
+        <div
+          id="lookupMessage"
+          class="message"
+        ></div>
+
+      </section>
+
+
+      <section
+        id="customerCard"
+        class="card hidden"
+      >
+
+        <div class="customer">
+
+          <div>
+
+            <div
+              id="customerName"
+              class="customer-name"
+            >
+              —
+            </div>
+
+            <div
+              id="customerCode"
+              class="customer-code"
+            >
+              —
+            </div>
+
+          </div>
+
+          <div class="balance-box">
+
+            <div class="balance-label">
+              SALDO
+            </div>
+
+            <div
+              id="customerBalance"
+              class="balance"
+            >
+              0 MZN
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <section
+        id="productsCard"
+        class="card hidden"
+      >
+
+        <h2>
+          Menu
+        </h2>
+
+        <div
+          id="products"
+          class="products"
+        ></div>
+
+      </section>
+
+
+      <section
+        id="cartCard"
+        class="card hidden"
+      >
+
+        <h2>
+          Carrinho
+        </h2>
+
+        <div
+          id="cart"
+        ></div>
+
+        <div class="total-row">
+
+          <div class="total-label">
+            TOTAL
+          </div>
+
+          <div
+            id="cartTotal"
+            class="total"
+          >
+            0 MZN
+          </div>
+
+        </div>
+
+        <br>
+
+        <button
+          id="sellBtn"
+          class="primary"
+          disabled
+        >
+          CONFIRMAR VENDA
+        </button>
+
+        <div
+          id="saleMessage"
+          class="message"
+        ></div>
+
+      </section>
+
+
+      <section
+        id="resultCard"
+        class="card hidden"
+      >
+
+        <div class="result">
+
+          <h2>
+            Venda concluída
+          </h2>
+
+          <div class="result-total">
+            <span id="resultTotal">
+              0
+            </span>
+            MZN
+          </div>
+
+          <div class="small">
+            Saldo restante
+          </div>
+
+          <div class="result-balance">
+            <span id="resultBalance">
+              0
+            </span>
+            MZN
+          </div>
+
+          <br>
+
+          <button
+            id="newSaleBtn"
+            class="primary"
+          >
+            NOVA VENDA
+          </button>
+
+        </div>
+
+      </section>
+
+    </section>
+
+  </main>
+
+
+  <script>
+    const EVENT_ID =
+      "efe5eee5-d361-44b4-a1bf-9d92914fa297";
+
+    let products = [];
+    let cart = {};
+    let participant = null;
+    let currency = "MZN";
+
+    const $ = (id) =>
+      document.getElementById(id);
+
+    function money(value) {
+      return (
+        Number(value || 0)
+          .toLocaleString("pt-MZ", {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+          })
+        + " "
+        + currency
+      );
+    }
+
+    function showMessage(
+      element,
+      text,
+      type = ""
+    ) {
+      element.textContent = text;
+      element.className =
+        "message " + type;
+    }
+
+    function clearMessage(element) {
+      element.textContent = "";
+      element.className = "message";
+    }
+
+    async function checkSession() {
+      try {
+        const response =
+          await fetch(
+            "/api/bar-session",
+            {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store"
+            }
+          );
+
+        if (!response.ok) {
+          return false;
+        }
+
+        const data =
+          await response.json();
+
+        return (
+          data.success === true &&
+          data.authenticated === true
+        );
+
+      } catch {
+        return false;
+      }
+    }
+
+    async function login() {
+      const staffId =
+        $("staffId").value.trim();
+
+      const staffPin =
+        $("staffPin").value.trim();
+
+      clearMessage(
+        $("loginMessage")
+      );
+
+      if (!staffId) {
+        showMessage(
+          $("loginMessage"),
+          "Informe o funcionário.",
+          "error"
+        );
+        return;
+      }
+
+      if (!staffPin) {
+        showMessage(
+          $("loginMessage"),
+          "Informe o PIN.",
+          "error"
+        );
+        return;
+      }
+
+      $("loginBtn").disabled = true;
+
+      try {
+        const response =
+          await fetch(
+            "/api/bar-session",
+            {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+              body: JSON.stringify({
+                staff_id: staffId,
+                staff_pin: staffPin
+              })
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (!response.ok) {
+          showMessage(
+            $("loginMessage"),
+            "Login recusado.",
+            "error"
+          );
+          return;
+        }
+
+        $("loginScreen")
+          .classList
+          .add("hidden");
+
+        $("barScreen")
+          .classList
+          .remove("hidden");
+
+        await loadEventData();
+
+      } catch {
+        showMessage(
+          $("loginMessage"),
+          "Erro de comunicação com o servidor.",
+          "error"
+        );
+      } finally {
+        $("loginBtn").disabled = false;
+      }
+    }
+
+    async function loadEventData(
+      shortCode = ""
+    ) {
+      const params =
+        new URLSearchParams();
+
+      params.set(
+        "event_id",
+        EVENT_ID
+      );
+
+      if (shortCode) {
+        params.set(
+          "short_code",
+          shortCode
+        );
+      }
+
+      const response =
+        await fetch(
+          "/api/bar-data?" +
+          params.toString(),
+          {
+            credentials: "include",
+            cache: "no-store"
+          }
+        );
+
+      if (response.status === 401) {
+        logoutLocal();
+        return null;
+      }
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+          "BAR_DATA_FAILED"
+        );
+      }
+
+      currency =
+        data.event?.currency ||
+        "MZN";
+
+      $("eventName").textContent =
+        data.event?.name ||
+        "Evento";
+
+      products =
+        data.products || [];
+
+      renderProducts();
+
+      if (data.participant) {
+        participant =
+          data.participant;
+
+        showParticipant();
+
+      } else if (shortCode) {
+        participant = null;
+
+        $("customerCard")
+          .classList
+          .add("hidden");
+
+        $("productsCard")
+          .classList
+          .add("hidden");
+
+        $("cartCard")
+          .classList
+          .add("hidden");
+
+        showMessage(
+          $("lookupMessage"),
+          "Cliente não encontrado.",
+          "error"
+        );
+      }
+
+      return data;
+    }
+
+    function showParticipant() {
+      $("customerCard")
+        .classList
+        .remove("hidden");
+
+      $("productsCard")
+        .classList
+        .remove("hidden");
+
+      $("cartCard")
+        .classList
+        .remove("hidden");
+
+      $("customerName").textContent =
+        participant.full_name ||
+        "Cliente";
+
+      $("customerCode").textContent =
+        participant.short_code ||
+        "";
+
+      $("customerBalance").textContent =
+        money(
+          participant.balance
+        );
+
+      clearMessage(
+        $("lookupMessage")
+      );
+
+      cart = {};
+
+      renderProducts();
+      renderCart();
+    }
+
+    function renderProducts() {
+      const container =
+        $("products");
+
+      container.innerHTML = "";
+
+      if (!products.length) {
+        container.innerHTML =
+          '<div class="small">Nenhum produto disponível.</div>';
+
+        return;
+      }
+
+      for (const product of products) {
+        const quantity =
+          Number(
+            cart[product.id] || 0
+          );
+
+        const card =
+          document.createElement("div");
+
+        card.className = "product";
+
+        card.innerHTML = `
+          <div class="product-name">
+            ${escapeHtml(product.name)}
+          </div>
+
+          <div class="product-category">
+            ${escapeHtml(product.category || "")}
+          </div>
+
+          <div class="product-price">
+            ${money(product.price)}
+          </div>
+
+          <div class="product-controls">
+
+            <button
+              class="qty-btn"
+              type="button"
+              data-action="minus"
+              data-id="${product.id}"
+            >
+              −
+            </button>
+
+            <div class="qty">
+              ${quantity}
+            </div>
+
+            <button
+              class="qty-btn"
+              type="button"
+              data-action="plus"
+              data-id="${product.id}"
+            >
+              +
+            </button>
+
+          </div>
+        `;
+
+        container.appendChild(card);
+      }
+    }
+
+    function renderCart() {
+      const container =
+        $("cart");
+
+      container.innerHTML = "";
+
+      let total = 0;
+      let count = 0;
+
+      for (const product of products) {
+        const quantity =
+          Number(
+            cart[product.id] || 0
+          );
+
+        if (quantity <= 0) {
+          continue;
+        }
+
+        const lineTotal =
+          Number(product.price) *
+          quantity;
+
+        total += lineTotal;
+        count += quantity;
+
+        const row =
+          document.createElement("div");
+
+        row.className = "cart-row";
+
+        row.innerHTML = `
+          <div class="cart-name">
+            ${escapeHtml(product.name)}
+          </div>
+
+          <div class="cart-qty">
+            x${quantity}
+          </div>
+
+          <div class="cart-total">
+            ${money(lineTotal)}
+          </div>
+        `;
+
+        container.appendChild(row);
+      }
+
+      if (count === 0) {
+        container.innerHTML =
+          '<div class="small">Nenhum produto selecionado.</div>';
+      }
+
+      $("cartTotal").textContent =
+        money(total);
+
+      $("sellBtn").disabled =
+        !participant ||
+        count === 0;
+    }
+
+    function changeQuantity(
+      productId,
+      delta
+    ) {
+      if (!participant) {
+        return;
+      }
+
+      const current =
+        Number(
+          cart[productId] || 0
+        );
+
+      const next =
+        Math.max(
+          0,
+          Math.min(
+            100,
+            current + delta
+          )
+        );
+
+      if (next === 0) {
+        delete cart[productId];
+      } else {
+        cart[productId] = next;
+      }
+
+      renderProducts();
+      renderCart();
+    }
+
+    async function lookupParticipant() {
+      const shortCode =
+        $("shortCode")
+          .value
+          .trim()
+          .toUpperCase();
+
+      clearMessage(
+        $("lookupMessage")
+      );
+
+      if (!shortCode) {
+        showMessage(
+          $("lookupMessage"),
+          "Informe o código curto.",
+          "error"
+        );
+        return;
+      }
+
+      $("lookupBtn").disabled = true;
+
+      try {
+        await loadEventData(
+          shortCode
+        );
+      } catch (error) {
+        showMessage(
+          $("lookupMessage"),
+          "Não foi possível consultar o cliente.",
+          "error"
+        );
+      } finally {
+        $("lookupBtn").disabled = false;
+      }
+    }
+
+    async function sell() {
+      if (!participant) {
+        return;
+      }
+
+      const items =
+        Object.entries(cart)
+          .map(
+            ([product_id, quantity]) => ({
+              product_id,
+              quantity: Number(quantity)
+            })
+          );
+
+      if (!items.length) {
+        return;
+      }
+
+      clearMessage(
+        $("saleMessage")
+      );
+
+      $("sellBtn").disabled = true;
+
+      try {
+        const response =
+          await fetch(
+            "/api/bar-sale",
+            {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+              body: JSON.stringify({
+                event_id: EVENT_ID,
+                short_code:
+                  participant.short_code,
+                items
+              })
+            }
+          );
+
+        const data =
+          await response.json();
+
+        if (response.status === 401) {
+          logoutLocal();
+          return;
+        }
+
+        if (!response.ok) {
+          let message =
+            "A venda não foi concluída.";
+
+          if (
+            data.error ===
+            "INSUFFICIENT_BALANCE"
+          ) {
+            message =
+              "Saldo insuficiente.";
+          }
+
+          if (
+            data.error ===
+            "EVENT_CLOSED"
+          ) {
+            message =
+              "O evento está fechado.";
+          }
+
+          showMessage(
+            $("saleMessage"),
+            message,
+            "error"
+          );
+
+          $("sellBtn").disabled = false;
+          return;
+        }
+
+        $("resultTotal").textContent =
+          Number(
+            data.total || 0
+          ).toLocaleString(
+            "pt-MZ"
+          );
+
+        $("resultBalance").textContent =
+          Number(
+            data.balance_after || 0
+          ).toLocaleString(
+            "pt-MZ"
+          );
+
+        $("cartCard")
+          .classList
+          .add("hidden");
+
+        $("resultCard")
+          .classList
+          .remove("hidden");
+
+        participant.balance =
+          Number(
+            data.balance_after || 0
+          );
+
+      } catch {
+        showMessage(
+          $("saleMessage"),
+          "Erro de comunicação com o servidor.",
+          "error"
+        );
+
+        $("sellBtn").disabled = false;
+      }
+    }
+
+    function newSale() {
+      cart = {};
+
+      $("resultCard")
+        .classList
+        .add("hidden");
+
+      $("cartCard")
+        .classList
+        .remove("hidden");
+
+      $("shortCode").value = "";
+
+      $("customerCard")
+        .classList
+        .add("hidden");
+
+      $("productsCard")
+        .classList
+        .add("hidden");
+
+      $("cartCard")
+        .classList
+        .add("hidden");
+
+      participant = null;
+
+      clearMessage(
+        $("lookupMessage")
+      );
+
+      clearMessage(
+        $("saleMessage")
+      );
+
+      $("shortCode")
+        .focus();
+    }
+
+    async function logout() {
+      try {
+        await fetch(
+          "/api/bar-session",
+          {
+            method: "DELETE",
+            credentials: "include"
+          }
+        );
+      } catch {}
+
+      logoutLocal();
+    }
+
+    function logoutLocal() {
+      participant = null;
+      cart = {};
+
+      $("barScreen")
+        .classList
+        .add("hidden");
+
+      $("loginScreen")
+        .classList
+        .remove("hidden");
+
+      $("staffPin").value = "";
+
+      $("shortCode").value = "";
+
+      $("customerCard")
+        .classList
+        .add("hidden");
+
+      $("productsCard")
+        .classList
+        .add("hidden");
+
+      $("cartCard")
+        .classList
+        .add("hidden");
+
+      $("resultCard")
+        .classList
+        .add("hidden");
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    $("loginBtn")
+      .addEventListener(
+        "click",
+        login
+      );
+
+    $("lookupBtn")
+      .addEventListener(
+        "click",
+        lookupParticipant
+      );
+
+    $("sellBtn")
+      .addEventListener(
+        "click",
+        sell
+      );
+
+    $("logoutBtn")
+      .addEventListener(
+        "click",
+        logout
+      );
+
+    $("newSaleBtn")
+      .addEventListener(
+        "click",
+        newSale
+      );
+
+    $("shortCode")
+      .addEventListener(
+        "keydown",
+        (event) => {
+          if (
+            event.key === "Enter"
+          ) {
+            lookupParticipant();
+          }
+        }
+      );
+
+    $("products")
+      .addEventListener(
+        "click",
+        (event) => {
+          const button =
+            event.target.closest(
+              ".qty-btn"
+            );
+
+          if (!button) {
+            return;
+          }
+
+          const id =
+            button.dataset.id;
+
+          const action =
+            button.dataset.action;
+
+          changeQuantity(
+            id,
+            action === "plus"
+              ? 1
+              : -1
+          );
+        }
+      );
+
+    (async function init() {
+      const authenticated =
+        await checkSession();
+
+      if (authenticated) {
+        $("loginScreen")
+          .classList
+          .add("hidden");
+
+        $("barScreen")
+          .classList
+          .remove("hidden");
+
+        try {
+          await loadEventData();
+        } catch {
+          showMessage(
+            $("lookupMessage"),
+            "Não foi possível carregar o evento.",
+            "error"
+          );
+        }
+      }
+    })();
+  </script>
+
+</body>
+</html>
