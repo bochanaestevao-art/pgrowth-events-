@@ -1,22 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
+import crypto from "node:crypto";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const barStaffSecret = process.env.BAR_STAFF_SECRET;
-
-const supabase = createClient(
-  supabaseUrl,
-  supabaseServiceRoleKey,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-);
+const COOKIE_NAME = "bar_session";
 
 function sendJson(res, status, data) {
-  res.status(status).json(data);
+  return res.status(status).json(data);
 }
 
 function getHeader(req, name) {
@@ -29,38 +17,196 @@ function getHeader(req, name) {
   return value;
 }
 
-function normalizeShortCode(value) {
-  return String(value || "")
-    .trim()
-    .toUpperCase();
+function timingSafeEqualString(a, b) {
+  const aBuffer = Buffer.from(String(a || ""));
+  const bBuffer = Buffer.from(String(b || ""));
+
+  if (aBuffer.length !== bBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(aBuffer, bBuffer);
 }
 
-function isValidUuid(value) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    String(value || "")
-  );
+function parseCookies(req) {
+  const header = getHeader(req, "cookie");
+
+  if (!header) {
+    return {};
+  }
+
+  const cookies = {};
+
+  for (const part of header.split(";")) {
+    const index = part.indexOf("=");
+
+    if (index === -1) {
+      continue;
+    }
+
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+
+    try {
+      cookies[key] = decodeURIComponent(value);
+    } catch {
+      cookies[key] = value;
+    }
+  }
+
+  return cookies;
 }
 
-function parseBody(req) {
-  if (!req.body) {
+function readBarSession(req) {
+  const sessionSecret =
+    String(
+      process.env.BAR_SESSION_SECRET || ""
+    ).trim();
+
+  if (!sessionSecret) {
+    throw new Error(
+      "BAR_SESSION_SECRET_MISSING"
+    );
+  }
+
+  const cookies = parseCookies(req);
+  const session = cookies[COOKIE_NAME];
+
+  if (!session) {
     return null;
   }
 
-  if (typeof req.body === "object") {
-    return req.body;
+  const separator = session.lastIndexOf(".");
+
+  if (separator <= 0) {
+    return null;
   }
 
+  const encodedPayload =
+    session.slice(0, separator);
+
+  const receivedSignature =
+    session.slice(separator + 1);
+
+  const expectedSignature =
+    crypto
+      .createHmac(
+        "sha256",
+        sessionSecret
+      )
+      .update(encodedPayload)
+      .digest("hex");
+
+  if (
+    !timingSafeEqualString(
+      receivedSignature,
+      expectedSignature
+    )
+  ) {
+    return null;
+  }
+
+  let payload;
+
   try {
-    return JSON.parse(req.body);
+    payload = JSON.parse(
+      Buffer
+        .from(
+          encodedPayload,
+          "base64url"
+        )
+        .toString("utf8")
+    );
   } catch {
     return null;
   }
+
+  if (
+    !payload ||
+    !payload.staff_id ||
+    !payload.exp
+  ) {
+    return null;
+  }
+
+  const now =
+    Math.floor(Date.now() / 1000);
+
+  if (payload.exp <= now) {
+    return null;
+  }
+
+  return payload;
 }
 
-export default async function handler(req, res) {
+function normalizeItems(items) {
+  if (!Array.isArray(items)) {
+    return null;
+  }
 
+  if (items.length === 0) {
+    return null;
+  }
+
+  const normalized = [];
+
+  const productIds =
+    new Set();
+
+  for (const item of items) {
+    if (
+      !item ||
+      typeof item !== "object"
+    ) {
+      return null;
+    }
+
+    const productId =
+      String(
+        item.product_id ||
+        item.productId ||
+        ""
+      ).trim();
+
+    const quantity =
+      Number(item.quantity);
+
+    if (!productId) {
+      return null;
+    }
+
+    if (
+      !Number.isInteger(quantity) ||
+      quantity < 1 ||
+      quantity > 100
+    ) {
+      return null;
+    }
+
+    if (productIds.has(productId)) {
+      return null;
+    }
+
+    productIds.add(productId);
+
+    normalized.push({
+      product_id: productId,
+      quantity
+    });
+  }
+
+  return normalized;
+}
+
+export default async function handler(
+  req,
+  res
+) {
   if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
+    res.setHeader(
+      "Allow",
+      "POST"
+    );
 
     return sendJson(res, 405, {
       success: false,
@@ -68,13 +214,23 @@ export default async function handler(req, res) {
     });
   }
 
+  const supabaseUrl =
+    String(
+      process.env.SUPABASE_URL || ""
+    ).trim();
+
+  const serviceRoleKey =
+    String(
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      ""
+    ).trim();
+
   if (
     !supabaseUrl ||
-    !supabaseServiceRoleKey ||
-    !barStaffSecret
+    !serviceRoleKey
   ) {
     console.error(
-      "BAR API: variáveis de ambiente ausentes."
+      "BAR SALE: configuração Supabase ausente."
     );
 
     return sendJson(res, 500, {
@@ -83,275 +239,204 @@ export default async function handler(req, res) {
     });
   }
 
-  const receivedSecret =
-    getHeader(req, "x-bar-secret");
+  let session;
 
-  if (
-    !receivedSecret ||
-    receivedSecret !== barStaffSecret
-  ) {
-    return sendJson(res, 401, {
+  try {
+    session =
+      readBarSession(req);
+  } catch (error) {
+    console.error(
+      "BAR SALE SESSION ERROR:",
+      error.message
+    );
+
+    return sendJson(res, 500, {
       success: false,
-      error: "UNAUTHORIZED"
+      error: "SERVER_CONFIGURATION_ERROR"
     });
   }
 
-  const body = parseBody(req);
+  if (!session) {
+    return sendJson(res, 401, {
+      success: false,
+      error: "NOT_AUTHENTICATED"
+    });
+  }
 
-  if (!body) {
+  let body = req.body;
+
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      return sendJson(res, 400, {
+        success: false,
+        error: "INVALID_JSON"
+      });
+    }
+  }
+
+  if (
+    !body ||
+    typeof body !== "object"
+  ) {
     return sendJson(res, 400, {
       success: false,
       error: "INVALID_JSON"
     });
   }
 
-  const eventId = String(
-    body.event_id || ""
-  ).trim();
+  const eventId =
+    String(
+      body.event_id ||
+      body.eventId ||
+      ""
+    ).trim();
 
-  const shortCode = normalizeShortCode(
-    body.short_code
-  );
+  const shortCode =
+    String(
+      body.short_code ||
+      body.shortCode ||
+      ""
+    ).trim()
+    .toUpperCase();
 
-  const staffId = String(
-    body.staff_id || ""
-  ).trim();
+  const items =
+    normalizeItems(body.items);
 
-  const items = body.items;
-
-  if (!isValidUuid(eventId)) {
+  if (!eventId) {
     return sendJson(res, 400, {
       success: false,
       error: "INVALID_EVENT_ID"
     });
   }
 
-  if (
-    !shortCode ||
-    shortCode.length < 4 ||
-    shortCode.length > 20
-  ) {
+  if (!shortCode) {
     return sendJson(res, 400, {
       success: false,
       error: "INVALID_SHORT_CODE"
     });
   }
 
-  if (
-    !staffId ||
-    staffId.length > 100
-  ) {
-    return sendJson(res, 400, {
-      success: false,
-      error: "INVALID_STAFF_ID"
-    });
-  }
-
-  if (
-    !Array.isArray(items) ||
-    items.length === 0
-  ) {
+  if (!items) {
     return sendJson(res, 400, {
       success: false,
       error: "INVALID_ITEMS"
     });
   }
 
-  if (items.length > 50) {
-    return sendJson(res, 400, {
-      success: false,
-      error: "TOO_MANY_ITEMS"
-    });
-  }
-
-  const normalizedItems = [];
-
-  for (const item of items) {
-
-    if (!item || typeof item !== "object") {
-      return sendJson(res, 400, {
-        success: false,
-        error: "INVALID_ITEM"
-      });
-    }
-
-    const productId = String(
-      item.product_id || ""
-    ).trim();
-
-    const quantityNumber = Number(
-      item.quantity
+  const supabase =
+    createClient(
+      supabaseUrl,
+      serviceRoleKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
 
-    if (!isValidUuid(productId)) {
-      return sendJson(res, 400, {
-        success: false,
-        error: "INVALID_PRODUCT_ID"
-      });
-    }
+  const staffId =
+    session.staff_id;
 
-    if (
-      !Number.isInteger(quantityNumber) ||
-      quantityNumber <= 0 ||
-      quantityNumber > 100
-    ) {
-      return sendJson(res, 400, {
-        success: false,
-        error: "INVALID_QUANTITY"
-      });
-    }
-
-    normalizedItems.push({
-      product_id: productId,
-      quantity: quantityNumber
-    });
-  }
-
-  const seenProducts = new Set();
-
-  for (const item of normalizedItems) {
-
-    if (seenProducts.has(item.product_id)) {
-      return sendJson(res, 400, {
-        success: false,
-        error: "DUPLICATE_PRODUCT"
-      });
-    }
-
-    seenProducts.add(item.product_id);
-  }
-
-  try {
-
-    const { data, error } = await supabase.rpc(
+  const { data, error } =
+    await supabase.rpc(
       "process_bar_sale",
       {
         p_event_id: eventId,
         p_short_code: shortCode,
-        p_items: normalizedItems,
+        p_items: items,
         p_staff_id: staffId
       }
     );
 
-    if (error) {
+  if (error) {
+    console.error(
+      "BAR SALE RPC ERROR:",
+      error.message
+    );
 
-      console.error(
-        "BAR SALE RPC ERROR:",
-        error
+    const message =
+      String(
+        error.message || ""
       );
 
-      const message =
-        String(error.message || "").toUpperCase();
-
-      if (
-        message.includes("EVENT_CLOSED")
-      ) {
-        return sendJson(res, 409, {
-          success: false,
-          error: "EVENT_CLOSED",
-          message: "O evento está fechado."
-        });
-      }
-
-      if (
-        message.includes("PARTICIPANT_NOT_FOUND")
-      ) {
-        return sendJson(res, 404, {
-          success: false,
-          error: "PARTICIPANT_NOT_FOUND",
-          message: "Participante não encontrado."
-        });
-      }
-
-      if (
-        message.includes("WALLET_NOT_FOUND")
-      ) {
-        return sendJson(res, 404, {
-          success: false,
-          error: "WALLET_NOT_FOUND",
-          message: "Carteira ativa não encontrada."
-        });
-      }
-
-      if (
-        message.includes("PRODUCT_NOT_FOUND")
-      ) {
-        return sendJson(res, 404, {
-          success: false,
-          error: "PRODUCT_NOT_FOUND",
-          message:
-            "Um dos produtos não está disponível."
-        });
-      }
-
-      if (
-        message.includes("INSUFFICIENT_BALANCE")
-      ) {
-
-        let available = null;
-        let requested = null;
-
-        const match =
-          String(error.message || "").match(
-            /INSUFFICIENT_BALANCE:([^,]+),([^,\s]+)/
-          );
-
-        if (match) {
-          available = Number(match[1]);
-          requested = Number(match[2]);
-        }
-
-        return sendJson(res, 409, {
-          success: false,
-          error: "INSUFFICIENT_BALANCE",
-          message:
-            "Saldo insuficiente para concluir a compra.",
-          balance: available,
-          requested: requested
-        });
-      }
-
-      return sendJson(res, 500, {
+    if (
+      message.includes(
+        "EVENT_CLOSED"
+      )
+    ) {
+      return sendJson(res, 409, {
         success: false,
-        error: "BAR_SALE_FAILED"
+        error: "EVENT_CLOSED"
       });
     }
 
     if (
-      !data ||
-      data.success !== true
+      message.includes(
+        "PARTICIPANT_NOT_FOUND"
+      )
     ) {
-      console.error(
-        "BAR SALE INVALID RPC RESPONSE:",
-        data
-      );
-
-      return sendJson(res, 500, {
+      return sendJson(res, 404, {
         success: false,
-        error: "INVALID_TRANSACTION_RESULT"
+        error: "PARTICIPANT_NOT_FOUND"
       });
     }
 
-    return sendJson(res, 200, {
-      success: true,
-      transaction_id: data.transaction_id,
-      participant_id: data.participant_id,
-      wallet_id: data.wallet_id,
-      total: data.total,
-      balance_before: data.balance_before,
-      balance_after: data.balance_after
-    });
+    if (
+      message.includes(
+        "WALLET_NOT_FOUND"
+      )
+    ) {
+      return sendJson(res, 404, {
+        success: false,
+        error: "WALLET_NOT_FOUND"
+      });
+    }
 
-  } catch (error) {
+    if (
+      message.includes(
+        "PRODUCT_NOT_FOUND"
+      )
+    ) {
+      return sendJson(res, 404, {
+        success: false,
+        error: "PRODUCT_NOT_FOUND"
+      });
+    }
 
-    console.error(
-      "BAR SALE UNEXPECTED ERROR:",
-      error
-    );
+    if (
+      message.includes(
+        "INSUFFICIENT_BALANCE"
+      )
+    ) {
+      return sendJson(res, 409, {
+        success: false,
+        error: "INSUFFICIENT_BALANCE"
+      });
+    }
 
     return sendJson(res, 500, {
       success: false,
-      error: "INTERNAL_SERVER_ERROR"
+      error: "BAR_SALE_FAILED"
     });
   }
+
+  return sendJson(res, 200, {
+    success: true,
+    staff_id: staffId,
+    transaction_id:
+      data?.transaction_id || null,
+    participant_id:
+      data?.participant_id || null,
+    wallet_id:
+      data?.wallet_id || null,
+    total:
+      data?.total || 0,
+    balance_before:
+      data?.balance_before || 0,
+    balance_after:
+      data?.balance_after || 0
+  });
 }
