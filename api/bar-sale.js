@@ -525,7 +525,9 @@ async function handlePost(req, res) {
     .toUpperCase();
 
   const items =
-    normalizeItems(body.items);
+    operation === "TOPUP"
+      ? []
+      : normalizeItems(body.items);
 
   if (!isUuid(eventId)) {
     return sendJson(res, 400, {
@@ -541,7 +543,7 @@ async function handlePost(req, res) {
     });
   }
 
-  if (!items) {
+  if (operation !== "TOPUP" && !items) {
     return sendJson(res, 400, {
       success: false,
       error: "INVALID_ITEMS"
@@ -562,6 +564,90 @@ async function handlePost(req, res) {
 
   const staffId =
     session.staff_id;
+
+  if (operation === "TOPUP") {
+    const amount = Number(body.amount);
+
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return sendJson(res, 400, {
+        success: false,
+        error: "INVALID_TOPUP_AMOUNT"
+      });
+    }
+
+    const {
+      data,
+      error
+    } = await supabase.rpc(
+      "process_wallet_topup",
+      {
+        p_event_id: eventId,
+        p_short_code: shortCode,
+        p_amount: amount,
+        p_payment_reference:
+          body.payment_reference || null,
+        p_staff_id: staffId,
+        p_description:
+          body.description || null,
+        p_payment_id:
+          body.payment_id || null,
+        p_payment_method:
+          body.payment_method || "CASH"
+      }
+    );
+
+    if (error) {
+      const message =
+        String(error.message || "").toLowerCase();
+
+      if (message.includes("event")) {
+        return sendJson(res, 400, {
+          success: false,
+          error: "EVENT_CLOSED"
+        });
+      }
+
+      if (
+        message.includes("participant") ||
+        message.includes("short code")
+      ) {
+        return sendJson(res, 404, {
+          success: false,
+          error: "PARTICIPANT_NOT_FOUND"
+        });
+      }
+
+      if (message.includes("wallet")) {
+        return sendJson(res, 404, {
+          success: false,
+          error: "WALLET_NOT_FOUND"
+        });
+      }
+
+      if (
+        message.includes("minimum") ||
+        message.includes("maximum") ||
+        message.includes("topup")
+      ) {
+        return sendJson(res, 400, {
+          success: false,
+          error: "TOPUP_NOT_ALLOWED"
+        });
+      }
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "TOPUP_FAILED",
+        detail: error.message
+      });
+    }
+
+    return sendJson(res, 200, {
+      success: true,
+      operation: "TOPUP",
+      ...data
+    });
+  }
 
   const {
     data,
