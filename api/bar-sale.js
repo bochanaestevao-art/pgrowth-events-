@@ -235,6 +235,34 @@ async function handleGet(req, res) {
       "https://localhost"
     );
 
+  const operation =
+
+    String(
+
+      body.operation || "SALE"
+
+    ).trim().toUpperCase();
+
+
+  if (
+
+    operation !== "SALE" &&
+
+    operation !== "TOPUP"
+
+  ) {
+
+    return sendJson(res, 400, {
+
+      success: false,
+
+      error: "INVALID_OPERATION"
+
+    });
+
+  }
+
+
   const eventId =
     String(
       url.searchParams.get("event_id") || ""
