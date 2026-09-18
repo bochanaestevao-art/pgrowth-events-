@@ -119,18 +119,15 @@ function readBarSession(req) {
   }
 
   if (!data || typeof data !== "object") {
+  if (!data.exp) {
     return null;
   }
 
-  if (!data.staff_id) {
+  const now = Math.floor(Date.now() / 1000);
+
+  if (Number(data.exp) <= now) {
     return null;
   }
-
-  if (
-    !data.expires_at ||
-    Number(data.expires_at) < Date.now()
-  ) {
-    return null;
   }
 
   return data;
