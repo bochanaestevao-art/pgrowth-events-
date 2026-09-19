@@ -1021,7 +1021,7 @@
 
     const url =
       shortCode
-        ? "/api/bar-sale?short_code=" +
+        ? "/api/bar-sale?event_id=" + encodeURIComponent(EVENT_ID) + "&short_code=" +
           encodeURIComponent(shortCode)
         : "/api/bar-sale";
 
