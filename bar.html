@@ -24,14 +24,12 @@
       margin: 0;
       background: #080808;
       color: #f5f5f5;
-      font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
     button,
-    input {
+    input,
+    select {
       font: inherit;
     }
 
@@ -39,6 +37,22 @@
       width: min(100%, 720px);
       margin: 0 auto;
       padding: 16px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .card {
+      background: #111;
+      border: 1px solid #292929;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .login-card {
+      margin-top: 60px;
     }
 
     .header {
@@ -59,27 +73,6 @@
       color: #c9a227;
       font-size: 13px;
       margin-top: 4px;
-    }
-
-    .logout {
-      border: 1px solid #333;
-      background: #151515;
-      color: #fff;
-      border-radius: 10px;
-      padding: 9px 12px;
-      cursor: pointer;
-    }
-
-    .card {
-      background: #111;
-      border: 1px solid #292929;
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 14px;
-    }
-
-    .login-card {
-      margin-top: 60px;
     }
 
     h1,
@@ -104,7 +97,12 @@
       margin-bottom: 6px;
     }
 
-    input {
+    .field {
+      margin-bottom: 12px;
+    }
+
+    input,
+    select {
       width: 100%;
       background: #080808;
       border: 1px solid #333;
@@ -114,12 +112,13 @@
       outline: none;
     }
 
-    input:focus {
+    input:focus,
+    select:focus {
       border-color: #c9a227;
     }
 
-    .field {
-      margin-bottom: 12px;
+    button {
+      cursor: pointer;
     }
 
     .primary {
@@ -130,12 +129,19 @@
       border-radius: 11px;
       padding: 14px;
       font-weight: 900;
-      cursor: pointer;
     }
 
     .primary:disabled {
       opacity: .45;
       cursor: not-allowed;
+    }
+
+    .logout {
+      border: 1px solid #333;
+      background: #151515;
+      color: #fff;
+      border-radius: 10px;
+      padding: 9px 12px;
     }
 
     .message {
@@ -152,8 +158,10 @@
       color: #76e39a;
     }
 
-    .hidden {
-      display: none !important;
+    .small {
+      color: #888;
+      font-size: 12px;
+      line-height: 1.4;
     }
 
     .customer {
@@ -194,8 +202,7 @@
 
     .products {
       display: grid;
-      grid-template-columns:
-        repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
     }
 
@@ -239,7 +246,6 @@
       color: #fff;
       border-radius: 9px;
       font-size: 20px;
-      cursor: pointer;
     }
 
     .qty {
@@ -250,8 +256,7 @@
 
     .cart-row {
       display: grid;
-      grid-template-columns:
-        1fr auto auto;
+      grid-template-columns: 1fr auto auto;
       gap: 10px;
       align-items: center;
       border-bottom: 1px solid #222;
@@ -274,23 +279,50 @@
       font-weight: 900;
     }
 
-    .total-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    .fiscal-box {
       margin-top: 15px;
-      padding-top: 14px;
+      padding: 12px;
+      background: #0b0b0b;
+      border: 1px solid #292929;
+      border-radius: 12px;
+    }
+
+    .fiscal-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .fiscal-total {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 10px;
+      padding-top: 10px;
       border-top: 1px solid #333;
-    }
-
-    .total-label {
-      color: #aaa;
-    }
-
-    .total {
       color: #c9a227;
-      font-size: 26px;
+      font-size: 20px;
       font-weight: 900;
+    }
+
+    .wallet-actions {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #292929;
+    }
+
+    .wallet-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .notice {
+      margin-top: 8px;
+      color: #aaa;
+      font-size: 12px;
+      line-height: 1.4;
     }
 
     .result {
@@ -311,14 +343,9 @@
       margin-top: 8px;
     }
 
-    .small {
-      color: #888;
-      font-size: 12px;
-      line-height: 1.4;
-    }
-
     @media (max-width: 460px) {
-      .products {
+      .products,
+      .wallet-grid {
         grid-template-columns: 1fr;
       }
 
@@ -332,521 +359,785 @@
 
 <body>
 
-  <main class="app">
+<main class="app">
 
-    <section
-      id="loginScreen"
-      class="card login-card"
+  <!-- LOGIN -->
+
+  <section
+    id="loginScreen"
+    class="card login-card"
+  >
+
+    <h1>BAR</h1>
+
+    <p class="small">
+      Acesso exclusivo para funcionários.
+    </p>
+
+    <div class="field">
+      <label for="staffId">
+        Funcionário
+      </label>
+
+      <input
+        id="staffId"
+        type="text"
+        autocomplete="username"
+        placeholder="Ex.: BAR-001"
+      >
+    </div>
+
+    <div class="field">
+      <label for="staffPin">
+        PIN
+      </label>
+
+      <input
+        id="staffPin"
+        type="password"
+        autocomplete="current-password"
+        placeholder="PIN"
+      >
+    </div>
+
+    <button
+      id="loginBtn"
+      class="primary"
     >
-      <h1>BAR</h1>
+      ENTRAR
+    </button>
 
-      <p class="small">
-        Acesso exclusivo para funcionários.
-      </p>
+    <div
+      id="loginMessage"
+      class="message"
+    ></div>
 
-      <div class="field">
-        <label for="staffId">
-          Funcionário
-        </label>
+  </section>
 
-        <input
-          id="staffId"
-          type="text"
-          autocomplete="username"
-          placeholder="Ex.: BAR-001"
+
+  <!-- BAR -->
+
+  <section
+    id="barScreen"
+    class="hidden"
+  >
+
+    <header class="header">
+
+      <div>
+
+        <div class="brand">
+          BLACK OUT — BAR
+        </div>
+
+        <div
+          id="eventName"
+          class="event-name"
         >
-      </div>
+          —
+        </div>
 
-      <div class="field">
-        <label for="staffPin">
-          PIN
-        </label>
-
-        <input
-          id="staffPin"
-          type="password"
-          inputmode="numeric"
-          autocomplete="current-password"
-          placeholder="PIN"
-        >
       </div>
 
       <button
-        id="loginBtn"
+        id="logoutBtn"
+        class="logout"
+      >
+        Sair
+      </button>
+
+    </header>
+
+
+    <!-- CLIENTE -->
+
+    <section class="card">
+
+      <h2>
+        Identificar cliente
+      </h2>
+
+      <div class="field">
+
+        <label for="shortCode">
+          Código curto
+        </label>
+
+        <input
+          id="shortCode"
+          type="text"
+          maxlength="20"
+          autocomplete="off"
+          autocapitalize="characters"
+          placeholder="Ex.: B7K4P9"
+        >
+
+      </div>
+
+      <button
+        id="lookupBtn"
         class="primary"
       >
-        ENTRAR
+        CONSULTAR
       </button>
 
       <div
-        id="loginMessage"
+        id="lookupMessage"
         class="message"
       ></div>
+
     </section>
 
 
+    <!-- CLIENTE / SALDO -->
+
     <section
-      id="barScreen"
-      class="hidden"
+      id="customerCard"
+      class="card hidden"
     >
 
-      <header class="header">
+      <div class="customer">
 
         <div>
-          <div class="brand">
-            BLACK OUT — BAR
-          </div>
 
           <div
-            id="eventName"
-            class="event-name"
+            id="customerName"
+            class="customer-name"
           >
             —
           </div>
-        </div>
 
-        <button
-          id="logoutBtn"
-          class="logout"
-        >
-          Sair
-        </button>
-
-      </header>
-
-
-      <section class="card">
-
-        <h2>
-          Identificar cliente
-        </h2>
-
-        <div class="field">
-
-          <label for="shortCode">
-            Código curto
-          </label>
-
-          <input
-            id="shortCode"
-            type="text"
-            maxlength="20"
-            autocomplete="off"
-            autocapitalize="characters"
-            placeholder="Ex.: B7K4P9"
+          <div
+            id="customerCode"
+            class="customer-code"
           >
-
-        </div>
-
-        <button
-          id="lookupBtn"
-          class="primary"
-        >
-          CONSULTAR
-        </button>
-
-        <div
-          id="lookupMessage"
-          class="message"
-        ></div>
-
-      </section>
-
-
-      <section
-        id="customerCard"
-        class="card hidden"
-      >
-
-        <div class="customer">
-
-          <div>
-
-            <div
-              id="customerName"
-              class="customer-name"
-            >
-              —
-            </div>
-
-            <div
-              id="customerCode"
-              class="customer-code"
-            >
-              —
-            </div>
-
-          </div>
-
-          <div class="balance-box">
-
-            <div class="balance-label">
-              SALDO
-            </div>
-
-            <div
-              id="customerBalance"
-              class="balance"
-            >
-              0 MZN
-            </div>
-
+            —
           </div>
 
         </div>
 
-      </section>
+        <div class="balance-box">
 
-
-      <section
-        id="productsCard"
-        class="card hidden"
-      >
-
-        <h2>
-          Menu
-        </h2>
-
-        <div
-          id="products"
-          class="products"
-        ></div>
-
-      </section>
-
-
-      <section
-        id="cartCard"
-        class="card hidden"
-      >
-
-        <h2>
-          Carrinho
-        </h2>
-
-        <div
-          id="cart"
-        ></div>
-
-        <div class="total-row">
-
-          <div class="total-label">
-            TOTAL
+          <div class="balance-label">
+            SALDO
           </div>
 
           <div
-            id="cartTotal"
-            class="total"
+            id="customerBalance"
+            class="balance"
           >
             0 MZN
           </div>
 
         </div>
 
-        <br>
-
-        <button
-          id="sellBtn"
-          class="primary"
-          disabled
-        >
-          CONFIRMAR VENDA
-        </button>
-
-        <div
-          id="saleMessage"
-          class="message"
-        ></div>
-
-      </section>
-
-
-      <section
-        id="resultCard"
-        class="card hidden"
-      >
-
-        <div class="result">
-
-          <h2>
-            Venda concluída
-          </h2>
-
-          <div class="result-total">
-            <span id="resultTotal">
-              0
-            </span>
-            MZN
-          </div>
-
-          <div class="small">
-            Saldo restante
-          </div>
-
-          <div class="result-balance">
-            <span id="resultBalance">
-              0
-            </span>
-            MZN
-          </div>
-
-          <br>
-
-          <button
-            id="newSaleBtn"
-            class="primary"
-          >
-            NOVA VENDA
-          </button>
-
-        </div>
-
-      </section>
+      </div>
 
     </section>
 
-  </main>
+
+    <!-- RECARGA -->
+
+    <section
+      id="walletCard"
+      class="card hidden"
+    >
+
+      <h2>
+        Carteira do cliente
+      </h2>
+
+      <div class="wallet-actions">
+
+        <div class="wallet-grid">
+
+          <div class="field">
+
+            <label for="topupAmount">
+              Valor da recarga
+            </label>
+
+            <input
+              id="topupAmount"
+              type="number"
+              min="0"
+              step="1"
+              inputmode="decimal"
+              placeholder="Ex.: 500"
+            >
+
+          </div>
+
+          <div class="field">
+
+            <label for="topupMethod">
+              Método
+            </label>
+
+            <select id="topupMethod">
+
+              <option value="CASH">
+                CASH
+              </option>
+
+              <option
+                value="EMOLA"
+                disabled
+              >
+                eMOLA / Pagar — em breve
+              </option>
+
+            </select>
+
+          </div>
+
+        </div>
 
 
-  <script>
-    const EVENT_ID =
-      "efe5eee5-d361-44b4-a1bf-9d92914fa297";
+        <div class="field">
 
-    let products = [];
-    let cart = {};
-    let participant = null;
-    let currency = "MZN";
+          <label for="topupReference">
+            Referência
+          </label>
 
-    const $ = (id) =>
-      document.getElementById(id);
+          <input
+            id="topupReference"
+            type="text"
+            autocomplete="off"
+            placeholder="Referência da recarga"
+          >
 
-    function money(value) {
-      return (
-        Number(value || 0)
-          .toLocaleString("pt-MZ", {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 2
-          })
-        + " "
-        + currency
-      );
-    }
+        </div>
 
-    function showMessage(
-      element,
-      text,
-      type = ""
-    ) {
-      element.textContent = text;
-      element.className =
-        "message " + type;
-    }
 
-    function clearMessage(element) {
-      element.textContent = "";
-      element.className = "message";
-    }
+        <button
+          id="topupBtn"
+          class="primary"
+        >
+          RECARREGAR CARTEIRA
+        </button>
 
-    async function checkSession() {
-      try {
-        const response =
-          await fetch(
-            "/api/bar-session",
-            {
-              method: "GET",
-              credentials: "include",
-              cache: "no-store"
-            }
-          );
 
-        if (!response.ok) {
-          return false;
+        <div
+          id="topupMessage"
+          class="message"
+        ></div>
+
+
+        <div class="notice">
+          A recarga CASH é registrada internamente
+          na carteira do evento. A integração automática
+          eMOLA/Pagar será ligada posteriormente.
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- PRODUTOS -->
+
+    <section
+      id="productsCard"
+      class="card hidden"
+    >
+
+      <h2>
+        Produtos
+      </h2>
+
+      <div
+        id="products"
+        class="products"
+      ></div>
+
+    </section>
+
+
+    <!-- CARRINHO -->
+
+    <section
+      id="cartCard"
+      class="card hidden"
+    >
+
+      <h2>
+        Venda
+      </h2>
+
+      <div
+        id="cart"
+      ></div>
+
+
+      <div
+        id="emptyCart"
+        class="small"
+      >
+        Nenhum produto selecionado.
+      </div>
+
+
+      <!-- FISCAL -->
+
+      <div
+        id="fiscalBox"
+        class="fiscal-box hidden"
+      >
+
+        <div class="fiscal-row">
+
+          <span>
+            Subtotal
+          </span>
+
+          <strong
+            id="fiscalSubtotal"
+          >
+            0 MZN
+          </strong>
+
+        </div>
+
+
+        <div
+          id="fiscalTaxRow"
+          class="fiscal-row hidden"
+        >
+
+          <span id="fiscalTaxName">
+            IVA
+          </span>
+
+          <strong
+            id="fiscalTax"
+          >
+            0 MZN
+          </strong>
+
+        </div>
+
+
+        <div class="fiscal-total">
+
+          <span>
+            TOTAL
+          </span>
+
+          <strong
+            id="fiscalTotal"
+          >
+            0 MZN
+          </strong>
+
+        </div>
+
+        <div
+          id="fiscalNotice"
+          class="notice"
+        ></div>
+
+      </div>
+
+
+      <div
+        id="saleMessage"
+        class="message"
+      ></div>
+
+
+      <button
+        id="sellBtn"
+        class="primary"
+      >
+        CONFIRMAR VENDA
+      </button>
+
+    </section>
+
+
+    <!-- RESULTADO -->
+
+    <section
+      id="resultCard"
+      class="card hidden"
+    >
+
+      <div class="result">
+
+        <h2>
+          Venda concluída
+        </h2>
+
+        <div class="small">
+          Total da venda
+        </div>
+
+        <div
+          id="resultTotal"
+          class="result-total"
+        >
+          0
+        </div>
+
+        <div class="small">
+          Novo saldo
+        </div>
+
+        <div
+          id="resultBalance"
+          class="result-balance"
+        >
+          0
+        </div>
+
+        <br>
+
+        <button
+          id="newSaleBtn"
+          class="primary"
+        >
+          NOVA VENDA
+        </button>
+
+      </div>
+
+    </section>
+
+  </section>
+
+</main>
+
+
+<script>
+
+  /*
+   * EVENTO ATUAL
+   *
+   * Para outro evento, alterar somente este UUID
+   * quando o backend estiver preparado para esse evento.
+   */
+
+  const EVENT_ID =
+    "efe5eee5-d361-44b4-a1bf-9d92914fa297";
+
+
+  let eventData = null;
+  let participant = null;
+  let products = [];
+  let cart = {};
+
+  let fiscal = {
+    tax_enabled: false,
+    apply_to_bar: false,
+    tax_rate: 0,
+    tax_name: "IVA",
+    server_pricing: false
+  };
+
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+
+  function money(value) {
+
+    return Number(value || 0)
+      .toLocaleString(
+        "pt-MZ",
+        {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
         }
+      ) + " MZN";
 
-        const data =
-          await response.json();
+  }
 
-        return (
-          data.success === true &&
-          data.authenticated === true
-        );
 
-      } catch {
-        return false;
-      }
-    }
+  function showMessage(
+    element,
+    message,
+    type
+  ) {
 
-    async function login() {
-      const staffId =
-        $("staffId").value.trim();
+    element.textContent = message;
 
-      const staffPin =
-        $("staffPin").value.trim();
+    element.className =
+      "message " +
+      (type || "");
 
-      clearMessage(
-        $("loginMessage")
-      );
+  }
 
-      if (!staffId) {
-        showMessage(
-          $("loginMessage"),
-          "Informe o funcionário.",
-          "error"
-        );
-        return;
-      }
 
-      if (!staffPin) {
-        showMessage(
-          $("loginMessage"),
-          "Informe o PIN.",
-          "error"
-        );
-        return;
-      }
+  function clearMessage(element) {
 
-      $("loginBtn").disabled = true;
+    element.textContent = "";
 
-      try {
-        const response =
-          await fetch(
-            "/api/bar-session",
-            {
-              method: "POST",
-              credentials: "include",
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
-              body: JSON.stringify({
-                staff_id: staffId,
-                staff_pin: staffPin
-              })
-            }
-          );
+    element.className =
+      "message";
 
-        const data =
-          await response.json();
+  }
 
-        if (!response.ok) {
-          showMessage(
-            $("loginMessage"),
-            "Login recusado.",
-            "error"
-          );
-          return;
-        }
 
-        $("loginScreen")
-          .classList
-          .add("hidden");
+  function escapeHtml(value) {
 
-        $("barScreen")
-          .classList
-          .remove("hidden");
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
 
-        await loadEventData();
+  }
 
-      } catch {
-        showMessage(
-          $("loginMessage"),
-          "Erro de comunicação com o servidor.",
-          "error"
-        );
-      } finally {
-        $("loginBtn").disabled = false;
-      }
-    }
 
-    async function loadEventData(
-      shortCode = ""
-    ) {
-      const params =
-        new URLSearchParams();
+  async function checkSession() {
 
-      params.set(
-        "event_id",
-        EVENT_ID
-      );
-
-      if (shortCode) {
-        params.set(
-          "short_code",
-          shortCode
-        );
-      }
+    try {
 
       const response =
         await fetch(
-          "/api/bar-sale?" +
-          params.toString(),
+          "/api/bar-session",
           {
-            credentials: "include",
-            cache: "no-store"
+            method: "GET",
+            credentials: "include"
           }
         );
 
-      if (response.status === 401) {
-        logoutLocal();
-        return null;
-      }
+      return response.ok;
+
+    } catch {
+
+      return false;
+
+    }
+
+  }
+
+
+  async function login() {
+
+    clearMessage(
+      $("loginMessage")
+    );
+
+    const staffId =
+      $("staffId")
+        .value
+        .trim();
+
+    const staffPin =
+      $("staffPin")
+        .value
+        .trim();
+
+
+    if (!staffId || !staffPin) {
+
+      showMessage(
+        $("loginMessage"),
+        "Informe o funcionário e o PIN.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    $("loginBtn").disabled = true;
+
+
+    try {
+
+      const response =
+        await fetch(
+          "/api/bar-session",
+          {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+            body: JSON.stringify({
+              staff_id: staffId,
+              staff_pin: staffPin
+            })
+          }
+        );
+
 
       const data =
         await response.json();
 
+
       if (!response.ok) {
-        throw new Error(
-          data.error ||
-          "BAR_DATA_FAILED"
-        );
-      }
-
-      currency =
-        data.event?.currency ||
-        "MZN";
-
-      $("eventName").textContent =
-        data.event?.name ||
-        "Evento";
-
-      products =
-        data.products || [];
-
-      renderProducts();
-
-      if (data.participant) {
-        participant =
-          data.participant;
-
-        showParticipant();
-
-      } else if (shortCode) {
-        participant = null;
-
-        $("customerCard")
-          .classList
-          .add("hidden");
-
-        $("productsCard")
-          .classList
-          .add("hidden");
-
-        $("cartCard")
-          .classList
-          .add("hidden");
 
         showMessage(
-          $("lookupMessage"),
-          "Cliente não encontrado.",
+          $("loginMessage"),
+          data.error ||
+            "Não foi possível iniciar a sessão.",
           "error"
         );
+
+        return;
+
       }
 
-      return data;
+
+      $("loginScreen")
+        .classList
+        .add("hidden");
+
+      $("barScreen")
+        .classList
+        .remove("hidden");
+
+
+      await loadEventData();
+
+    } catch {
+
+      showMessage(
+        $("loginMessage"),
+        "Erro de comunicação com o servidor.",
+        "error"
+      );
+
+    } finally {
+
+      $("loginBtn").disabled = false;
+
     }
 
-    function showParticipant() {
+  }
+
+
+  async function loadEventData(
+    shortCode = null
+  ) {
+
+    const url =
+      shortCode
+        ? "/api/bar-sale?short_code=" +
+          encodeURIComponent(shortCode)
+        : "/api/bar-sale";
+
+
+    const response =
+      await fetch(
+        url,
+        {
+          method: "GET",
+          credentials: "include"
+        }
+      );
+
+
+    if (response.status === 401) {
+
+      logoutLocal();
+
+      throw new Error(
+        "UNAUTHORIZED"
+      );
+
+    }
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+          "BAR_DATA_ERROR"
+      );
+
+    }
+
+
+    eventData =
+      data.event || null;
+
+
+    products =
+      Array.isArray(
+        data.products
+      )
+        ? data.products
+        : [];
+
+
+    if (data.fiscal) {
+
+      fiscal = {
+        tax_enabled:
+          Boolean(
+            data.fiscal.tax_enabled
+          ),
+
+        apply_to_bar:
+          Boolean(
+            data.fiscal.apply_to_bar
+          ),
+
+        tax_rate:
+          Number(
+            data.fiscal.tax_rate || 0
+          ),
+
+        tax_name:
+          data.fiscal.tax_name ||
+          data.fiscal.tax_name ||
+          "IVA",
+
+        server_pricing:
+          Boolean(
+            data.fiscal.server_pricing
+          )
+      };
+
+    } else {
+
+      fiscal = {
+        tax_enabled: false,
+        apply_to_bar: false,
+        tax_rate: 0,
+        tax_name: "IVA",
+        server_pricing: false
+      };
+
+    }
+
+
+    if (eventData) {
+
+      $("eventName")
+        .textContent =
+        eventData.name ||
+        "BLACK OUT";
+
+    }
+
+
+    renderFiscal();
+
+
+    if (data.participant) {
+
+      participant =
+        data.participant;
+
       $("customerCard")
+        .classList
+        .remove("hidden");
+
+      $("walletCard")
         .classList
         .remove("hidden");
 
@@ -858,73 +1149,100 @@
         .classList
         .remove("hidden");
 
-      $("customerName").textContent =
+
+      $("customerName")
+        .textContent =
         participant.full_name ||
+        participant.name ||
         "Cliente";
 
-      $("customerCode").textContent =
-        participant.short_code ||
-        "";
 
-      $("customerBalance").textContent =
+      $("customerCode")
+        .textContent =
+        participant.short_code ||
+        shortCode;
+
+
+      $("customerBalance")
+        .textContent =
         money(
           participant.balance
         );
 
-      clearMessage(
-        $("lookupMessage")
-      );
-
-      cart = {};
-
-      renderProducts();
-      renderCart();
     }
 
-    function renderProducts() {
-      const container =
-        $("products");
 
-      container.innerHTML = "";
+    renderProducts();
 
-      if (!products.length) {
-        container.innerHTML =
-          '<div class="small">Nenhum produto disponível.</div>';
+    renderCart();
 
-        return;
-      }
+  }
 
-      for (const product of products) {
+
+  function renderProducts() {
+
+    const container =
+      $("products");
+
+    container.innerHTML = "";
+
+
+    if (!products.length) {
+
+      container.innerHTML =
+        '<div class="small">Nenhum produto disponível.</div>';
+
+      return;
+
+    }
+
+
+    products.forEach(
+      product => {
+
         const quantity =
           Number(
             cart[product.id] || 0
           );
 
-        const card =
-          document.createElement("div");
 
-        card.className = "product";
+        const card =
+          document.createElement(
+            "div"
+          );
+
+        card.className =
+          "product";
+
 
         card.innerHTML = `
+
           <div class="product-name">
-            ${escapeHtml(product.name)}
+            ${escapeHtml(
+              product.name
+            )}
           </div>
 
           <div class="product-category">
-            ${escapeHtml(product.category || "")}
+            ${escapeHtml(
+              product.category ||
+              ""
+            )}
           </div>
 
           <div class="product-price">
-            ${money(product.price)}
+            ${money(
+              product.price
+            )}
           </div>
 
           <div class="product-controls">
 
             <button
               class="qty-btn"
-              type="button"
-              data-action="minus"
               data-id="${product.id}"
+              data-action="minus"
+              type="button"
             >
               −
             </button>
@@ -935,460 +1253,1119 @@
 
             <button
               class="qty-btn"
-              type="button"
-              data-action="plus"
               data-id="${product.id}"
+              data-action="plus"
+              type="button"
             >
               +
             </button>
 
           </div>
+
         `;
 
-        container.appendChild(card);
-      }
-    }
 
-    function renderCart() {
-      const container =
-        $("cart");
-
-      container.innerHTML = "";
-
-      let total = 0;
-      let count = 0;
-
-      for (const product of products) {
-        const quantity =
-          Number(
-            cart[product.id] || 0
-          );
-
-        if (quantity <= 0) {
-          continue;
-        }
-
-        const lineTotal =
-          Number(product.price) *
-          quantity;
-
-        total += lineTotal;
-        count += quantity;
-
-        const row =
-          document.createElement("div");
-
-        row.className = "cart-row";
-
-        row.innerHTML = `
-          <div class="cart-name">
-            ${escapeHtml(product.name)}
-          </div>
-
-          <div class="cart-qty">
-            x${quantity}
-          </div>
-
-          <div class="cart-total">
-            ${money(lineTotal)}
-          </div>
-        `;
-
-        container.appendChild(row);
-      }
-
-      if (count === 0) {
-        container.innerHTML =
-          '<div class="small">Nenhum produto selecionado.</div>';
-      }
-
-      $("cartTotal").textContent =
-        money(total);
-
-      $("sellBtn").disabled =
-        !participant ||
-        count === 0;
-    }
-
-    function changeQuantity(
-      productId,
-      delta
-    ) {
-      if (!participant) {
-        return;
-      }
-
-      const current =
-        Number(
-          cart[productId] || 0
+        container.appendChild(
+          card
         );
 
-      const next =
-        Math.max(
-          0,
-          Math.min(
-            100,
-            current + delta
-          )
+      }
+    );
+
+  }
+
+
+  function changeQuantity(
+    productId,
+    amount
+  ) {
+
+    const current =
+      Number(
+        cart[productId] || 0
+      );
+
+
+    const next =
+      Math.max(
+        0,
+        current + amount
+      );
+
+
+    if (next === 0) {
+
+      delete cart[productId];
+
+    } else {
+
+      cart[productId] =
+        Math.min(
+          100,
+          next
         );
 
-      if (next === 0) {
-        delete cart[productId];
-      } else {
-        cart[productId] = next;
-      }
-
-      renderProducts();
-      renderCart();
     }
 
-    async function lookupParticipant() {
-      const shortCode =
-        $("shortCode")
-          .value
-          .trim()
-          .toUpperCase();
 
-      clearMessage(
-        $("lookupMessage")
-      );
+    renderProducts();
 
-      if (!shortCode) {
-        showMessage(
-          $("lookupMessage"),
-          "Informe o código curto.",
-          "error"
-        );
-        return;
-      }
+    renderCart();
 
-      $("lookupBtn").disabled = true;
+  }
 
-      try {
-        await loadEventData(
-          shortCode
-        );
-      } catch (error) {
-        showMessage(
-          $("lookupMessage"),
-          "Não foi possível consultar o cliente.",
-          "error"
-        );
-      } finally {
-        $("lookupBtn").disabled = false;
-      }
-    }
 
-    async function sell() {
-      if (!participant) {
-        return;
-      }
+  function calculateSubtotal() {
 
-      const items =
-        Object.entries(cart)
-          .map(
-            ([product_id, quantity]) => ({
-              product_id,
-              quantity: Number(quantity)
-            })
-          );
+    let total = 0;
 
-      if (!items.length) {
-        return;
-      }
 
-      clearMessage(
-        $("saleMessage")
-      );
+    Object.entries(cart)
+      .forEach(
+        ([productId, quantity]) => {
 
-      $("sellBtn").disabled = true;
-
-      try {
-        const response =
-          await fetch(
-            "/api/bar-sale",
-            {
-              method: "POST",
-              credentials: "include",
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
-              body: JSON.stringify({
-                event_id: EVENT_ID,
-                short_code:
-                  participant.short_code,
-                items
-              })
-            }
-          );
-
-        const data =
-          await response.json();
-
-        if (response.status === 401) {
-          logoutLocal();
-          return;
-        }
-
-        if (!response.ok) {
-          let message =
-            "A venda não foi concluída.";
-
-          if (
-            data.error ===
-            "INSUFFICIENT_BALANCE"
-          ) {
-            message =
-              "Saldo insuficiente.";
-          }
-
-          if (
-            data.error ===
-            "EVENT_CLOSED"
-          ) {
-            message =
-              "O evento está fechado.";
-          }
-
-          showMessage(
-            $("saleMessage"),
-            message,
-            "error"
-          );
-
-          $("sellBtn").disabled = false;
-          return;
-        }
-
-        $("resultTotal").textContent =
-          Number(
-            data.total || 0
-          ).toLocaleString(
-            "pt-MZ"
-          );
-
-        $("resultBalance").textContent =
-          Number(
-            data.balance_after || 0
-          ).toLocaleString(
-            "pt-MZ"
-          );
-
-        $("cartCard")
-          .classList
-          .add("hidden");
-
-        $("resultCard")
-          .classList
-          .remove("hidden");
-
-        participant.balance =
-          Number(
-            data.balance_after || 0
-          );
-
-      } catch {
-        showMessage(
-          $("saleMessage"),
-          "Erro de comunicação com o servidor.",
-          "error"
-        );
-
-        $("sellBtn").disabled = false;
-      }
-    }
-
-    function newSale() {
-      cart = {};
-
-      $("resultCard")
-        .classList
-        .add("hidden");
-
-      $("cartCard")
-        .classList
-        .remove("hidden");
-
-      $("shortCode").value = "";
-
-      $("customerCard")
-        .classList
-        .add("hidden");
-
-      $("productsCard")
-        .classList
-        .add("hidden");
-
-      $("cartCard")
-        .classList
-        .add("hidden");
-
-      participant = null;
-
-      clearMessage(
-        $("lookupMessage")
-      );
-
-      clearMessage(
-        $("saleMessage")
-      );
-
-      $("shortCode")
-        .focus();
-    }
-
-    async function logout() {
-      try {
-        await fetch(
-          "/api/bar-session",
-          {
-            method: "DELETE",
-            credentials: "include"
-          }
-        );
-      } catch {}
-
-      logoutLocal();
-    }
-
-    function logoutLocal() {
-      participant = null;
-      cart = {};
-
-      $("barScreen")
-        .classList
-        .add("hidden");
-
-      $("loginScreen")
-        .classList
-        .remove("hidden");
-
-      $("staffPin").value = "";
-
-      $("shortCode").value = "";
-
-      $("customerCard")
-        .classList
-        .add("hidden");
-
-      $("productsCard")
-        .classList
-        .add("hidden");
-
-      $("cartCard")
-        .classList
-        .add("hidden");
-
-      $("resultCard")
-        .classList
-        .add("hidden");
-    }
-
-    function escapeHtml(value) {
-      return String(value ?? "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-    }
-
-    $("loginBtn")
-      .addEventListener(
-        "click",
-        login
-      );
-
-    $("lookupBtn")
-      .addEventListener(
-        "click",
-        lookupParticipant
-      );
-
-    $("sellBtn")
-      .addEventListener(
-        "click",
-        sell
-      );
-
-    $("logoutBtn")
-      .addEventListener(
-        "click",
-        logout
-      );
-
-    $("newSaleBtn")
-      .addEventListener(
-        "click",
-        newSale
-      );
-
-    $("shortCode")
-      .addEventListener(
-        "keydown",
-        (event) => {
-          if (
-            event.key === "Enter"
-          ) {
-            lookupParticipant();
-          }
-        }
-      );
-
-    $("products")
-      .addEventListener(
-        "click",
-        (event) => {
-          const button =
-            event.target.closest(
-              ".qty-btn"
+          const product =
+            products.find(
+              item =>
+                item.id ===
+                productId
             );
 
-          if (!button) {
+
+          if (!product) {
             return;
           }
 
-          const id =
-            button.dataset.id;
 
-          const action =
-            button.dataset.action;
+          total +=
+            Number(
+              product.price || 0
+            ) *
+            Number(quantity || 0);
 
-          changeQuantity(
-            id,
-            action === "plus"
-              ? 1
-              : -1
-          );
         }
       );
 
-    (async function init() {
-      const authenticated =
-        await checkSession();
 
-      if (authenticated) {
-        $("loginScreen")
-          .classList
-          .add("hidden");
+    return total;
 
-        $("barScreen")
-          .classList
-          .remove("hidden");
+  }
 
-        try {
-          await loadEventData();
-        } catch {
-          showMessage(
-            $("lookupMessage"),
-            "Não foi possível carregar o evento.",
-            "error"
-          );
-        }
+
+  function calculateTax(
+    subtotal
+  ) {
+
+    if (
+      !fiscal.tax_enabled ||
+      !fiscal.apply_to_bar ||
+      !fiscal.server_pricing ||
+      !fiscal.tax_rate
+    ) {
+
+      return 0;
+
+    }
+
+
+    return subtotal *
+      (
+        Number(
+          fiscal.tax_rate
+        ) / 100
+      );
+
+  }
+
+
+  function renderFiscal() {
+
+    const box =
+      $("fiscalBox");
+
+
+    if (
+      fiscal.tax_enabled &&
+      fiscal.apply_to_bar
+    ) {
+
+      box.classList
+        .remove("hidden");
+
+      if (
+        fiscal.server_pricing
+      ) {
+
+        $("fiscalNotice")
+          .textContent =
+          "O backend está configurado para fornecer o preço fiscal oficial.";
+
+      } else {
+
+        $("fiscalNotice")
+          .textContent =
+          "IVA configurado, mas o preço fiscal oficial ainda não está ativo no backend. A venda continua usando o preço oficial dos produtos.";
+
       }
-    })();
-  </script>
+
+    } else {
+
+      box.classList
+        .add("hidden");
+
+    }
+
+  }
+
+
+  function renderCart() {
+
+    const container =
+      $("cart");
+
+
+    container.innerHTML = "";
+
+
+    const entries =
+      Object.entries(cart)
+        .filter(
+          ([, quantity]) =>
+            Number(quantity) > 0
+        );
+
+
+    if (!entries.length) {
+
+      $("emptyCart")
+        .classList
+        .remove("hidden");
+
+      $("sellBtn").disabled =
+        true;
+
+      $("fiscalBox")
+        .classList
+        .add("hidden");
+
+      return;
+
+    }
+
+
+    $("emptyCart")
+      .classList
+      .add("hidden");
+
+
+    let subtotal = 0;
+
+
+    entries.forEach(
+      ([productId, quantity]) => {
+
+        const product =
+          products.find(
+            item =>
+              item.id ===
+              productId
+          );
+
+
+        if (!product) {
+          return;
+        }
+
+
+        const total =
+          Number(
+            product.price || 0
+          ) *
+          Number(quantity);
+
+
+        subtotal += total;
+
+
+        const row =
+          document.createElement(
+            "div"
+          );
+
+
+        row.className =
+          "cart-row";
+
+
+        row.innerHTML = `
+
+          <div class="cart-name">
+            ${escapeHtml(
+              product.name
+            )}
+          </div>
+
+          <div class="cart-qty">
+            ${quantity}x
+          </div>
+
+          <div class="cart-total">
+            ${money(total)}
+          </div>
+
+        `;
+
+
+        container.appendChild(
+          row
+        );
+
+      }
+    );
+
+
+    const tax =
+      calculateTax(
+        subtotal
+      );
+
+
+    const total =
+      subtotal + tax;
+
+
+    $("fiscalSubtotal")
+      .textContent =
+      money(subtotal);
+
+
+    $("fiscalTax")
+      .textContent =
+      money(tax);
+
+
+    $("fiscalTotal")
+      .textContent =
+      money(total);
+
+
+    if (
+      fiscal.tax_enabled &&
+      fiscal.apply_to_bar
+    ) {
+
+      $("fiscalBox")
+        .classList
+        .remove("hidden");
+
+
+      $("fiscalTaxRow")
+        .classList
+        .toggle(
+          "hidden",
+          !fiscal.server_pricing
+        );
+
+
+      $("fiscalTaxName")
+        .textContent =
+        fiscal.tax_name +
+        " (" +
+        Number(
+          fiscal.tax_rate
+        ) +
+        "%)";
+
+    }
+
+
+    $("sellBtn").disabled =
+      false;
+
+  }
+
+
+  async function lookupParticipant() {
+
+    const shortCode =
+      $("shortCode")
+        .value
+        .trim()
+        .toUpperCase();
+
+
+    clearMessage(
+      $("lookupMessage")
+    );
+
+
+    if (!shortCode) {
+
+      showMessage(
+        $("lookupMessage"),
+        "Informe o código curto.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    $("lookupBtn").disabled =
+      true;
+
+
+    try {
+
+      await loadEventData(
+        shortCode
+      );
+
+      showMessage(
+        $("lookupMessage"),
+        "Cliente encontrado.",
+        "success"
+      );
+
+    } catch {
+
+      participant = null;
+
+      $("customerCard")
+        .classList
+        .add("hidden");
+
+      $("walletCard")
+        .classList
+        .add("hidden");
+
+      $("productsCard")
+        .classList
+        .add("hidden");
+
+      $("cartCard")
+        .classList
+        .add("hidden");
+
+
+      showMessage(
+        $("lookupMessage"),
+        "Não foi possível consultar o cliente.",
+        "error"
+      );
+
+    } finally {
+
+      $("lookupBtn").disabled =
+        false;
+
+    }
+
+  }
+
+
+  async function topup() {
+
+    if (!participant) {
+
+      showMessage(
+        $("topupMessage"),
+        "Identifique primeiro o cliente.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const amount =
+      Number(
+        $("topupAmount").value
+      );
+
+
+    const paymentMethod =
+      $("topupMethod").value;
+
+
+    const reference =
+      $("topupReference")
+        .value
+        .trim();
+
+
+    if (
+      !Number.isFinite(amount) ||
+      amount <= 0
+    ) {
+
+      showMessage(
+        $("topupMessage"),
+        "Informe um valor de recarga válido.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    if (
+      paymentMethod ===
+      "EMOLA"
+    ) {
+
+      showMessage(
+        $("topupMessage"),
+        "A integração automática eMOLA/Pagar ainda não está ativa.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    clearMessage(
+      $("topupMessage")
+    );
+
+
+    $("topupBtn").disabled =
+      true;
+
+
+    try {
+
+      const response =
+        await fetch(
+          "/api/bar-sale",
+          {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+            body: JSON.stringify({
+
+              operation:
+                "TOPUP",
+
+              event_id:
+                EVENT_ID,
+
+              short_code:
+                participant.short_code,
+
+              amount,
+
+              payment_method:
+                paymentMethod,
+
+              payment_reference:
+                reference ||
+                null,
+
+              description:
+                "Recarga de carteira pelo Bar"
+
+            })
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (
+        response.status ===
+        401
+      ) {
+
+        logoutLocal();
+
+        return;
+
+      }
+
+
+      if (!response.ok) {
+
+        const messages = {
+
+          BELOW_MIN_TOPUP:
+            "O valor está abaixo do mínimo permitido.",
+
+          ABOVE_MAX_TOPUP:
+            "O valor ultrapassa o máximo permitido.",
+
+          TOPUP_DISABLED:
+            "As recargas estão desativadas para este evento.",
+
+          EVENT_CLOSED:
+            "O evento está fechado.",
+
+          PARTICIPANT_NOT_FOUND:
+            "Cliente não encontrado.",
+
+          WALLET_NOT_FOUND:
+            "Carteira do cliente não encontrada."
+
+        };
+
+
+        showMessage(
+          $("topupMessage"),
+          messages[
+            data.error
+          ] ||
+            "A recarga não foi concluída.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      participant.balance =
+        Number(
+          data.balance_after ||
+          0
+        );
+
+
+      $("customerBalance")
+        .textContent =
+        money(
+          participant.balance
+        );
+
+
+      $("topupAmount")
+        .value = "";
+
+
+      $("topupReference")
+        .value = "";
+
+
+      showMessage(
+        $("topupMessage"),
+        "Recarga de " +
+          money(
+            data.amount
+          ) +
+          " concluída. Novo saldo: " +
+          money(
+            data.balance_after
+          ) +
+          ".",
+        "success"
+      );
+
+
+    } catch {
+
+      showMessage(
+        $("topupMessage"),
+        "Erro de comunicação com o servidor.",
+        "error"
+      );
+
+    } finally {
+
+      $("topupBtn").disabled =
+        false;
+
+    }
+
+  }
+
+
+  async function sell() {
+
+    if (!participant) {
+      return;
+    }
+
+
+    const items =
+      Object.entries(cart)
+        .map(
+          ([product_id, quantity]) => ({
+            product_id,
+            quantity:
+              Number(quantity)
+          })
+        )
+        .filter(
+          item =>
+            item.quantity > 0
+        );
+
+
+    if (!items.length) {
+
+      showMessage(
+        $("saleMessage"),
+        "Selecione pelo menos um produto.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    clearMessage(
+      $("saleMessage")
+    );
+
+
+    $("sellBtn").disabled =
+      true;
+
+
+    try {
+
+      const response =
+        await fetch(
+          "/api/bar-sale",
+          {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+            body: JSON.stringify({
+
+              event_id:
+                EVENT_ID,
+
+              short_code:
+                participant.short_code,
+
+              items
+
+            })
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (
+        response.status ===
+        401
+      ) {
+
+        logoutLocal();
+
+        return;
+
+      }
+
+
+      if (!response.ok) {
+
+        let message =
+          "A venda não foi concluída.";
+
+
+        if (
+          data.error ===
+          "INSUFFICIENT_BALANCE"
+        ) {
+
+          message =
+            "Saldo insuficiente.";
+
+        }
+
+
+        if (
+          data.error ===
+          "EVENT_CLOSED"
+        ) {
+
+          message =
+            "O evento está fechado.";
+
+        }
+
+
+        if (
+          data.error ===
+          "PARTICIPANT_NOT_FOUND"
+        ) {
+
+          message =
+            "Cliente não encontrado.";
+
+        }
+
+
+        if (
+          data.error ===
+          "WALLET_NOT_FOUND"
+        ) {
+
+          message =
+            "Carteira do cliente não encontrada.";
+
+        }
+
+
+        showMessage(
+          $("saleMessage"),
+          message,
+          "error"
+        );
+
+
+        $("sellBtn").disabled =
+          false;
+
+        return;
+
+      }
+
+
+      $("resultTotal")
+        .textContent =
+        money(
+          data.total
+        );
+
+
+      $("resultBalance")
+        .textContent =
+        money(
+          data.balance_after
+        );
+
+
+      participant.balance =
+        Number(
+          data.balance_after ||
+          0
+        );
+
+
+      $("customerBalance")
+        .textContent =
+        money(
+          participant.balance
+        );
+
+
+      $("cartCard")
+        .classList
+        .add("hidden");
+
+
+      $("resultCard")
+        .classList
+        .remove("hidden");
+
+
+    } catch {
+
+      showMessage(
+        $("saleMessage"),
+        "Erro de comunicação com o servidor.",
+        "error"
+      );
+
+
+      $("sellBtn").disabled =
+        false;
+
+    }
+
+  }
+
+
+  function newSale() {
+
+    cart = {};
+
+    participant =
+      null;
+
+
+    $("shortCode")
+      .value = "";
+
+
+    $("topupAmount")
+      .value = "";
+
+
+    $("topupReference")
+      .value = "";
+
+
+    $("customerCard")
+      .classList
+      .add("hidden");
+
+
+    $("walletCard")
+      .classList
+      .add("hidden");
+
+
+    $("productsCard")
+      .classList
+      .add("hidden");
+
+
+    $("cartCard")
+      .classList
+      .add("hidden");
+
+
+    $("resultCard")
+      .classList
+      .add("hidden");
+
+
+    clearMessage(
+      $("lookupMessage")
+    );
+
+
+    clearMessage(
+      $("topupMessage")
+    );
+
+
+    clearMessage(
+      $("saleMessage")
+    );
+
+
+    $("shortCode")
+      .focus();
+
+  }
+
+
+  async function logout() {
+
+    try {
+
+      await fetch(
+        "/api/bar-session",
+        {
+          method: "DELETE",
+          credentials: "include"
+        }
+      );
+
+    } catch {}
+
+
+    logoutLocal();
+
+  }
+
+
+  function logoutLocal() {
+
+    participant =
+      null;
+
+    cart = {};
+
+
+    $("barScreen")
+      .classList
+      .add("hidden");
+
+
+    $("loginScreen")
+      .classList
+      .remove("hidden");
+
+
+    $("staffPin")
+      .value = "";
+
+
+    $("shortCode")
+      .value = "";
+
+
+    $("customerCard")
+      .classList
+      .add("hidden");
+
+
+    $("walletCard")
+      .classList
+      .add("hidden");
+
+
+    $("productsCard")
+      .classList
+      .add("hidden");
+
+
+    $("cartCard")
+      .classList
+      .add("hidden");
+
+
+    $("resultCard")
+      .classList
+      .add("hidden");
+
+  }
+
+
+  $("loginBtn")
+    .addEventListener(
+      "click",
+      login
+    );
+
+
+  $("lookupBtn")
+    .addEventListener(
+      "click",
+      lookupParticipant
+    );
+
+
+  $("topupBtn")
+    .addEventListener(
+      "click",
+      topup
+    );
+
+
+  $("sellBtn")
+    .addEventListener(
+      "click",
+      sell
+    );
+
+
+  $("logoutBtn")
+    .addEventListener(
+      "click",
+      logout
+    );
+
+
+  $("newSaleBtn")
+    .addEventListener(
+      "click",
+      newSale
+    );
+
+
+  $("shortCode")
+    .addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key ===
+          "Enter"
+        ) {
+
+          lookupParticipant();
+
+        }
+
+      }
+    );
+
+
+  $("products")
+    .addEventListener(
+      "click",
+      event => {
+
+        const button =
+          event.target.closest(
+            ".qty-btn"
+          );
+
+
+        if (!button) {
+          return;
+        }
+
+
+        const id =
+          button.dataset.id;
+
+
+        const action =
+          button.dataset.action;
+
+
+        changeQuantity(
+          id,
+          action === "plus"
+            ? 1
+            : -1
+        );
+
+      }
+    );
+
+
+  (async function init() {
+
+    const authenticated =
+      await checkSession();
+
+
+    if (!authenticated) {
+      return;
+    }
+
+
+    $("loginScreen")
+      .classList
+      .add("hidden");
+
+
+    $("barScreen")
+      .classList
+      .remove("hidden");
+
+
+    try {
+
+      await loadEventData();
+
+    } catch {
+
+      showMessage(
+        $("lookupMessage"),
+        "Não foi possível carregar o evento.",
+        "error"
+      );
+
+    }
+
+  })();
+
+</script>
 
 </body>
 </html>
