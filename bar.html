@@ -1712,19 +1712,51 @@
     }
 
 
-    if (
-      paymentMethod ===
-      "EMOLA"
-    ) {
+    if (paymentMethod === "EMOLA") {
 
-      showMessage(
-        $("topupMessage"),
-        "A integração automática eMOLA/Pagar ainda não está ativa.",
-        "error"
-      );
+      clearMessage($("topupMessage"));
+      $("topupBtn").disabled = true;
+
+      try {
+        const response = await fetch("/api/bar-sale", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            operation: "TEST_PAGAR",
+            method: "EMOLA"
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.status === 401) {
+          logoutLocal();
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error(data.detail || data.error || "Teste Pagar falhou.");
+        }
+
+        showMessage(
+          $("topupMessage"),
+          "Teste Pagar eMOLA enviado. Status: " + (data.paymentStatus || "desconhecido"),
+          "success"
+        );
+      } catch (error) {
+        showMessage(
+          $("topupMessage"),
+          error.message || "Erro no teste Pagar.",
+          "error"
+        );
+      } finally {
+        $("topupBtn").disabled = false;
+      }
 
       return;
-
     }
 
 
