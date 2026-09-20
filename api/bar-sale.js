@@ -17,6 +17,84 @@ function getHeader(req, name) {
 }
 
 function timingSafeEqualString(a, b) {
+async function pagarPost(path, body, idempotencyKey) {
+  const apiBaseUrl = process.env.PAGAR_API_BASE_URL;
+  const apiKey = process.env.PAGAR_API_KEY;
+  const signingSecret = process.env.PAGAR_SIGNING_SECRET;
+
+  if (!apiBaseUrl || !apiKey || !signingSecret) {
+    throw new Error("Configuração da Pagar não encontrada");
+  }
+
+  const timestamp = Date.now().toString();
+  const nonce = crypto.randomBytes(18).toString("base64url");
+  const rawBody = JSON.stringify(body);
+
+  const bodyHash = crypto
+    .createHash("sha256")
+    .update(rawBody)
+    .digest("hex");
+
+  const canonicalPath =
+    new URL(path, apiBaseUrl).pathname;
+
+  const canonical = [
+    timestamp,
+    nonce,
+    "POST",
+    canonicalPath,
+    bodyHash
+  ].join("\n");
+
+  const signature = crypto
+    .createHmac("sha256", signingSecret)
+    .update(canonical)
+    .digest("hex");
+
+  const response = await fetch(
+    `${apiBaseUrl}${path}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+        "Pagar-Api-Key": apiKey,
+        "X-Pagar-Timestamp": timestamp,
+        "X-Pagar-Nonce": nonce,
+        "X-Pagar-Signature": `v1=${signature}`,
+        "Idempotency-Key": idempotencyKey
+      },
+      body: rawBody
+    }
+  );
+
+  const text = await response.text();
+
+  let data = null;
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+  }
+
+  if (!response.ok) {
+    const error = new Error(
+      data?.message ||
+      data?.error ||
+      "Erro na API Pagar"
+    );
+
+    error.status = response.status;
+    error.data = data;
+
+    throw error;
+  }
+
+  return data;
+}
   const aa = Buffer.from(String(a || ""), "utf8");
   const bb = Buffer.from(String(b || ""), "utf8");
 
@@ -552,7 +630,7 @@ async function handlePost(req, res) {
 
     if (
       operation !== "SALE" &&
-      operation !== "TOPUP"
+      operation !== "TOPUP" && operation !== "TEST_PAGAR"
     ) {
       return sendJson(res, 400, {
         success: false,
@@ -560,7 +638,87 @@ async function handlePost(req, res) {
       });
     }
 
-const eventId =
+  if (operation === "TEST_PAGAR") {
+    const testMethod =
+      String(body.method || "EMOLA")
+        .trim()
+        .toUpperCase();
+
+    if (
+      testMethod !== "EMOLA" &&
+      testMethod !== "MPESA"
+    ) {
+      return sendJson(res, 400, {
+        success: false,
+        error: "INVALID_TEST_METHOD"
+      });
+    }
+
+    const testPhone =
+      testMethod === "EMOLA"
+        ? "860000001"
+        : "840000001";
+
+    const reference =
+      `TEST-BAR-${testMethod}-${Date.now()}-${crypto
+        .randomBytes(3)
+        .toString("hex")
+        .toUpperCase()}`;
+
+    const idempotencyKey =
+      `test-bar-${reference}`;
+
+    try {
+      const pagarResponse =
+        await pagarPost(
+          "/payments",
+          {
+            amountMzn: 50,
+            method: testMethod,
+            payerPhone: testPhone,
+            title: "BLACK OUT — TESTE",
+            description:
+              `TESTE Pagar ${testMethod} — Bar`,
+            reference
+          },
+          idempotencyKey
+        );
+
+      const payment =
+        pagarResponse?.payment ||
+        pagarResponse;
+
+      return sendJson(res, 200, {
+        success: true,
+        test: true,
+        method: testMethod,
+        reference,
+        paymentId:
+          payment?.id ||
+          payment?.paymentId ||
+          null,
+        paymentStatus:
+          payment?.status ||
+          null
+      });
+    } catch (error) {
+      console.error(
+        "TEST PAGAR ERROR:",
+        error
+      );
+
+      return sendJson(res, 502, {
+        success: false,
+        test: true,
+        error: "PAGAR_TEST_FAILED",
+        detail:
+          error?.data ||
+          error?.message ||
+          "Erro desconhecido"
+      });
+    }
+  }
+
     String(
       body.event_id || ""
     ).trim();
@@ -590,7 +748,7 @@ const eventId =
     });
   }
 
-  if (operation !== "TOPUP" && !items) {
+  if (operation !== "TOPUP" && operation !== "TEST_PAGAR" && !items) {
     return sendJson(res, 400, {
       success: false,
       error: "INVALID_ITEMS"
