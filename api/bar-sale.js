@@ -319,6 +319,37 @@ async function handleGet(req, res) {
     });
   }
 
+  const {
+    data: fiscalSettings,
+    error: fiscalError
+  } = await supabase
+    .from("event_fiscal_settings")
+    .select("tax_enabled,tax_name,tax_rate,apply_to_tickets,apply_to_bar,currency")
+    .eq("event_id", eventId)
+    .maybeSingle();
+
+  if (fiscalError) {
+    console.error(
+      "BAR DATA FISCAL ERROR:",
+      fiscalError.message
+    );
+
+    return sendJson(res, 500, {
+      success: false,
+      error: "FISCAL_LOOKUP_FAILED"
+    });
+  }
+
+  const fiscal = {
+    tax_enabled: Boolean(fiscalSettings?.tax_enabled),
+    tax_name: fiscalSettings?.tax_name || "IVA",
+    tax_rate: Number(fiscalSettings?.tax_rate || 0),
+    apply_to_tickets: Boolean(fiscalSettings?.apply_to_tickets),
+    apply_to_bar: Boolean(fiscalSettings?.apply_to_bar),
+    currency: fiscalSettings?.currency || event.currency,
+    server_pricing: true
+  };
+
   let participant = null;
 
   if (shortCode) {
@@ -416,6 +447,7 @@ async function handleGet(req, res) {
       currency: event.currency
     },
     participant,
+    fiscal,
     products:
       (products || []).map(
         product => ({
