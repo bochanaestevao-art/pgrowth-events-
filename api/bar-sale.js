@@ -1,144 +1,140 @@
-import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
 
-const COOKIE_NAME = "bar_session";
+export const config = {
+  api: {
+    bodyParser: true,
+  },
+};
 
 function sendJson(res, status, data) {
-  res.statusCode = status;
-  res.setHeader(
-    "Content-Type",
-    "application/json; charset=utf-8"
-  );
-  res.setHeader("Cache-Control", "no-store");
-  res.end(JSON.stringify(data));
+  return res.status(status).json(data);
 }
 
-function getHeader(req, name) {
-  const value = req.headers?.[name.toLowerCase()];
+function getEnv(name) {
+  const value = process.env[name];
 
-  if (Array.isArray(value)) {
-    return value[0];
+  if (!value) {
+    throw new Error(`Variável de ambiente ausente: ${name}`);
   }
 
-  return value || "";
+  return value;
 }
 
 function timingSafeEqualString(a, b) {
-  const aa = Buffer.from(
-    String(a || ""),
-    "utf8"
-  );
+  if (!a || !b) return false;
 
-  const bb = Buffer.from(
-    String(b || ""),
-    "utf8"
-  );
+  const aa = Buffer.from(String(a));
+  const bb = Buffer.from(String(b));
 
-  if (aa.length !== bb.length) {
-    return false;
-  }
+  if (aa.length !== bb.length) return false;
 
   return crypto.timingSafeEqual(aa, bb);
 }
 
-async function pagarPost(
-  path,
-  body,
-  idempotencyKey
-) {
-  const apiBaseUrl =
-    process.env.PAGAR_API_BASE_URL;
+function parseCookies(req) {
+  const header = req.headers.cookie || "";
+  const cookies = {};
 
-  const apiKey =
-    process.env.PAGAR_API_KEY;
+  for (const part of header.split(";")) {
+    const index = part.indexOf("=");
 
-  const signingSecret =
-    process.env.PAGAR_SIGNING_SECRET;
+    if (index === -1) continue;
 
-  if (
-    !apiBaseUrl ||
-    !apiKey ||
-    !signingSecret
-  ) {
-    throw new Error(
-      "Configuração da Pagar não encontrada"
-    );
+    const key = part.slice(0, index).trim();
+    const value = part.slice(index + 1).trim();
+
+    try {
+      cookies[key] = decodeURIComponent(value);
+    } catch {
+      cookies[key] = value;
+    }
   }
 
-  const timestamp =
-    Date.now().toString();
+  return cookies;
+}
 
-  const nonce =
-    crypto
-      .randomBytes(18)
-      .toString("base64url");
+function verifyBarSession(req) {
+  const cookies = parseCookies(req);
+  const token = cookies.bar_session;
 
-  const rawBody =
-    JSON.stringify(body);
+  if (!token) return null;
 
-  const bodyHash =
-    crypto
-      .createHash("sha256")
-      .update(rawBody)
-      .digest("hex");
+  const secret = process.env.BAR_SESSION_SECRET;
 
-  const canonicalPath =
-    new URL(
-      path,
-      apiBaseUrl
-    ).pathname;
+  if (!secret) {
+    throw new Error("BAR_SESSION_SECRET não configurado");
+  }
 
-  const canonical = [
-    timestamp,
-    nonce,
-    "POST",
-    canonicalPath,
-    bodyHash
-  ].join("\n");
+  const parts = token.split(".");
 
-  const signature =
-    crypto
-      .createHmac(
-        "sha256",
-        signingSecret
-      )
-      .update(canonical)
-      .digest("hex");
+  if (parts.length !== 2) return null;
 
-  const response =
-    await fetch(
-      `${apiBaseUrl}${path}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type":
-            "application/json",
+  const payload = parts[0];
+  const suppliedSignature = parts[1];
 
-          "Authorization":
-            `Bearer ${apiKey}`,
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(payload)
+    .digest("hex");
 
-          "Pagar-Api-Key":
-            apiKey,
+  if (
+    !timingSafeEqualString(
+      suppliedSignature,
+      expectedSignature
+    )
+  ) {
+    return null;
+  }
 
-          "X-Pagar-Timestamp":
-            timestamp,
-
-          "X-Pagar-Nonce":
-            nonce,
-
-          "X-Pagar-Signature":
-            `v1=${signature}`,
-
-          "Idempotency-Key":
-            idempotencyKey
-        },
-
-        body: rawBody
-      }
+  try {
+    const decoded = JSON.parse(
+      Buffer.from(payload, "base64url").toString("utf8")
     );
 
-  const text =
-    await response.text();
+    if (!decoded || !decoded.staff_id) {
+      return null;
+    }
+
+    if (
+      decoded.exp &&
+      Date.now() > Number(decoded.exp)
+    ) {
+      return null;
+    }
+
+    return decoded;
+  } catch {
+    return null;
+  }
+}
+
+function getSupabaseConfig() {
+  return {
+    url: getEnv("SUPABASE_URL").replace(/\/+$/, ""),
+    key: getEnv("SUPABASE_SERVICE_ROLE_KEY"),
+  };
+}
+
+async function supabaseRequest(path, options = {}) {
+  const {
+    url,
+    key,
+  } = getSupabaseConfig();
+
+  const response = await fetch(
+    `${url}${path}`,
+    {
+      ...options,
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      },
+    }
+  );
+
+  const text = await response.text();
 
   let data = null;
 
@@ -151,17 +147,18 @@ async function pagarPost(
   }
 
   if (!response.ok) {
-    const error =
-      new Error(
-        data?.message ||
-        data?.error ||
-        "Erro na API Pagar"
-      );
+    const error = new Error(
+      typeof data === "string"
+        ? data
+        : data?.message ||
+          data?.error_description ||
+          data?.hint ||
+          data?.details ||
+          `Supabase HTTP ${response.status}`
+    );
 
-    error.status =
-      response.status;
-
-    error.data = data;
+    error.status = response.status;
+    error.details = data;
 
     throw error;
   }
@@ -169,1088 +166,1156 @@ async function pagarPost(
   return data;
 }
 
-function parseCookies(req) {
-  const header =
-    getHeader(req, "cookie");
+function normalizeAmount(value) {
+  const amount = Number(value);
 
-  if (!header) {
-    return {};
+  if (!Number.isFinite(amount)) {
+    return null;
   }
 
-  const cookies = {};
-
-  for (
-    const part of header.split(";")
-  ) {
-    const index =
-      part.indexOf("=");
-
-    if (index === -1) {
-      continue;
-    }
-
-    const key =
-      part
-        .slice(0, index)
-        .trim();
-
-    const value =
-      part
-        .slice(index + 1)
-        .trim();
-
-    if (!key) {
-      continue;
-    }
-
-    try {
-      cookies[key] =
-        decodeURIComponent(value);
-    } catch {
-      cookies[key] = value;
-    }
+  if (amount <= 0) {
+    return null;
   }
 
-  return cookies;
+  return Math.round(amount * 100) / 100;
 }
 
-function readBarSession(req) {
-  const cookies =
-    parseCookies(req);
+function normalizePaymentMethod(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase();
+}
 
-  const raw =
-    cookies[COOKIE_NAME];
+function normalizeShortCode(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase();
+}
 
-  if (!raw) {
-    return null;
-  }
+function getParticipantPhone(participant, requestedPhone) {
+  const phone = String(
+    requestedPhone ||
+      participant?.phone ||
+      ""
+  ).trim();
 
-  const separator =
-    raw.lastIndexOf(".");
+  return phone;
+}
 
-  if (separator <= 0) {
-    return null;
-  }
+function generateTopupReference(
+  eventId,
+  staffId
+) {
+  const eventPart = String(eventId)
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .slice(0, 12);
 
-  const payload =
-    raw.slice(0, separator);
+  const staffPart = String(staffId || "STAFF")
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .slice(0, 8);
 
-  const receivedSignature =
-    raw.slice(separator + 1);
+  const randomPart = crypto
+    .randomBytes(8)
+    .toString("hex");
 
-  const secret =
-    process.env.BAR_SESSION_SECRET;
+  return [
+    "BAR-TOPUP",
+    eventPart,
+    staffPart,
+    Date.now(),
+    randomPart,
+  ].join("-");
+}
 
-  if (!secret) {
-    return null;
-  }
+function generateIdempotencyKey(reference) {
+  return `bar-topup-${reference}`;
+}
 
-  const expectedSignature =
-    crypto
-      .createHmac(
-        "sha256",
-        secret
-      )
-      .update(payload)
-      .digest("hex");
+function getPagarConfig() {
+  return {
+    baseUrl: getEnv(
+      "PAGAR_API_BASE_URL"
+    ).replace(/\/+$/, ""),
+    apiKey: getEnv("PAGAR_API_KEY"),
+    signingSecret: getEnv(
+      "PAGAR_SIGNING_SECRET"
+    ),
+  };
+}
 
-  if (
-    !timingSafeEqualString(
-      receivedSignature,
-      expectedSignature
+async function pagarPost(
+  path,
+  body,
+  idempotencyKey
+) {
+  const {
+    baseUrl,
+    apiKey,
+    signingSecret,
+  } = getPagarConfig();
+
+  const timestamp =
+    Math.floor(Date.now() / 1000).toString();
+
+  const nonce = crypto
+    .randomBytes(16)
+    .toString("hex");
+
+  const rawBody = JSON.stringify(body);
+
+  const bodyHash = crypto
+    .createHash("sha256")
+    .update(rawBody)
+    .digest("hex");
+
+  const canonical = [
+    timestamp,
+    nonce,
+    "POST",
+    path,
+    bodyHash,
+  ].join(".");
+
+  const signature = crypto
+    .createHmac(
+      "sha256",
+      signingSecret
     )
-  ) {
-    return null;
+    .update(canonical)
+    .digest("hex");
+
+  const response = await fetch(
+    `${baseUrl}${path}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type":
+          "application/json",
+        Accept: "application/json",
+
+        Authorization:
+          `Bearer ${apiKey}`,
+
+        "Pagar-Api-Key": apiKey,
+
+        "X-Pagar-Timestamp":
+          timestamp,
+
+        "X-Pagar-Nonce":
+          nonce,
+
+        "X-Pagar-Signature":
+          `v1=${signature}`,
+
+        "Idempotency-Key":
+          idempotencyKey,
+      },
+      body: rawBody,
+    }
+  );
+
+  const text = await response.text();
+
+  let data = null;
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
   }
 
-  let data;
-
-  try {
-    data =
-      JSON.parse(
-        Buffer
-          .from(
-            payload,
-            "base64url"
-          )
-          .toString("utf8")
-      );
-  } catch {
-    return null;
-  }
-
-  if (
-    !data ||
-    typeof data !== "object"
-  ) {
-    return null;
-  }
-
-  if (!data.exp) {
-    return null;
-  }
-
-  const now =
-    Math.floor(
-      Date.now() / 1000
+  if (!response.ok) {
+    const error = new Error(
+      typeof data === "string"
+        ? data
+        : data?.message ||
+          data?.error ||
+          data?.details ||
+          `Pagar HTTP ${response.status}`
     );
 
-  if (
-    Number(data.exp) <= now
-  ) {
-    return null;
+    error.status = response.status;
+    error.details = data;
+
+    throw error;
   }
 
   return data;
 }
 
-function isUuid(value) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    String(value || "")
+function extractPaymentId(payment) {
+  return (
+    payment?.id ||
+    payment?.payment_id ||
+    payment?.paymentId ||
+    payment?.data?.id ||
+    payment?.data?.payment_id ||
+    null
   );
 }
 
-function normalizeItems(items) {
-  if (!Array.isArray(items)) {
-    return null;
-  }
-
-  if (items.length < 1) {
-    return null;
-  }
-
-  if (items.length > 100) {
-    return null;
-  }
-
-  const normalized = [];
-
-  for (const item of items) {
-    if (
-      !item ||
-      typeof item !== "object"
-    ) {
-      return null;
-    }
-
-    const productId =
-      String(
-        item.product_id || ""
-      ).trim();
-
-    const quantity =
-      Number(item.quantity);
-
-    if (!isUuid(productId)) {
-      return null;
-    }
-
-    if (
-      !Number.isInteger(quantity) ||
-      quantity < 1 ||
-      quantity > 100
-    ) {
-      return null;
-    }
-
-    normalized.push({
-      product_id: productId,
-      quantity
-    });
-  }
-
-  return normalized;
+function extractPaymentStatus(payment) {
+  return String(
+    payment?.status ||
+      payment?.payment_status ||
+      payment?.paymentStatus ||
+      payment?.data?.status ||
+      ""
+  ).toUpperCase();
 }
 
-async function handleGet(req, res) {
-  const session =
-    readBarSession(req);
-
-  if (!session) {
-    return sendJson(res, 401, {
-      success: false,
-      error: "UNAUTHORIZED"
-    });
-  }
-
-  const supabaseUrl =
-    process.env.SUPABASE_URL;
-
-  const serviceRoleKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (
-    !supabaseUrl ||
-    !serviceRoleKey
-  ) {
-    console.error(
-      "BAR DATA: missing Supabase environment variables"
+async function getEvent(eventId) {
+  const rows =
+    await supabaseRequest(
+      `/rest/v1/events?id=eq.${encodeURIComponent(
+        eventId
+      )}&select=id,name,description,starts_at,ends_at,status,currency,created_at,closed_at,closed_by&limit=1`
     );
 
-    return sendJson(res, 500, {
-      success: false,
-      error: "SERVER_CONFIG_ERROR"
-    });
+  return Array.isArray(rows)
+    ? rows[0] || null
+    : null;
+}
+
+async function getParticipant(
+  eventId,
+  shortCode
+) {
+  const rows =
+    await supabaseRequest(
+      `/rest/v1/event_participants?event_id=eq.${encodeURIComponent(
+        eventId
+      )}&short_code=eq.${encodeURIComponent(
+        shortCode
+      )}&status=eq.ACTIVE&select=id,event_id,full_name,phone,short_code,status,created_at&limit=1`
+    );
+
+  return Array.isArray(rows)
+    ? rows[0] || null
+    : null;
+}
+
+async function getWallet(
+  eventId,
+  participantId
+) {
+  const rows =
+    await supabaseRequest(
+      `/rest/v1/wallet_accounts?event_id=eq.${encodeURIComponent(
+        eventId
+      )}&participant_id=eq.${encodeURIComponent(
+        participantId
+      )}&status=eq.ACTIVE&select=id,event_id,participant_id,balance,status,created_at,closed_at&limit=1`
+    );
+
+  return Array.isArray(rows)
+    ? rows[0] || null
+    : null;
+}
+
+async function getProducts(eventId) {
+  return supabaseRequest(
+    `/rest/v1/bar_products?event_id=eq.${encodeURIComponent(
+      eventId
+    )}&status=eq.ACTIVE&select=*&order=name.asc`
+  );
+}
+
+async function getFiscalSettings(
+  eventId
+) {
+  const rows =
+    await supabaseRequest(
+      `/rest/v1/event_fiscal_settings?event_id=eq.${encodeURIComponent(
+        eventId
+      )}&select=*&limit=1`
+    );
+
+  return Array.isArray(rows)
+    ? rows[0] || null
+    : null;
+}
+
+async function getWalletSettings(
+  eventId
+) {
+  const rows =
+    await supabaseRequest(
+      `/rest/v1/wallet_settings?event_id=eq.${encodeURIComponent(
+        eventId
+      )}&select=id,event_id,min_topup,max_topup,currency,topup_enabled,created_at,topup_min_amount,topup_max_amount&limit=1`
+    );
+
+  return Array.isArray(rows)
+    ? rows[0] || null
+    : null;
+}
+
+function validateTopupSettings(
+  amount,
+  settings
+) {
+  if (!settings) {
+    throw new Error(
+      "WALLET_SETTINGS_NOT_FOUND"
+    );
   }
 
-  const supabase =
-    createClient(
-      supabaseUrl,
-      serviceRoleKey,
+  if (settings.topup_enabled === false) {
+    throw new Error(
+      "TOPUP_DISABLED"
+    );
+  }
+
+  const minimum =
+    settings.topup_min_amount ??
+    settings.min_topup;
+
+  const maximum =
+    settings.topup_max_amount ??
+    settings.max_topup;
+
+  if (
+    minimum !== null &&
+    minimum !== undefined &&
+    amount < Number(minimum)
+  ) {
+    throw new Error(
+      "BELOW_MIN_TOPUP"
+    );
+  }
+
+  if (
+    maximum !== null &&
+    maximum !== undefined &&
+    amount > Number(maximum)
+  ) {
+    throw new Error(
+      "ABOVE_MAX_TOPUP"
+    );
+  }
+}
+
+async function processCashTopup({
+  eventId,
+  shortCode,
+  amount,
+  paymentReference,
+  staffId,
+  description,
+}) {
+  return supabaseRequest(
+    "/rest/v1/rpc/process_wallet_topup",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        p_event_id: eventId,
+        p_short_code: shortCode,
+        p_amount: amount,
+        p_payment_reference:
+          paymentReference || null,
+        p_staff_id:
+          staffId || null,
+        p_description:
+          description || null,
+      }),
+    }
+  );
+}
+
+async function createPendingElectronicTopup({
+  eventId,
+  participantId,
+  walletId,
+  amount,
+  reference,
+  paymentMethod,
+  staffId,
+  description,
+}) {
+  const rows =
+    await supabaseRequest(
+      "/rest/v1/wallet_topups",
       {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
+        method: "POST",
+        headers: {
+          Prefer:
+            "return=representation",
+        },
+        body: JSON.stringify({
+          event_id: eventId,
+          wallet_id: walletId,
+          participant_id:
+            participantId,
+          amount,
+          payment_status:
+            "PENDING",
+          payment_reference:
+            reference,
+          payment_id: null,
+          payment_method:
+            paymentMethod,
+          staff_id:
+            staffId || null,
+          description:
+            description || null,
+        }),
       }
     );
 
-  const url =
-    new URL(
-      req.url || "/api/bar-sale",
-      "https://localhost"
+  if (
+    !Array.isArray(rows) ||
+    !rows[0]
+  ) {
+    throw new Error(
+      "TOPUP_CREATION_FAILED"
     );
-
-  const eventId =
-    String(
-      url.searchParams.get(
-        "event_id"
-      ) || ""
-    ).trim();
-
-  const shortCode =
-    String(
-      url.searchParams.get(
-        "short_code"
-      ) || ""
-    )
-      .trim()
-      .toUpperCase();
-
-  if (!isUuid(eventId)) {
-    return sendJson(res, 400, {
-      success: false,
-      error: "INVALID_EVENT_ID"
-    });
   }
 
-  const {
-    data: event,
-    error: eventError
-  } = await supabase
-    .from("events")
-    .select(
-      "id,name,status,currency"
-    )
-    .eq("id", eventId)
-    .maybeSingle();
-
-  if (eventError) {
-    console.error(
-      "BAR DATA EVENT ERROR:",
-      eventError.message
-    );
-
-    return sendJson(res, 500, {
-      success: false,
-      error: "EVENT_LOOKUP_FAILED"
-    });
-  }
-
-  if (!event) {
-    return sendJson(res, 404, {
-      success: false,
-      error: "EVENT_NOT_FOUND"
-    });
-  }
-
-  if (event.status !== "OPEN") {
-    return sendJson(res, 409, {
-      success: false,
-      error: "EVENT_CLOSED"
-    });
-  }
-
-  const {
-    data: products,
-    error: productsError
-  } = await supabase
-    .from("bar_products")
-    .select(
-      "id,name,category,price,status"
-    )
-    .eq("event_id", eventId)
-    .eq("status", "ACTIVE")
-    .order("category", {
-      ascending: true
-    })
-    .order("name", {
-      ascending: true
-    });
-
-  if (productsError) {
-    console.error(
-      "BAR DATA PRODUCTS ERROR:",
-      productsError.message
-    );
-
-    return sendJson(res, 500, {
-      success: false,
-      error: "PRODUCT_LOOKUP_FAILED"
-    });
-  }
-
-  const {
-    data: fiscalSettings,
-    error: fiscalError
-  } = await supabase
-    .from("event_fiscal_settings")
-    .select(
-      "tax_enabled,tax_name,tax_rate,apply_to_tickets,apply_to_bar,currency"
-    )
-    .eq("event_id", eventId)
-    .maybeSingle();
-
-  if (fiscalError) {
-    console.error(
-      "BAR DATA FISCAL ERROR:",
-      fiscalError.message
-    );
-
-    return sendJson(res, 500, {
-      success: false,
-      error: "FISCAL_LOOKUP_FAILED"
-    });
-  }
-
-  const fiscal = {
-    tax_enabled:
-      Boolean(
-        fiscalSettings?.tax_enabled
-      ),
-
-    tax_name:
-      fiscalSettings?.tax_name ||
-      "IVA",
-
-    tax_rate:
-      Number(
-        fiscalSettings?.tax_rate || 0
-      ),
-
-    apply_to_tickets:
-      Boolean(
-        fiscalSettings?.apply_to_tickets
-      ),
-
-    apply_to_bar:
-      Boolean(
-        fiscalSettings?.apply_to_bar
-      ),
-
-    currency:
-      fiscalSettings?.currency ||
-      event.currency,
-
-    server_pricing: true
-  };
-
-  let participant = null;
-
-  if (shortCode) {
-    const {
-      data: participantRow,
-      error: participantError
-    } = await supabase
-      .from("event_participants")
-      .select(
-        "id,full_name,phone,short_code,status"
-      )
-      .eq("event_id", eventId)
-      .eq("short_code", shortCode)
-      .eq("status", "ACTIVE")
-      .maybeSingle();
-
-    if (participantError) {
-      console.error(
-        "BAR DATA PARTICIPANT ERROR:",
-        participantError.message
-      );
-
-      return sendJson(res, 500, {
-        success: false,
-        error:
-          "PARTICIPANT_LOOKUP_FAILED"
-      });
-    }
-
-    if (!participantRow) {
-      return sendJson(res, 404, {
-        success: false,
-        error:
-          "PARTICIPANT_NOT_FOUND"
-      });
-    }
-
-    const {
-      data: wallet,
-      error: walletError
-    } = await supabase
-      .from("wallet_accounts")
-      .select(
-        "id,balance,status"
-      )
-      .eq("event_id", eventId)
-      .eq(
-        "participant_id",
-        participantRow.id
-      )
-      .maybeSingle();
-
-    if (walletError) {
-      console.error(
-        "BAR DATA WALLET ERROR:",
-        walletError.message
-      );
-
-      return sendJson(res, 500, {
-        success: false,
-        error:
-          "WALLET_LOOKUP_FAILED"
-      });
-    }
-
-    if (!wallet) {
-      return sendJson(res, 404, {
-        success: false,
-        error:
-          "WALLET_NOT_FOUND"
-      });
-    }
-
-    participant = {
-      id: participantRow.id,
-
-      full_name:
-        participantRow.full_name,
-
-      phone:
-        participantRow.phone,
-
-      short_code:
-        participantRow.short_code,
-
-      wallet_id:
-        wallet.id,
-
-      balance:
-        Number(wallet.balance || 0),
-
-      wallet_status:
-        wallet.status
-    };
-  }
-
-  return sendJson(res, 200, {
-    success: true,
-
-    staff_id:
-      session.staff_id,
-
-    event: {
-      id: event.id,
-      name: event.name,
-      status: event.status,
-      currency: event.currency
-    },
-
-    participant,
-
-    fiscal,
-
-    products:
-      (products || []).map(
-        product => ({
-          id: product.id,
-
-          name:
-            product.name,
-
-          category:
-            product.category,
-
-          price:
-            Number(
-              product.price || 0
-            ),
-
-          status:
-            product.status
-        })
-      )
-  });
+  return rows[0];
 }
 
-async function handlePost(req, res) {
-  const session =
-    readBarSession(req);
+async function updatePendingTopupPayment({
+  reference,
+  paymentId,
+}) {
+  await supabaseRequest(
+    `/rest/v1/wallet_topups?payment_reference=eq.${encodeURIComponent(
+      reference
+    )}&payment_status=eq.PENDING`,
+    {
+      method: "PATCH",
+      headers: {
+        Prefer:
+          "return=minimal",
+      },
+      body: JSON.stringify({
+        payment_id:
+          paymentId || null,
+      }),
+    }
+  );
+}
 
-  if (!session) {
-    return sendJson(res, 401, {
-      success: false,
-      error: "UNAUTHORIZED"
-    });
-  }
+async function markTopupFailed(
+  reference,
+  description
+) {
+  await supabaseRequest(
+    `/rest/v1/wallet_topups?payment_reference=eq.${encodeURIComponent(
+      reference
+    )}&payment_status=eq.PENDING`,
+    {
+      method: "PATCH",
+      headers: {
+        Prefer:
+          "return=minimal",
+      },
+      body: JSON.stringify({
+        payment_status:
+          "FAILED",
+        description:
+          description || null,
+      }),
+    }
+  );
+}
 
-  const supabaseUrl =
-    process.env.SUPABASE_URL;
-
-  const serviceRoleKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (
-    !supabaseUrl ||
-    !serviceRoleKey
-  ) {
-    console.error(
-      "BAR SALE: missing Supabase environment variables"
+async function processElectronicTopup({
+  eventId,
+  participant,
+  wallet,
+  amount,
+  paymentMethod,
+  staffId,
+  phone,
+  description,
+}) {
+  const payerPhone =
+    getParticipantPhone(
+      participant,
+      phone
     );
 
-    return sendJson(res, 500, {
-      success: false,
-      error: "SERVER_CONFIG_ERROR"
-    });
+  if (!payerPhone) {
+    throw new Error(
+      "PARTICIPANT_PHONE_REQUIRED"
+    );
   }
 
-  let body;
+  const reference =
+    generateTopupReference(
+      eventId,
+      staffId
+    );
+
+  await createPendingElectronicTopup({
+    eventId,
+    participantId:
+      participant.id,
+    walletId: wallet.id,
+    amount,
+    reference,
+    paymentMethod,
+    staffId,
+    description,
+  });
 
   try {
-    if (
-      req.body &&
-      typeof req.body === "object"
-    ) {
-      body = req.body;
-    } else {
-      const chunks = [];
-
-      for await (const chunk of req) {
-        chunks.push(
-          Buffer.isBuffer(chunk)
-            ? chunk
-            : Buffer.from(chunk)
-        );
-      }
-
-      const raw =
-        Buffer
-          .concat(chunks)
-          .toString("utf8");
-
-      body =
-        raw
-          ? JSON.parse(raw)
-          : null;
-    }
-  } catch (error) {
-    console.error(
-      "BAR SALE BODY ERROR:",
-      error.message
-    );
-
-    return sendJson(res, 400, {
-      success: false,
-      error: "INVALID_JSON"
-    });
-  }
-
-  if (
-    !body ||
-    typeof body !== "object"
-  ) {
-    return sendJson(res, 400, {
-      success: false,
-      error: "INVALID_BODY"
-    });
-  }
-
-  const operation =
-    String(
-      body.operation || "SALE"
-    )
-      .trim()
-      .toUpperCase();
-
-  if (
-    operation !== "SALE" &&
-    operation !== "TOPUP" &&
-    operation !== "TEST_PAGAR"
-  ) {
-    return sendJson(res, 400, {
-      success: false,
-      error: "INVALID_OPERATION"
-    });
-  }
-
-  /*
-   * TEST_PAGAR
-   *
-   * Este bloco é propositalmente independente
-   * de event_id e short_code.
-   *
-   * ATENÇÃO:
-   * /payments pode criar uma cobrança real
-   * dependendo da configuração da conta Pagar.
-   */
-  if (operation === "TEST_PAGAR") {
-    const testMethod =
-      String(
-        body.method || "EMOLA"
-      )
-        .trim()
-        .toUpperCase();
-
-    if (
-      testMethod !== "EMOLA" &&
-      testMethod !== "MPESA"
-    ) {
-      return sendJson(res, 400, {
-        success: false,
-        error:
-          "INVALID_TEST_METHOD"
-      });
-    }
-
-    const testPhone =
-      testMethod === "EMOLA"
-        ? "860000001"
-        : "840000001";
-
-    const reference =
-      `TEST-BAR-${testMethod}-${Date.now()}-${crypto
-        .randomBytes(3)
-        .toString("hex")
-        .toUpperCase()}`;
-
-    const idempotencyKey =
-      `test-bar-${reference}`;
-
-    try {
-      const pagarResponse =
-        await pagarPost(
-          "/payments",
-          {
-            amountMzn: 50,
-
-            method:
-              testMethod,
-
-            payerPhone:
-              testPhone,
-
-            title:
-              "BLACK OUT — TESTE",
-
-            description:
-              `TESTE Pagar ${testMethod} — Bar`,
-
-            reference
-          },
-
-          idempotencyKey
-        );
-
-      const payment =
-        pagarResponse?.payment ||
-        pagarResponse;
-
-      return sendJson(res, 200, {
-        success: true,
-
-        test: true,
-
-        method:
-          testMethod,
-
-        reference,
-
-        paymentId:
-          payment?.id ||
-          payment?.paymentId ||
-          null,
-
-        paymentStatus:
-          payment?.status ||
-          null
-      });
-    } catch (error) {
-      console.error(
-        "TEST PAGAR ERROR:",
-        error
+    const payment =
+      await pagarPost(
+        "/payments",
+        {
+          amountMzn: amount,
+          method:
+            paymentMethod,
+          payerPhone,
+          title:
+            "BLACK OUT — RECARGA DE CARTEIRA",
+          description:
+            description ||
+            `BLACK OUT — Recarga ${paymentMethod} | ${participant.full_name} | ${reference}`,
+          reference,
+        },
+        generateIdempotencyKey(
+          reference
+        )
       );
 
-      return sendJson(res, 502, {
-        success: false,
+    const paymentId =
+      extractPaymentId(
+        payment
+      );
 
-        test: true,
+    const paymentStatus =
+      extractPaymentStatus(
+        payment
+      );
 
-        error:
-          "PAGAR_TEST_FAILED",
-
-        detail:
-          error?.data ||
-          error?.message ||
-          "Erro desconhecido"
-      });
-    }
-  }
-
-  const eventId =
-    String(
-      body.event_id || ""
-    ).trim();
-
-  const shortCode =
-    String(
-      body.short_code || ""
-    )
-      .trim()
-      .toUpperCase();
-
-  const items =
-    operation === "TOPUP"
-      ? []
-      : normalizeItems(
-          body.items
-        );
-
-  if (!isUuid(eventId)) {
-    return sendJson(res, 400, {
-      success: false,
-      error: "INVALID_EVENT_ID"
+    await updatePendingTopupPayment({
+      reference,
+      paymentId,
     });
-  }
 
-  if (!shortCode) {
-    return sendJson(res, 400, {
-      success: false,
-      error: "INVALID_SHORT_CODE"
-    });
-  }
-
-  if (
-    operation !== "TOPUP" &&
-    operation !== "TEST_PAGAR" &&
-    !items
-  ) {
-    return sendJson(res, 400, {
-      success: false,
-      error: "INVALID_ITEMS"
-    });
-  }
-
-  const supabase =
-    createClient(
-      supabaseUrl,
-      serviceRoleKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
-
-  const staffId =
-    session.staff_id;
-
-  if (operation === "TOPUP") {
-    const amount =
-      Number(body.amount);
-
-    if (
-      !Number.isFinite(amount) ||
-      amount <= 0
-    ) {
-      return sendJson(res, 400, {
-        success: false,
-        error:
-          "INVALID_TOPUP_AMOUNT"
-      });
+    return {
+      success: true,
+      operation:
+        "TOPUP_PAYMENT",
+      status:
+        "PENDING",
+      payment_status:
+        paymentStatus ||
+        "PENDING",
+      payment_reference:
+        reference,
+      payment_id:
+        paymentId,
+      payment_method:
+        paymentMethod,
+      amount,
+      participant_id:
+        participant.id,
+      wallet_id:
+        wallet.id,
+      message:
+        "Recarga criada. O saldo será creditado somente após a confirmação do pagamento.",
+    };
+  } catch (error) {
+    try {
+      await markTopupFailed(
+        reference,
+        `Falha ao criar pagamento Pagar: ${error.message}`
+      );
+    } catch (markError) {
+      console.error(
+        "Falha ao marcar TOPUP como FAILED:",
+        markError
+      );
     }
 
-    const {
-      data,
-      error
-    } = await supabase.rpc(
-      "process_wallet_topup",
-      {
-        p_event_id:
-          eventId,
+    throw error;
+  }
+}
 
+async function processSale({
+  eventId,
+  shortCode,
+  productId,
+  quantity,
+  staffId,
+}) {
+  const items = [
+    {
+      product_id: productId,
+      quantity,
+    },
+  ];
+
+  return supabaseRequest(
+    "/rest/v1/rpc/process_bar_sale",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        p_event_id: eventId,
         p_short_code:
           shortCode,
-
-        p_amount:
-          amount,
-
-        p_payment_reference:
-          body.payment_reference ||
-          null,
-
+        p_items: items,
         p_staff_id:
-          staffId,
-
-        p_description:
-          body.description ||
-          null,
-
-        p_payment_id:
-          body.payment_id ||
-          null,
-
-        p_payment_method:
-          body.payment_method ||
-          "CASH"
-      }
-    );
-
-    if (error) {
-      const message =
-        String(
-          error.message || ""
-        ).toLowerCase();
-
-      if (
-        message.includes("event")
-      ) {
-        return sendJson(res, 400, {
-          success: false,
-          error:
-            "EVENT_CLOSED"
-        });
-      }
-
-      if (
-        message.includes(
-          "participant"
-        ) ||
-        message.includes(
-          "short code"
-        )
-      ) {
-        return sendJson(res, 404, {
-          success: false,
-          error:
-            "PARTICIPANT_NOT_FOUND"
-        });
-      }
-
-      if (
-        message.includes("wallet")
-      ) {
-        return sendJson(res, 404, {
-          success: false,
-          error:
-            "WALLET_NOT_FOUND"
-        });
-      }
-
-      if (
-        message.includes(
-          "minimum"
-        ) ||
-        message.includes(
-          "maximum"
-        ) ||
-        message.includes(
-          "topup"
-        )
-      ) {
-        return sendJson(res, 400, {
-          success: false,
-          error:
-            "TOPUP_NOT_ALLOWED"
-        });
-      }
-
-      return sendJson(res, 500, {
-        success: false,
-        error:
-          "TOPUP_FAILED",
-        detail:
-          error.message
-      });
-    }
-
-    return sendJson(res, 200, {
-      success: true,
-
-      operation:
-        "TOPUP",
-
-      ...data
-    });
-  }
-
-  const {
-    data,
-    error
-  } = await supabase.rpc(
-    "process_bar_sale",
-    {
-      p_event_id:
-        eventId,
-
-      p_short_code:
-        shortCode,
-
-      p_items:
-        items,
-
-      p_staff_id:
-        staffId
+          staffId || null,
+      }),
     }
   );
+}
 
-  if (error) {
-    console.error(
-      "BAR SALE RPC ERROR:",
-      error.message
+function mapErrorMessage(error) {
+  const message =
+    String(
+      error?.message || ""
     );
 
-    const message =
-      String(
-        error.message || ""
-      );
+  const known = {
+    EVENT_CLOSED:
+      "O evento está fechado.",
+    PARTICIPANT_NOT_FOUND:
+      "Participante não encontrado ou inativo.",
+    WALLET_NOT_FOUND:
+      "Carteira do participante não encontrada.",
+    WALLET_NOT_ACTIVE:
+      "A carteira do participante não está ativa.",
+    INVALID_AMOUNT:
+      "Valor da recarga inválido.",
+    BELOW_MIN_TOPUP:
+      "O valor da recarga está abaixo do mínimo permitido.",
+    ABOVE_MAX_TOPUP:
+      "O valor da recarga está acima do máximo permitido.",
+    TOPUP_DISABLED:
+      "As recargas estão desativadas para este evento.",
+    WALLET_SETTINGS_NOT_FOUND:
+      "Configuração da carteira não encontrada.",
+    PARTICIPANT_PHONE_REQUIRED:
+      "O participante não possui telefone para realizar o pagamento.",
+    TOPUP_CREATION_FAILED:
+      "Não foi possível registrar a recarga.",
+    INVALID_ITEMS:
+      "Itens da venda inválidos.",
+    PRODUCT_NOT_FOUND:
+      "Produto não encontrado.",
+    INSUFFICIENT_BALANCE:
+      "Saldo insuficiente.",
+    PAYMENT_REFERENCE_REQUIRED:
+      "Referência de pagamento obrigatória.",
+    PAYMENT_ID_REQUIRED:
+      "ID do pagamento obrigatório.",
+  };
 
-    if (
-      message.includes(
-        "EVENT_CLOSED"
-      )
-    ) {
-      return sendJson(res, 409, {
-        success: false,
-        error:
-          "EVENT_CLOSED"
-      });
-    }
-
-    if (
-      message.includes(
-        "PARTICIPANT_NOT_FOUND"
-      )
-    ) {
-      return sendJson(res, 404, {
-        success: false,
-        error:
-          "PARTICIPANT_NOT_FOUND"
-      });
-    }
-
-    if (
-      message.includes(
-        "WALLET_NOT_FOUND"
-      )
-    ) {
-      return sendJson(res, 404, {
-        success: false,
-        error:
-          "WALLET_NOT_FOUND"
-      });
-    }
-
-    if (
-      message.includes(
-        "PRODUCT_NOT_FOUND"
-      )
-    ) {
-      return sendJson(res, 404, {
-        success: false,
-        error:
-          "PRODUCT_NOT_FOUND"
-      });
-    }
-
-    if (
-      message.includes(
-        "INSUFFICIENT_BALANCE"
-      )
-    ) {
-      return sendJson(res, 409, {
-        success: false,
-        error:
-          "INSUFFICIENT_BALANCE"
-      });
-    }
-
-    return sendJson(res, 500, {
-      success: false,
-      error:
-        "BAR_SALE_FAILED"
-    });
-  }
-
-  return sendJson(res, 200, {
-    success: true,
-
-    staff_id:
-      staffId,
-
-    transaction_id:
-      data?.transaction_id ||
-      null,
-
-    participant_id:
-      data?.participant_id ||
-      null,
-
-    wallet_id:
-      data?.wallet_id ||
-      null,
-
-    total:
-      Number(
-        data?.total || 0
-      ),
-
-    balance_before:
-      Number(
-        data?.balance_before || 0
-      ),
-
-    balance_after:
-      Number(
-        data?.balance_after || 0
-      )
-  });
+  return (
+    known[message] ||
+    message ||
+    "Erro interno ao processar a operação."
+  );
 }
 
 export default async function handler(
   req,
   res
 ) {
-  if (req.method === "GET") {
-    return handleGet(
-      req,
-      res
+  try {
+    const session =
+      verifyBarSession(req);
+
+    if (!session) {
+      return sendJson(
+        res,
+        401,
+        {
+          success: false,
+          message:
+            "Sessão do Staff Bar inválida ou expirada.",
+        }
+      );
+    }
+
+    if (req.method === "GET") {
+      const eventId =
+        String(
+          req.query.event_id ||
+            ""
+        ).trim();
+
+      const shortCode =
+        normalizeShortCode(
+          req.query.short_code
+        );
+
+      if (
+        !eventId ||
+        !shortCode
+      ) {
+        return sendJson(
+          res,
+          400,
+          {
+            success: false,
+            message:
+              "event_id e short_code são obrigatórios.",
+          }
+        );
+      }
+
+      const event =
+        await getEvent(
+          eventId
+        );
+
+      if (!event) {
+        return sendJson(
+          res,
+          404,
+          {
+            success: false,
+            message:
+              "Evento não encontrado.",
+          }
+        );
+      }
+
+      const participant =
+        await getParticipant(
+          eventId,
+          shortCode
+        );
+
+      if (!participant) {
+        return sendJson(
+          res,
+          404,
+          {
+            success: false,
+            message:
+              "Participante não encontrado ou inativo.",
+          }
+        );
+      }
+
+      const wallet =
+        await getWallet(
+          eventId,
+          participant.id
+        );
+
+      if (!wallet) {
+        return sendJson(
+          res,
+          404,
+          {
+            success: false,
+            message:
+              "Carteira do participante não encontrada.",
+          }
+        );
+      }
+
+      const [
+        products,
+        fiscal,
+        walletSettings,
+      ] = await Promise.all([
+        getProducts(eventId),
+        getFiscalSettings(
+          eventId
+        ),
+        getWalletSettings(
+          eventId
+        ),
+      ]);
+
+      return sendJson(
+        res,
+        200,
+        {
+          success: true,
+          event,
+          participant,
+          wallet,
+          products,
+          fiscal,
+          wallet_settings:
+            walletSettings,
+        }
+      );
+    }
+
+    if (req.method !== "POST") {
+      return sendJson(
+        res,
+        405,
+        {
+          success: false,
+          message:
+            "Método não permitido.",
+        }
+      );
+    }
+
+    const body =
+      req.body &&
+      typeof req.body === "object"
+        ? req.body
+        : {};
+
+    const operation =
+      String(
+        body.operation || ""
+      )
+        .trim()
+        .toUpperCase();
+
+    const eventId =
+      String(
+        body.event_id || ""
+      ).trim();
+
+    const shortCode =
+      normalizeShortCode(
+        body.short_code
+      );
+
+    if (
+      !eventId ||
+      !shortCode
+    ) {
+      return sendJson(
+        res,
+        400,
+        {
+          success: false,
+          message:
+            "event_id e short_code são obrigatórios.",
+        }
+      );
+    }
+
+    if (
+      operation ===
+      "TEST_PAGAR"
+    ) {
+      return sendJson(
+        res,
+        410,
+        {
+          success: false,
+          message:
+            "TEST_PAGAR foi desativado. Use TOPUP_PAYMENT para recargas eletrônicas.",
+        }
+      );
+    }
+
+    if (
+      operation === "SALE"
+    ) {
+      const productId =
+        String(
+          body.product_id ||
+            ""
+        ).trim();
+
+      const quantity =
+        Number(
+          body.quantity
+        );
+
+      if (!productId) {
+        return sendJson(
+          res,
+          400,
+          {
+            success: false,
+            message:
+              "product_id é obrigatório.",
+          }
+        );
+      }
+
+      if (
+        !Number.isInteger(
+          quantity
+        ) ||
+        quantity <= 0
+      ) {
+        return sendJson(
+          res,
+          400,
+          {
+            success: false,
+            message:
+              "quantity inválida.",
+          }
+        );
+      }
+
+      const result =
+        await processSale({
+          eventId,
+          shortCode,
+          productId,
+          quantity,
+          staffId:
+            session.staff_id,
+        });
+
+      return sendJson(
+        res,
+        200,
+        {
+          success: true,
+          operation:
+            "SALE",
+          result,
+        }
+      );
+    }
+
+    if (
+      operation === "TOPUP" ||
+      operation ===
+        "TOPUP_PAYMENT"
+    ) {
+      const amount =
+        normalizeAmount(
+          body.amount
+        );
+
+      const paymentMethod =
+        normalizePaymentMethod(
+          body.payment_method ||
+            body.method
+        );
+
+      if (!amount) {
+        return sendJson(
+          res,
+          400,
+          {
+            success: false,
+            message:
+              "Valor da recarga inválido.",
+          }
+        );
+      }
+
+      const event =
+        await getEvent(
+          eventId
+        );
+
+      if (!event) {
+        return sendJson(
+          res,
+          404,
+          {
+            success: false,
+            message:
+              "Evento não encontrado.",
+          }
+        );
+      }
+
+      const participant =
+        await getParticipant(
+          eventId,
+          shortCode
+        );
+
+      if (!participant) {
+        return sendJson(
+          res,
+          404,
+          {
+            success: false,
+            message:
+              "Participante não encontrado ou inativo.",
+          }
+        );
+      }
+
+      const wallet =
+        await getWallet(
+          eventId,
+          participant.id
+        );
+
+      if (!wallet) {
+        return sendJson(
+          res,
+          404,
+          {
+            success: false,
+            message:
+              "Carteira do participante não encontrada.",
+          }
+        );
+      }
+
+      const walletSettings =
+        await getWalletSettings(
+          eventId
+        );
+
+      validateTopupSettings(
+        amount,
+        walletSettings
+      );
+
+      if (
+        paymentMethod ===
+        "CASH"
+      ) {
+        if (
+          operation !==
+          "TOPUP"
+        ) {
+          return sendJson(
+            res,
+            400,
+            {
+              success: false,
+              message:
+                "TOPUP_PAYMENT é destinado a pagamentos eletrônicos.",
+            }
+          );
+        }
+
+        const paymentReference =
+          String(
+            body.payment_reference ||
+              `CASH-${Date.now()}-${crypto
+                .randomBytes(5)
+                .toString("hex")}`
+          );
+
+        const result =
+          await processCashTopup({
+            eventId,
+            shortCode,
+            amount,
+            paymentReference,
+            staffId:
+              session.staff_id,
+            description:
+              body.description ||
+              "Recarga CASH — Staff Bar",
+          });
+
+        return sendJson(
+          res,
+          200,
+          {
+            success: true,
+            operation:
+              "TOPUP",
+            payment_method:
+              "CASH",
+            status:
+              "PAID",
+            result,
+          }
+        );
+      }
+
+      if (
+        paymentMethod !==
+          "EMOLA" &&
+        paymentMethod !==
+          "MPESA"
+      ) {
+        return sendJson(
+          res,
+          400,
+          {
+            success: false,
+            message:
+              "Método de pagamento inválido. Use CASH, EMOLA ou MPESA.",
+          }
+        );
+      }
+
+      if (
+        operation !==
+        "TOPUP_PAYMENT"
+      ) {
+        return sendJson(
+          res,
+          400,
+          {
+            success: false,
+            message:
+              "Para eMOLA/M-Pesa use a operação TOPUP_PAYMENT.",
+          }
+        );
+      }
+
+      const result =
+        await processElectronicTopup({
+          eventId,
+          participant,
+          wallet,
+          amount,
+          paymentMethod,
+          staffId:
+            session.staff_id,
+          phone:
+            body.phone,
+          description:
+            body.description ||
+            `Recarga ${paymentMethod} — Staff Bar`,
+        });
+
+      return sendJson(
+        res,
+        200,
+        result
+      );
+    }
+
+    return sendJson(
+      res,
+      400,
+      {
+        success: false,
+        message:
+          "Operação inválida. Use SALE, TOPUP ou TOPUP_PAYMENT.",
+      }
+    );
+  } catch (error) {
+    console.error(
+      "bar-sale error:",
+      error
+    );
+
+    const message =
+      mapErrorMessage(
+        error
+      );
+
+    const status =
+      error?.status &&
+      Number.isInteger(
+        Number(error.status)
+      )
+        ? Number(
+            error.status
+          )
+        : 500;
+
+    return sendJson(
+      res,
+      status,
+      {
+        success: false,
+        message,
+      }
     );
   }
-
-  if (req.method === "POST") {
-    return handlePost(
-      req,
-      res
-    );
-  }
-
-  res.setHeader(
-    "Allow",
-    "GET, POST"
-  );
-
-  return sendJson(res, 405, {
-    success: false,
-    error:
-      "METHOD_NOT_ALLOWED"
-  });
 }
