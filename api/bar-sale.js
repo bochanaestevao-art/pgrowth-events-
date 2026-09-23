@@ -508,6 +508,10 @@ async function processCashTopup({
   staffId,
   description,
 }) {
+  const reference =
+    paymentReference ||
+    `CASH-${Date.now()}`;
+
   return supabaseRequest(
     "/rest/v1/rpc/process_wallet_topup",
     {
@@ -516,9 +520,9 @@ async function processCashTopup({
         p_event_id: eventId,
         p_short_code: shortCode,
         p_amount: amount,
-        p_payment_reference: paymentReference || null,
+        p_payment_reference: reference,
         p_staff_id: staffId || null,
-        p_description: description || null,
+        p_description: description || "Recarga CASH",
         p_payment_id: null,
         p_payment_method: "CASH",
       }),
