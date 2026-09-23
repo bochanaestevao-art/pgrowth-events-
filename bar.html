@@ -1164,10 +1164,12 @@
 
 
       $("customerBalance")
-        .textContent =
-        money(
-          participant.balance
-        );
+  .textContent =
+  money(
+    data.wallet?.balance ??
+    participant.balance ??
+    0
+  );
 
     }
 
