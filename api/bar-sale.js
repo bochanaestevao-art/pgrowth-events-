@@ -839,113 +839,123 @@ export default async function handler(
     }
 
     if (req.method === "GET") {
-      const eventId =
-        String(
-          req.query.event_id ||
-            ""
-        ).trim();
+  const eventId = String(
+    req.query.event_id || ""
+  ).trim();
 
-      const shortCode =
-        normalizeShortCode(
-          req.query.short_code
-        );
+  const shortCode = normalizeShortCode(
+    req.query.short_code
+  );
 
-      if (
-        !eventId ||
-        !shortCode
-      ) {
-        return sendJson(
-          res,
-          400,
-          {
-            success: false,
-            message:
-              "event_id e short_code são obrigatórios.",
-          }
-        );
-      }
+  /*
+   * Quando o Staff acabou de fazer login,
+   * o frontend chama /api/bar-sale sem short_code.
+   * Nesse momento precisamos carregar apenas
+   * os dados gerais do evento.
+   */
+  if (!eventId && !shortCode) {
+    const defaultEventId =
+      "efe5eee5-d361-44b4-a1bf-9d92914fa297";
 
-      const event =
-        await getEvent(
-          eventId
-        );
+    const event = await getEvent(
+      defaultEventId
+    );
 
-      if (!event) {
-        return sendJson(
-          res,
-          404,
-          {
-            success: false,
-            message:
-              "Evento não encontrado.",
-          }
-        );
-      }
+    if (!event) {
+      return sendJson(res, 404, {
+        success: false,
+        message: "Evento não encontrado.",
+      });
+    }
 
-      const participant =
-        await getParticipant(
-          eventId,
-          shortCode
-        );
+    const [
+      products,
+      fiscal,
+      walletSettings,
+    ] = await Promise.all([
+      getProducts(defaultEventId),
+      getFiscalSettings(defaultEventId),
+      getWalletSettings(defaultEventId),
+    ]);
 
-      if (!participant) {
-        return sendJson(
-          res,
-          404,
-          {
-            success: false,
-            message:
-              "Participante não encontrado ou inativo.",
-          }
-        );
-      }
+    return sendJson(res, 200, {
+      success: true,
+      event,
+      participant: null,
+      wallet: null,
+      products,
+      fiscal,
+      wallet_settings: walletSettings,
+    });
+  }
 
-      const wallet =
-        await getWallet(
-          eventId,
-          participant.id
-        );
+  if (!eventId || !shortCode) {
+    return sendJson(res, 400, {
+      success: false,
+      message:
+        "event_id e short_code são obrigatórios.",
+    });
+  }
 
-      if (!wallet) {
-        return sendJson(
-          res,
-          404,
-          {
-            success: false,
-            message:
-              "Carteira do participante não encontrada.",
-          }
-        );
-      }
+  const event = await getEvent(
+    eventId
+  );
 
-      const [
-        products,
-        fiscal,
-        walletSettings,
-      ] = await Promise.all([
-        getProducts(eventId),
-        getFiscalSettings(
-          eventId
-        ),
-        getWalletSettings(
-          eventId
-        ),
-      ]);
+  if (!event) {
+    return sendJson(res, 404, {
+      success: false,
+      message: "Evento não encontrado.",
+    });
+  }
 
-      return sendJson(
-        res,
-        200,
-        {
-          success: true,
-          event,
-          participant,
-          wallet,
-          products,
-          fiscal,
-          wallet_settings:
-            walletSettings,
-        }
-      );
+  const participant =
+    await getParticipant(
+      eventId,
+      shortCode
+    );
+
+  if (!participant) {
+    return sendJson(res, 404, {
+      success: false,
+      message:
+        "Participante não encontrado ou inativo.",
+    });
+  }
+
+  const wallet =
+    await getWallet(
+      eventId,
+      participant.id
+    );
+
+  if (!wallet) {
+    return sendJson(res, 404, {
+      success: false,
+      message:
+        "Carteira do participante não encontrada.",
+    });
+  }
+
+  const [
+    products,
+    fiscal,
+    walletSettings,
+  ] = await Promise.all([
+    getProducts(eventId),
+    getFiscalSettings(eventId),
+    getWalletSettings(eventId),
+  ]);
+
+  return sendJson(res, 200, {
+    success: true,
+    event,
+    participant,
+    wallet,
+    products,
+    fiscal,
+    wallet_settings:
+      walletSettings,
+  });
     }
 
     if (req.method !== "POST") {
