@@ -1080,14 +1080,17 @@ export default async function handler(
             session.staff_id,
         });
 
-      return sendJson(
+            return sendJson(
         res,
         200,
         {
           success: true,
           operation:
             "SALE",
-          result,
+          ...(result &&
+          typeof result === "object"
+            ? result
+            : {}),
         }
       );
     }
