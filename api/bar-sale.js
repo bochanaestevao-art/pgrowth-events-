@@ -514,12 +514,11 @@ async function processCashTopup({
         p_event_id: eventId,
         p_short_code: shortCode,
         p_amount: amount,
-        p_payment_reference:
-          paymentReference || null,
-        p_staff_id:
-          staffId || null,
-        p_description:
-          description || null,
+        p_payment_reference: paymentReference || null,
+        p_staff_id: staffId || null,
+        p_description: description || null,
+        p_payment_id: null,
+        p_payment_method: "CASH",
       }),
     }
   );
