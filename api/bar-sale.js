@@ -59,7 +59,9 @@ function verifyBarSession(req) {
 
   if (!token) return null;
 
-  const secret = process.env.BAR_SESSION_SECRET;
+  const secret = String(
+  process.env.BAR_SESSION_SECRET || ""
+).trim();
 
   if (!secret) {
     throw new Error("BAR_SESSION_SECRET não configurado");
