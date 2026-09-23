@@ -98,10 +98,10 @@ function verifyBarSession(req) {
     }
 
     if (
-      decoded.exp &&
-      Date.now() > Number(decoded.exp)
-    ) {
-      return null;
+  decoded.exp &&
+  Math.floor(Date.now() / 1000) > Number(decoded.exp)
+) {
+  return null;
     }
 
     return decoded;
