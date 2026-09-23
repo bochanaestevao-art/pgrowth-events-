@@ -747,17 +747,9 @@ async function processElectronicTopup({
 async function processSale({
   eventId,
   shortCode,
-  productId,
-  quantity,
+  items,
   staffId,
 }) {
-  const items = [
-    {
-      product_id: productId,
-      quantity,
-    },
-  ];
-
   return supabaseRequest(
     "/rest/v1/rpc/process_bar_sale",
     {
@@ -1030,42 +1022,51 @@ export default async function handler(
     if (
       operation === "SALE"
     ) {
-      const productId =
-        String(
-          body.product_id ||
-            ""
-        ).trim();
+      const items =
+        Array.isArray(body.items)
+          ? body.items
+          : [];
 
-      const quantity =
-        Number(
-          body.quantity
-        );
-
-      if (!productId) {
+      if (!items.length) {
         return sendJson(
           res,
           400,
           {
             success: false,
             message:
-              "product_id é obrigatório.",
+              "Selecione pelo menos um produto.",
           }
         );
       }
 
-      if (
-        !Number.isInteger(
-          quantity
-        ) ||
-        quantity <= 0
-      ) {
+      const normalizedItems =
+        items.map((item) => ({
+          product_id: String(
+            item?.product_id || ""
+          ).trim(),
+          quantity: Number(
+            item?.quantity
+          ),
+        }));
+
+      const invalidItem =
+        normalizedItems.find(
+          (item) =>
+            !item.product_id ||
+            !Number.isInteger(
+              item.quantity
+            ) ||
+            item.quantity <= 0
+        );
+
+      if (invalidItem) {
         return sendJson(
           res,
           400,
           {
             success: false,
             message:
-              "quantity inválida.",
+              "Produto ou quantidade inválida.",
           }
         );
       }
@@ -1074,13 +1075,12 @@ export default async function handler(
         await processSale({
           eventId,
           shortCode,
-          productId,
-          quantity,
+          items: normalizedItems,
           staffId:
             session.staff_id,
         });
 
-            return sendJson(
+      return sendJson(
         res,
         200,
         {
