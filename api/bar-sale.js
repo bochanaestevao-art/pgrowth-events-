@@ -1224,19 +1224,18 @@ export default async function handler(
           });
 
         return sendJson(
-          res,
-          200,
-          {
-            success: true,
-            operation:
-              "TOPUP",
-            payment_method:
-              "CASH",
-            status:
-              "PAID",
-            result,
-          }
-        );
+  res,
+  200,
+  {
+    success: true,
+    operation: "TOPUP",
+    payment_method: "CASH",
+    status: "PAID",
+    ...(result && typeof result === "object"
+      ? result
+      : {}),
+  }
+);
       }
 
       if (
