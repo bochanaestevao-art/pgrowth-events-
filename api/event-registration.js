@@ -97,8 +97,8 @@ export default async function handler(req, res) {
   const phone =
     String(body.phone || "").trim();
 
-  const address =
-    String(body.address || "").trim();
+  const email =
+    String(body.email || "").trim();
 
   if (!eventSlug || eventSlug.length > 100) {
     return sendJson(res, 400, {
@@ -128,10 +128,10 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!address || address.length > 500) {
+  if (!email || email.length > 254) {
     return sendJson(res, 400, {
       success: false,
-      error: "INVALID_ADDRESS"
+      error: "INVALID_EMAIL"
     });
   }
 
@@ -148,7 +148,7 @@ export default async function handler(req, res) {
           event_name: eventName,
           full_name: fullName,
           phone: phone,
-          address: address
+          email: email
         })
       }
     );

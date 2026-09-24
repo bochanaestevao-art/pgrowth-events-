@@ -282,17 +282,17 @@ button:disabled{
           required
         >
 
-        <label for="address">
-          Morada *
+        <label for="email">
+          Email *
         </label>
 
         <input
-          id="address"
-          name="address"
-          type="text"
+          id="email"
+          name="email"
+          type="email"
           placeholder="Digite a sua morada"
-          autocomplete="street-address"
-          maxlength="200"
+          autocomplete="email"
+          maxlength="254"
           required
         >
 
@@ -386,9 +386,9 @@ form.addEventListener(
         .value
         .trim();
 
-    const address =
+    const email =
       document
-        .getElementById("address")
+        .getElementById("email")
         .value
         .trim();
 
@@ -406,9 +406,9 @@ form.addEventListener(
       return;
     }
 
-    if(address.length < 3){
+    if(email.length < 3){
       showError(
-        "Introduza a sua morada."
+        "Introduza o seu email (OPCIONAL)."
       );
       return;
     }
@@ -445,8 +445,8 @@ form.addEventListener(
             phone:
               phone,
 
-            address:
-              address
+            email:
+              email
           })
         }
       );
