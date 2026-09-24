@@ -504,13 +504,11 @@ async function processCashTopup({
   eventId,
   shortCode,
   amount,
-  paymentReference,
   staffId,
   description,
 }) {
   const reference =
-    paymentReference ||
-    `CASH-${Date.now()}`;
+  `BAR-CASH-${String(eventId)}-${String(staffId || "SYSTEM")}-${Date.now()}-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
 
   return supabaseRequest(
     "/rest/v1/rpc/process_wallet_topup",
@@ -1205,20 +1203,11 @@ export default async function handler(
           );
         }
 
-        const paymentReference =
-          String(
-            body.payment_reference ||
-              `CASH-${Date.now()}-${crypto
-                .randomBytes(5)
-                .toString("hex")}`
-          );
-
         const result =
           await processCashTopup({
             eventId,
             shortCode,
             amount,
-            paymentReference,
             staffId:
               session.staff_id,
             description:

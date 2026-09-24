@@ -576,16 +576,17 @@
 
             <select id="topupMethod">
 
-              <option value="CASH">
-                CASH
-              </option>
+  <option value="CASH">
+    CASH
+  </option>
 
-              <option
-                value="EMOLA"
-                disabled
-              >
-                eMOLA / Pagar — em breve
-              </option>
+  <option value="MPESA">
+    M-Pesa / Pagar
+  </option>
+
+  <option value="EMOLA">
+    eMOLA / Pagar
+  </option>
 
             </select>
 
@@ -594,20 +595,24 @@
         </div>
 
 
-        <div class="field">
+        <div class="wallet-grid">
+  <div class="field">
+    <label for="topupAmount">Valor da recarga</label>
+    <input id="topupAmount" type="number" min="0" step="1" inputmode="decimal" placeholder="Ex.: 500">
+  </div>
 
-          <label for="topupReference">
-            Referência
-          </label>
+  <div class="field">
+    <label for="topupMethod">Método</label>
+    <select id="topupMethod">
+      <option value="CASH">CASH</option>
+      <option value="MPESA">M-Pesa / Pagar</option>
+      <option value="EMOLA">eMOLA / Pagar</option>
+    </select>
+  </div>
+</div>
 
-          <input
-            id="topupReference"
-            type="text"
-            autocomplete="off"
-            placeholder="Referência da recarga"
-          >
-
-        </div>
+<button id="topupBtn" class="primary">RECARREGAR CARTEIRA</button>
+<div id="topupMessage" class="message"></div>
 
 
         <button
@@ -1669,202 +1674,158 @@
 
   async function topup() {
 
-    if (!participant) {
+  if (!participant) {
 
-      showMessage(
-        $("topupMessage"),
-        "Identifique primeiro o cliente.",
-        "error"
-      );
+    showMessage(
+      $("topupMessage"),
+      "Identifique primeiro o cliente.",
+      "error"
+    );
 
-      return;
+    return;
 
-    }
-
-
-    const amount =
-      Number(
-        $("topupAmount").value
-      );
+  }
 
 
-    const paymentMethod =
-      $("topupMethod").value;
-
-
-    const reference =
-      $("topupReference")
-        .value
-        .trim();
-
-
-    if (
-      !Number.isFinite(amount) ||
-      amount <= 0
-    ) {
-
-      showMessage(
-        $("topupMessage"),
-        "Informe um valor de recarga válido.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    if (paymentMethod === "EMOLA") {
-
-      clearMessage($("topupMessage"));
-      $("topupBtn").disabled = true;
-
-      try {
-        const response = await fetch("/api/bar-sale", {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            operation: "TEST_PAGAR",
-            method: "EMOLA"
-          })
-        });
-
-        const data = await response.json();
-
-        if (response.status === 401) {
-          logoutLocal();
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(data.detail || data.error || "Teste Pagar falhou.");
-        }
-
-        showMessage(
-          $("topupMessage"),
-          "Teste Pagar eMOLA enviado. Status: " + (data.paymentStatus || "desconhecido"),
-          "success"
-        );
-      } catch (error) {
-        showMessage(
-          $("topupMessage"),
-          error.message || "Erro no teste Pagar.",
-          "error"
-        );
-      } finally {
-        $("topupBtn").disabled = false;
-      }
-
-      return;
-    }
-
-
-    clearMessage(
-      $("topupMessage")
+  const amount =
+    Number(
+      $("topupAmount").value
     );
 
 
-    $("topupBtn").disabled =
-      true;
+  const paymentMethod =
+    $("topupMethod").value;
 
 
-    try {
+  if (
+    !Number.isFinite(amount) ||
+    amount <= 0
+  ) {
 
-      const response =
-        await fetch(
-          "/api/bar-sale",
-          {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
-            body: JSON.stringify({
+    showMessage(
+      $("topupMessage"),
+      "Informe um valor de recarga válido.",
+      "error"
+    );
 
-              operation:
-                "TOPUP",
+    return;
 
-              event_id:
-                EVENT_ID,
-
-              short_code:
-                participant.short_code,
-
-              amount,
-
-              payment_method:
-                paymentMethod,
-
-              payment_reference:
-                reference ||
-                null,
-
-              description:
-                "Recarga de carteira pelo Bar"
-
-            })
-          }
-        );
+  }
 
 
-      const data =
-        await response.json();
+  clearMessage(
+    $("topupMessage")
+  );
 
 
-      if (
-        response.status ===
-        401
-      ) {
-
-        logoutLocal();
-
-        return;
-
-      }
+  $("topupBtn").disabled =
+    true;
 
 
-      if (!response.ok) {
+  try {
 
-        const messages = {
+    const response =
+      await fetch(
+        "/api/bar-sale",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+          body: JSON.stringify({
 
-          BELOW_MIN_TOPUP:
-            "O valor está abaixo do mínimo permitido.",
+            operation:
+              paymentMethod === "CASH"
+                ? "TOPUP"
+                : "TOPUP_PAYMENT",
 
-          ABOVE_MAX_TOPUP:
-            "O valor ultrapassa o máximo permitido.",
+            event_id:
+              EVENT_ID,
 
-          TOPUP_DISABLED:
-            "As recargas estão desativadas para este evento.",
+            short_code:
+              participant.short_code,
 
-          EVENT_CLOSED:
-            "O evento está fechado.",
+            amount,
 
-          PARTICIPANT_NOT_FOUND:
-            "Cliente não encontrado.",
+            payment_method:
+              paymentMethod,
 
-          WALLET_NOT_FOUND:
-            "Carteira do cliente não encontrada."
+            description:
+              "Recarga de carteira pelo Bar"
 
-        };
+          })
+        }
+      );
 
 
-        showMessage(
-          $("topupMessage"),
-          messages[
-            data.error
-          ] ||
-            "A recarga não foi concluída.",
-          "error"
-        );
+    const data =
+      await response.json();
 
-        return;
 
-      }
+    if (
+      response.status ===
+      401
+    ) {
 
+      logoutLocal();
+
+      return;
+
+    }
+
+
+    if (!response.ok) {
+
+      const messages = {
+
+        BELOW_MIN_TOPUP:
+          "O valor está abaixo do mínimo permitido.",
+
+        ABOVE_MAX_TOPUP:
+          "O valor ultrapassa o máximo permitido.",
+
+        TOPUP_DISABLED:
+          "As recargas estão desativadas para este evento.",
+
+        EVENT_CLOSED:
+          "O evento está fechado.",
+
+        PARTICIPANT_NOT_FOUND:
+          "Cliente não encontrado.",
+
+        WALLET_NOT_FOUND:
+          "Carteira do cliente não encontrada."
+
+      };
+
+
+      showMessage(
+        $("topupMessage"),
+        messages[
+          data.error
+        ] ||
+          "A recarga não foi concluída.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    /*
+     * CASH
+     *
+     * No CASH, o backend já processa
+     * a recarga e devolve o novo saldo.
+     */
+
+    if (
+      paymentMethod ===
+      "CASH"
+    ) {
 
       participant.balance =
         Number(
@@ -1884,10 +1845,6 @@
         .value = "";
 
 
-      $("topupReference")
-        .value = "";
-
-
       showMessage(
         $("topupMessage"),
         "Recarga de " +
@@ -1903,20 +1860,58 @@
       );
 
 
-    } catch {
-
-      showMessage(
-        $("topupMessage"),
-        "Erro de comunicação com o servidor.",
-        "error"
-      );
-
-    } finally {
-
-      $("topupBtn").disabled =
-        false;
+      return;
 
     }
+
+
+    /*
+     * M-PESA / eMOLA
+     *
+     * O pagamento foi criado, mas ainda
+     * não deve aumentar o saldo.
+     *
+     * O saldo só será atualizado depois
+     * da confirmação do Pagar através
+     * do webhook.
+     */
+
+    const methodName =
+      paymentMethod ===
+      "MPESA"
+        ? "M-Pesa"
+        : "eMOLA";
+
+
+    showMessage(
+      $("topupMessage"),
+      "Pagamento " +
+        methodName +
+        " criado. " +
+        "Aguardando confirmação do pagamento. " +
+        "O saldo será atualizado somente após a confirmação.",
+      "success"
+    );
+
+
+    $("topupAmount")
+      .value = "";
+
+
+  } catch {
+
+    showMessage(
+      $("topupMessage"),
+      "Erro de comunicação com o servidor.",
+      "error"
+    );
+
+  } finally {
+
+    $("topupBtn").disabled =
+      false;
+
+  }
 
   }
 
@@ -2145,9 +2140,6 @@
     $("topupAmount")
       .value = "";
 
-
-    $("topupReference")
-      .value = "";
 
 
     $("customerCard")
