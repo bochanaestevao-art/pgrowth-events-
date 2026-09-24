@@ -128,7 +128,7 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!email || email.length > 254) {
+  if (email && email.length > 254) {
     return sendJson(res, 400, {
       success: false,
       error: "INVALID_EMAIL"

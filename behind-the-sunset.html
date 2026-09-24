@@ -283,17 +283,17 @@ button:disabled{
         >
 
         <label for="email">
-          Email *
+  Email <span class="optional">(OPCIONAL)</span>
         </label>
 
         <input
-          id="email"
-          name="email"
-          type="email"
-          placeholder="Digite a sua morada"
-          autocomplete="email"
-          maxlength="254"
-          required
+  id="email"
+  name="email"
+  type="email"
+  maxlength="254"
+  autocomplete="email"
+  placeholder="seuemail@exemplo.com"
+
         >
 
         <button
@@ -406,11 +406,12 @@ form.addEventListener(
       return;
     }
 
-    if(email.length < 3){
-      showError(
-        "Introduza o seu email (OPCIONAL)."
-      );
-      return;
+    if(email && email.length < 3){
+  showMessage(
+    "Introduza um email válido ou deixe o campo vazio.",
+    "error"
+  );
+  return;
     }
 
     submitting = true;
