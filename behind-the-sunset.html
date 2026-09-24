@@ -1,15 +1,18 @@
-
 <!DOCTYPE html>
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta name="description" content="BEHIND THE SUNSET — Pgrowth Events">
 <title>BEHIND THE SUNSET | Pgrowth Events</title>
 
 <style>
 *{
   box-sizing:border-box;
+}
+
+html{
+  scroll-behavior:smooth;
 }
 
 body{
@@ -28,6 +31,7 @@ body{
 .hero{
   width:100%;
   background:#000;
+  overflow:hidden;
 }
 
 .hero img{
@@ -93,10 +97,15 @@ input{
   color:#fff;
   font-size:16px;
   outline:none;
+  font-family:Arial,Helvetica,sans-serif;
 }
 
 input:focus{
   border-color:#d6b36a;
+}
+
+input:disabled{
+  opacity:.65;
 }
 
 button{
@@ -110,10 +119,12 @@ button{
   font-size:16px;
   font-weight:bold;
   cursor:pointer;
+  font-family:Arial,Helvetica,sans-serif;
 }
 
 button:disabled{
   opacity:.6;
+  cursor:not-allowed;
 }
 
 .msg{
@@ -131,6 +142,12 @@ button:disabled{
   color:#b9e6c2;
 }
 
+.success strong{
+  display:block;
+  margin-bottom:7px;
+  font-size:18px;
+}
+
 .error{
   background:#2a1111;
   border:1px solid #6b2929;
@@ -143,6 +160,67 @@ button:disabled{
   color:#777;
   font-size:12px;
 }
+
+/*
+ * MOBILE
+ * Reduz o cartaz para que a informação e o formulário
+ * apareçam muito mais cedo na tela.
+ */
+@media (max-width:600px){
+
+  .container{
+    width:100%;
+    padding-bottom:28px;
+  }
+
+  .hero{
+    height:36vh;
+    min-height:220px;
+    max-height:320px;
+  }
+
+  .hero img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center top;
+  }
+
+  .content{
+    padding:18px 16px;
+  }
+
+  .brand{
+    margin-bottom:12px;
+    font-size:11px;
+  }
+
+  h1{
+    font-size:25px;
+  }
+
+  .info{
+    margin:16px 0;
+    padding:14px;
+  }
+
+  .info p{
+    margin:7px 0;
+    font-size:14px;
+  }
+
+  .form{
+    margin-top:18px;
+  }
+
+  label{
+    margin-top:13px;
+  }
+
+  button{
+    margin-top:20px;
+  }
+}
 </style>
 </head>
 
@@ -154,6 +232,7 @@ button:disabled{
     <img
       src="behind-the-sunset.jpg"
       alt="BEHIND THE SUNSET"
+      loading="eager"
     >
   </div>
 
@@ -174,9 +253,16 @@ button:disabled{
 
     <div class="form">
 
-      <form id="registrationForm">
+      <form
+        id="registrationForm"
+        accept-charset="UTF-8"
+        autocomplete="on"
+      >
 
-        <label for="fullName">Nome completo *</label>
+        <label for="fullName">
+          Nome completo *
+        </label>
+
         <input
           id="fullName"
           name="fullName"
@@ -187,7 +273,10 @@ button:disabled{
           required
         >
 
-        <label for="phone">Contacto *</label>
+        <label for="phone">
+          Contacto *
+        </label>
+
         <input
           id="phone"
           name="phone"
@@ -198,7 +287,10 @@ button:disabled{
           required
         >
 
-        <label for="address">Morada *</label>
+        <label for="address">
+          Morada *
+        </label>
+
         <input
           id="address"
           name="address"
@@ -209,17 +301,39 @@ button:disabled{
           required
         >
 
-        <button id="submitBtn" type="submit">
+        <button
+          id="submitBtn"
+          type="submit"
+        >
           REGISTAR
         </button>
 
       </form>
 
-      <div id="successMsg" class="msg success">
-        Registo realizado com sucesso.
+      <div
+        id="successMsg"
+        class="msg success"
+        role="status"
+        aria-live="polite"
+      >
+        <strong>✓ REGISTO CONFIRMADO</strong>
+        O seu registo para o
+        <strong>BEHIND THE SUNSET</strong>
+        foi realizado com sucesso.
+        <br><br>
+        <strong>26 de Setembro — 15H00</strong>
+        <br>
+        Ponta - Gea
+        <br><br>
+        Obrigado pela sua inscrição!
       </div>
 
-      <div id="errorMsg" class="msg error"></div>
+      <div
+        id="errorMsg"
+        class="msg error"
+        role="alert"
+        aria-live="assertive"
+      ></div>
 
     </div>
 
@@ -228,115 +342,198 @@ button:disabled{
     </div>
 
   </div>
+
 </div>
 
 <script>
-const form = document.getElementById("registrationForm");
-const submitBtn = document.getElementById("submitBtn");
-const successMsg = document.getElementById("successMsg");
-const errorMsg = document.getElementById("errorMsg");
+"use strict";
 
-```javascript
-form.addEventListener("submit", async function(e){
+const form =
+  document.getElementById("registrationForm");
 
-  e.preventDefault();
+const submitBtn =
+  document.getElementById("submitBtn");
 
-  successMsg.style.display = "none";
-  errorMsg.style.display = "none";
+const successMsg =
+  document.getElementById("successMsg");
 
-  const fullName =
-    document.getElementById("fullName").value.trim();
+const errorMsg =
+  document.getElementById("errorMsg");
 
-  const phone =
-    document.getElementById("phone").value.trim();
+let submitting = false;
 
-  const address =
-    document.getElementById("address").value.trim();
+form.addEventListener(
+  "submit",
+  async function(e){
 
-  if(fullName.length < 3){
-    showError("Introduza o nome completo.");
-    return;
-  }
+    e.preventDefault();
 
-  if(phone.length < 9){
-    showError("Introduza um contacto válido.");
-    return;
-  }
-
-  if(address.length < 3){
-    showError("Introduza a sua morada.");
-    return;
-  }
-
-  submitBtn.disabled = true;
-  submitBtn.textContent = "A REGISTAR...";
-
-  try {
-
-    const response = await fetch(
-      "/api/event-registration",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          eventSlug: "behind-the-sunset",
-          eventName: "BEHIND THE SUNSET",
-          fullName,
-          phone,
-          address
-        })
-      }
-    );
-
-    const result = await response.json();
-
-    if(!response.ok || !result.ok){
-      throw new Error(
-        result.error ||
-        "Não foi possível realizar o registo."
-      );
+    /*
+     * Proteção contra duplo clique e múltiplos envios
+     * enquanto o primeiro pedido ainda está em andamento.
+     */
+    if(submitting){
+      return;
     }
 
-    successMsg.textContent =
-      "Registo realizado com sucesso! Obrigado pela sua confirmação de presença no BEHIND THE SUNSET.";
+    successMsg.style.display = "none";
+    errorMsg.style.display = "none";
 
-    successMsg.style.display = "block";
+    const fullName =
+      document
+        .getElementById("fullName")
+        .value
+        .trim();
 
-    form.reset();
+    const phone =
+      document
+        .getElementById("phone")
+        .value
+        .trim();
 
-    successMsg.scrollIntoView({
-      behavior:"smooth",
-      block:"center"
-    });
+    const address =
+      document
+        .getElementById("address")
+        .value
+        .trim();
 
-  } catch(error) {
+    if(fullName.length < 3){
+      showError(
+        "Introduza o nome completo."
+      );
+      return;
+    }
 
-    console.error(
-      "Erro no registo:",
-      error
-    );
+    if(phone.length < 9){
+      showError(
+        "Introduza um contacto válido."
+      );
+      return;
+    }
 
-    showError(
-      error.message ||
-      "Não foi possível realizar o registo. Tente novamente."
-    );
+    if(address.length < 3){
+      showError(
+        "Introduza a sua morada."
+      );
+      return;
+    }
 
-  } finally {
+    submitting = true;
 
-    submitBtn.disabled = false;
-    submitBtn.textContent = "REGISTAR";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "A REGISTAR...";
+
+    try{
+
+      const response = await fetch(
+        "/api/event-registration",
+        {
+          method:"POST",
+
+          headers:{
+            "Content-Type":
+              "application/json",
+            "Accept":
+              "application/json"
+          },
+
+          body:JSON.stringify({
+            eventSlug:
+              "behind-the-sunset",
+
+            eventName:
+              "BEHIND THE SUNSET",
+
+            fullName:
+              fullName,
+
+            phone:
+              phone,
+
+            address:
+              address
+          })
+        }
+      );
+
+      let result = null;
+
+      try{
+        result = await response.json();
+      }catch{
+        result = null;
+      }
+
+      /*
+       * O backend retorna:
+       *
+       * {
+       *   success: true,
+       *   registration: {...}
+       * }
+       *
+       * Não usamos "result.ok".
+       */
+      if(
+        !response.ok ||
+        !result ||
+        result.success !== true
+      ){
+
+        throw new Error(
+          result?.error ||
+          result?.message ||
+          "Não foi possível realizar o registo. Tente novamente."
+        );
+      }
+
+      /*
+       * Só mostramos CONFIRMADO depois
+       * de a API responder success:true.
+       */
+      successMsg.style.display = "block";
+
+      form.reset();
+
+      successMsg.scrollIntoView({
+        behavior:"smooth",
+        block:"center"
+      });
+
+    }catch(error){
+
+      console.error(
+        "Erro no registo:",
+        error
+      );
+
+      showError(
+        "Não foi possível concluir o registo. " +
+        "Verifique a sua ligação e tente novamente."
+      );
+
+    }finally{
+
+      /*
+       * Liberta o botão depois que a operação
+       * terminou. Assim outra pessoa pode usar
+       * o mesmo telefone posteriormente.
+       */
+      submitting = false;
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = "REGISTAR";
+    }
 
   }
-
-});
-```
-
+);
 
 function showError(message){
 
+  successMsg.style.display = "none";
+
   errorMsg.textContent = message;
+
   errorMsg.style.display = "block";
 
   errorMsg.scrollIntoView({
@@ -348,4 +545,3 @@ function showError(message){
 
 </body>
 </html>
-```

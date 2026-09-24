@@ -8,16 +8,19 @@ function sendJson(res, status, data) {
   res.status(status).json(data);
 }
 
-async function supabaseRequest(path, options = {}) {
+async function supabaseRequest(path, options) {
+  const requestOptions = options || {};
+
   const response = await fetch(
-    `${SUPABASE_URL}/rest/v1/${path}`,
+    SUPABASE_URL + "/rest/v1/" + path,
     {
-      ...options,
+      ...requestOptions,
       headers: {
         apikey: SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        Authorization:
+          "Bearer " + SUPABASE_SERVICE_ROLE_KEY,
         "Content-Type": "application/json",
-        ...(options.headers || {})
+        ...(requestOptions.headers || {})
       }
     }
   );
@@ -82,25 +85,20 @@ export default async function handler(req, res) {
     });
   }
 
-  const eventSlug = String(
-    body.eventSlug || ""
-  ).trim();
+  const eventSlug =
+    String(body.eventSlug || "").trim();
 
-  const eventName = String(
-    body.eventName || ""
-  ).trim();
+  const eventName =
+    String(body.eventName || "").trim();
 
-  const fullName = String(
-    body.fullName || ""
-  ).trim();
+  const fullName =
+    String(body.fullName || "").trim();
 
-  const phone = String(
-    body.phone || ""
-  ).trim();
+  const phone =
+    String(body.phone || "").trim();
 
-  const address = String(
-    body.address || ""
-  ).trim();
+  const address =
+    String(body.address || "").trim();
 
   if (!eventSlug || eventSlug.length > 100) {
     return sendJson(res, 400, {
@@ -137,27 +135,50 @@ export default async function handler(req, res) {
     });
   }
 
-  const result = await supabaseRequest(
-    "event_registrations",
-    {
-      method: "POST",
-      headers: {
-        Prefer: "return=representation"
-      },
-      body: JSON.stringify({
-        event_slug: eventSlug,
-        event_name: eventName,
-        full_name: fullName,
-        phone,
-        address
-      })
-    }
-  );
+  try {
+    const result = await supabaseRequest(
+      "event_registrations",
+      {
+        method: "POST",
+        headers: {
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify({
+          event_slug: eventSlug,
+          event_name: eventName,
+          full_name: fullName,
+          phone: phone,
+          address: address
+        })
+      }
+    );
 
-  if (!result.ok) {
+    if (!result.ok) {
+      console.error(
+        "EVENT REGISTRATION: Supabase recusou o registo. HTTP " +
+          result.status
+      );
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "REGISTRATION_FAILED"
+      });
+    }
+
+    const registration =
+      Array.isArray(result.data)
+        ? result.data[0]
+        : result.data;
+
+    return sendJson(res, 200, {
+      success: true,
+      registration: registration
+    });
+
+  } catch (error) {
     console.error(
-      "EVENT REGISTRATION: Supabase recusou o registo.",
-      result.status
+      "EVENT REGISTRATION: erro inesperado.",
+      error
     );
 
     return sendJson(res, 500, {
@@ -165,14 +186,4 @@ export default async function handler(req, res) {
       error: "REGISTRATION_FAILED"
     });
   }
-
-  const registration =
-    Array.isArray(result.data)
-      ? result.data[0]
-      : result.data;
-
-  return sendJson(res, 200, {
-    success: true,
-    registration
-  });
 }
