@@ -350,10 +350,12 @@ async function pagarPost(
 function extractPaymentId(payment) {
   return (
     payment?.id ||
+    payment?.payment?.id ||
     payment?.payment_id ||
     payment?.paymentId ||
     payment?.data?.id ||
     payment?.data?.payment_id ||
+    payment?.data?.payment?.id ||
     null
   );
 }
@@ -361,9 +363,11 @@ function extractPaymentId(payment) {
 function extractPaymentStatus(payment) {
   return String(
     payment?.status ||
+      payment?.payment?.status ||
       payment?.payment_status ||
       payment?.paymentStatus ||
       payment?.data?.status ||
+      payment?.data?.payment?.status ||
       ""
   ).toUpperCase();
 }
