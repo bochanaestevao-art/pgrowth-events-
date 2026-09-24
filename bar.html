@@ -903,7 +903,7 @@
 
       const response =
         await fetch(
-          "/api/bar-session",
+          "/api/bar-sale",
           {
             method: "GET",
             credentials: "include"
@@ -958,7 +958,7 @@
 
       const response =
         await fetch(
-          "/api/bar-session",
+          "/api/bar-sale?session=1",
           {
             method: "POST",
             credentials: "include",
@@ -2193,7 +2193,7 @@
     try {
 
       await fetch(
-        "/api/bar-session",
+        "/api/bar-sale",
         {
           method: "DELETE",
           credentials: "include"
