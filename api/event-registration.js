@@ -1,17 +1,14 @@
-```javascript
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_URL =
+  String(process.env.SUPABASE_URL || "").trim();
 
-function send(res, status, body) {
-  res.status(status).json(body);
+const SUPABASE_SERVICE_ROLE_KEY =
+  String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+
+function sendJson(res, status, data) {
+  res.status(status).json(data);
 }
 
 async function supabaseRequest(path, options = {}) {
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error("Credenciais do Supabase não configuradas.");
-  }
-
   const response = await fetch(
     `${SUPABASE_URL}/rest/v1/${path}`,
     {
@@ -29,130 +26,153 @@ async function supabaseRequest(path, options = {}) {
 
   let data = null;
 
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = text;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
   }
 
-  if (!response.ok) {
-    const error = new Error(
-      typeof data === "string"
-        ? data
-        : data?.message || "Erro no Supabase."
-    );
-
-    error.status = response.status;
-    throw error;
-  }
-
-  return data;
-}
-
-function clean(value, maxLength) {
-  return String(value || "")
-    .trim()
-    .slice(0, maxLength);
+  return {
+    ok: response.ok,
+    status: response.status,
+    data
+  };
 }
 
 export default async function handler(req, res) {
-
   if (req.method !== "POST") {
-    return send(res, 405, {
-      ok: false,
-      error: "Método não permitido."
+    res.setHeader("Allow", "POST");
+
+    return sendJson(res, 405, {
+      success: false,
+      error: "METHOD_NOT_ALLOWED"
     });
   }
 
-  try {
-
-    const body =
-      typeof req.body === "string"
-        ? JSON.parse(req.body)
-        : req.body || {};
-
-    const eventSlug = clean(body.eventSlug, 100);
-    const eventName = clean(body.eventName, 200);
-    const fullName = clean(body.fullName, 100);
-    const phone = clean(body.phone, 30);
-    const address = clean(body.address, 200);
-
-    if (!eventSlug) {
-      return send(res, 400, {
-        ok: false,
-        error: "Evento não informado."
-      });
-    }
-
-    if (!eventName) {
-      return send(res, 400, {
-        ok: false,
-        error: "Nome do evento não informado."
-      });
-    }
-
-    if (fullName.length < 3) {
-      return send(res, 400, {
-        ok: false,
-        error: "Introduza o nome completo."
-      });
-    }
-
-    if (phone.length < 9) {
-      return send(res, 400, {
-        ok: false,
-        error: "Introduza um contacto válido."
-      });
-    }
-
-    if (address.length < 3) {
-      return send(res, 400, {
-        ok: false,
-        error: "Introduza uma morada válida."
-      });
-    }
-
-    const registration = {
-      event_slug: eventSlug,
-      event_name: eventName,
-      full_name: fullName,
-      phone,
-      address
-    };
-
-    const data = await supabaseRequest(
-      "event_registrations",
-      {
-        method: "POST",
-        headers: {
-          Prefer: "return=representation"
-        },
-        body: JSON.stringify(registration)
-      }
-    );
-
-    return send(res, 201, {
-      ok: true,
-      message: "Registo realizado com sucesso.",
-      registration: Array.isArray(data)
-        ? data[0] || null
-        : data
-    });
-
-  } catch (error) {
-
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     console.error(
-      "EVENT REGISTRATION ERROR:",
-      error
+      "EVENT REGISTRATION: configuração do Supabase ausente."
     );
 
-    return send(res, error.status || 500, {
-      ok: false,
-      error:
-        error.status
-          ? error.message
-          : "Erro interno ao realizar o registo."
+    return sendJson(res, 500, {
+      success: false,
+      error: "SERVER_CONFIGURATION_ERROR"
     });
   }
+
+  let body = req.body;
+
+  if (typeof body === "string") {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      return sendJson(res, 400, {
+        success: false,
+        error: "INVALID_JSON"
+      });
+    }
+  }
+
+  if (!body || typeof body !== "object") {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_JSON"
+    });
+  }
+
+  const eventSlug = String(
+    body.eventSlug || ""
+  ).trim();
+
+  const eventName = String(
+    body.eventName || ""
+  ).trim();
+
+  const fullName = String(
+    body.fullName || ""
+  ).trim();
+
+  const phone = String(
+    body.phone || ""
+  ).trim();
+
+  const address = String(
+    body.address || ""
+  ).trim();
+
+  if (!eventSlug || eventSlug.length > 100) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_EVENT"
+    });
+  }
+
+  if (!eventName || eventName.length > 200) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_EVENT_NAME"
+    });
+  }
+
+  if (!fullName || fullName.length > 200) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_FULL_NAME"
+    });
+  }
+
+  if (!phone || phone.length > 50) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_PHONE"
+    });
+  }
+
+  if (!address || address.length > 500) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_ADDRESS"
+    });
+  }
+
+  const result = await supabaseRequest(
+    "event_registrations",
+    {
+      method: "POST",
+      headers: {
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify({
+        event_slug: eventSlug,
+        event_name: eventName,
+        full_name: fullName,
+        phone,
+        address
+      })
+    }
+  );
+
+  if (!result.ok) {
+    console.error(
+      "EVENT REGISTRATION: Supabase recusou o registo.",
+      result.status
+    );
+
+    return sendJson(res, 500, {
+      success: false,
+      error: "REGISTRATION_FAILED"
+    });
+  }
+
+  const registration =
+    Array.isArray(result.data)
+      ? result.data[0]
+      : result.data;
+
+  return sendJson(res, 200, {
+    success: true,
+    registration
+  });
 }
-```
