@@ -1,0 +1,351 @@
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>BEHIND THE SUNSET | Pgrowth Events</title>
+
+<style>
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  background:#080808;
+  color:#fff;
+  font-family:Arial,Helvetica,sans-serif;
+}
+
+.container{
+  width:min(100%,620px);
+  margin:0 auto;
+  padding-bottom:40px;
+}
+
+.hero{
+  width:100%;
+  background:#000;
+}
+
+.hero img{
+  display:block;
+  width:100%;
+  height:auto;
+}
+
+.content{
+  padding:24px 18px;
+}
+
+.brand{
+  text-align:center;
+  font-size:12px;
+  letter-spacing:2px;
+  color:#aaa;
+  margin-bottom:18px;
+}
+
+h1{
+  margin:0;
+  text-align:center;
+  font-size:30px;
+  line-height:1.15;
+  letter-spacing:.5px;
+}
+
+.info{
+  margin:22px 0;
+  padding:18px;
+  border:1px solid #292929;
+  border-radius:14px;
+  background:#111;
+}
+
+.info p{
+  margin:9px 0;
+  font-size:15px;
+}
+
+.info strong{
+  color:#d6b36a;
+}
+
+.form{
+  margin-top:24px;
+}
+
+label{
+  display:block;
+  margin:16px 0 7px;
+  font-size:14px;
+  font-weight:bold;
+}
+
+input{
+  width:100%;
+  padding:14px;
+  border:1px solid #333;
+  border-radius:10px;
+  background:#151515;
+  color:#fff;
+  font-size:16px;
+  outline:none;
+}
+
+input:focus{
+  border-color:#d6b36a;
+}
+
+button{
+  width:100%;
+  margin-top:24px;
+  padding:16px;
+  border:0;
+  border-radius:10px;
+  background:#d6b36a;
+  color:#080808;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:disabled{
+  opacity:.6;
+}
+
+.msg{
+  display:none;
+  margin-top:18px;
+  padding:15px;
+  border-radius:10px;
+  text-align:center;
+  line-height:1.5;
+}
+
+.success{
+  background:#102516;
+  border:1px solid #245b31;
+  color:#b9e6c2;
+}
+
+.error{
+  background:#2a1111;
+  border:1px solid #6b2929;
+  color:#ffbaba;
+}
+
+.footer{
+  margin-top:30px;
+  text-align:center;
+  color:#777;
+  font-size:12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="hero">
+    <img
+      src="behind-the-sunset.jpg"
+      alt="BEHIND THE SUNSET"
+    >
+  </div>
+
+  <div class="content">
+
+    <div class="brand">
+      PGROWTH EVENTS • EXPERIÊNCIA DIGITAL
+    </div>
+
+    <h1>BEHIND THE SUNSET</h1>
+
+    <div class="info">
+      <p>📍 <strong>Local:</strong> Ponta - Gea</p>
+      <p>📅 <strong>Data:</strong> 26 de Setembro — Sábado</p>
+      <p>🕒 <strong>Hora:</strong> 15H00</p>
+      <p>👤 <strong>Organização:</strong> Elton Tomas</p>
+    </div>
+
+    <div class="form">
+
+      <form id="registrationForm">
+
+        <label for="fullName">Nome completo *</label>
+        <input
+          id="fullName"
+          name="fullName"
+          type="text"
+          placeholder="Digite o seu nome completo"
+          autocomplete="name"
+          maxlength="100"
+          required
+        >
+
+        <label for="phone">Contacto *</label>
+        <input
+          id="phone"
+          name="phone"
+          type="tel"
+          placeholder="Digite o seu contacto"
+          autocomplete="tel"
+          maxlength="30"
+          required
+        >
+
+        <label for="address">Morada *</label>
+        <input
+          id="address"
+          name="address"
+          type="text"
+          placeholder="Digite a sua morada"
+          autocomplete="street-address"
+          maxlength="200"
+          required
+        >
+
+        <button id="submitBtn" type="submit">
+          REGISTAR
+        </button>
+
+      </form>
+
+      <div id="successMsg" class="msg success">
+        Registo realizado com sucesso.
+      </div>
+
+      <div id="errorMsg" class="msg error"></div>
+
+    </div>
+
+    <div class="footer">
+      Pgrowth Events
+    </div>
+
+  </div>
+</div>
+
+<script>
+const form = document.getElementById("registrationForm");
+const submitBtn = document.getElementById("submitBtn");
+const successMsg = document.getElementById("successMsg");
+const errorMsg = document.getElementById("errorMsg");
+
+```javascript
+form.addEventListener("submit", async function(e){
+
+  e.preventDefault();
+
+  successMsg.style.display = "none";
+  errorMsg.style.display = "none";
+
+  const fullName =
+    document.getElementById("fullName").value.trim();
+
+  const phone =
+    document.getElementById("phone").value.trim();
+
+  const address =
+    document.getElementById("address").value.trim();
+
+  if(fullName.length < 3){
+    showError("Introduza o nome completo.");
+    return;
+  }
+
+  if(phone.length < 9){
+    showError("Introduza um contacto válido.");
+    return;
+  }
+
+  if(address.length < 3){
+    showError("Introduza a sua morada.");
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "A REGISTAR...";
+
+  try {
+
+    const response = await fetch(
+      "/api/event-registration",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          eventSlug: "behind-the-sunset",
+          eventName: "BEHIND THE SUNSET",
+          fullName,
+          phone,
+          address
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if(!response.ok || !result.ok){
+      throw new Error(
+        result.error ||
+        "Não foi possível realizar o registo."
+      );
+    }
+
+    successMsg.textContent =
+      "Registo realizado com sucesso! Obrigado pela sua confirmação de presença no BEHIND THE SUNSET.";
+
+    successMsg.style.display = "block";
+
+    form.reset();
+
+    successMsg.scrollIntoView({
+      behavior:"smooth",
+      block:"center"
+    });
+
+  } catch(error) {
+
+    console.error(
+      "Erro no registo:",
+      error
+    );
+
+    showError(
+      error.message ||
+      "Não foi possível realizar o registo. Tente novamente."
+    );
+
+  } finally {
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = "REGISTAR";
+
+  }
+
+});
+```
+
+
+function showError(message){
+
+  errorMsg.textContent = message;
+  errorMsg.style.display = "block";
+
+  errorMsg.scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+}
+</script>
+
+</body>
+</html>
+```
