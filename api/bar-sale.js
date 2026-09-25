@@ -245,23 +245,18 @@ function getPagarConfig() {
   };
 }
 
-async function pagarPost(
-  path,
-  body,
-  idempotencyKey
-) {
+async function pagarPost(path, body, idempotencyKey) {
   const {
     baseUrl,
     apiKey,
     signingSecret,
   } = getPagarConfig();
 
-  const timestamp =
-    Math.floor(Date.now() / 1000).toString();
+  const timestamp = Date.now().toString();
 
   const nonce = crypto
-    .randomBytes(16)
-    .toString("hex");
+    .randomBytes(18)
+    .toString("base64url");
 
   const rawBody = JSON.stringify(body);
 
@@ -270,54 +265,38 @@ async function pagarPost(
     .update(rawBody)
     .digest("hex");
 
+  const url = `${baseUrl}${path}`;
+  const canonicalPath = new URL(url).pathname;
+
   const canonical = [
     timestamp,
     nonce,
     "POST",
-    path,
+    canonicalPath,
     bodyHash,
-  ].join(".");
+  ].join("\n");
 
   const signature = crypto
-    .createHmac(
-      "sha256",
-      signingSecret
-    )
+    .createHmac("sha256", signingSecret)
     .update(canonical)
     .digest("hex");
 
-  const response = await fetch(
-    `${baseUrl}${path}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type":
-          "application/json",
-        Accept: "application/json",
-
-        Authorization:
-          `Bearer ${apiKey}`,
-
-        "Pagar-Api-Key": apiKey,
-
-        "X-Pagar-Timestamp":
-          timestamp,
-
-        "X-Pagar-Nonce":
-          nonce,
-
-        "X-Pagar-Signature":
-          `v1=${signature}`,
-
-        "Idempotency-Key":
-          idempotencyKey,
-      },
-      body: rawBody,
-    }
-  );
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${apiKey}`,
+      "Pagar-Api-Key": apiKey,
+      "X-Pagar-Timestamp": timestamp,
+      "X-Pagar-Nonce": nonce,
+      "X-Pagar-Signature": `v1=${signature}`,
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: rawBody,
+  });
 
   const text = await response.text();
-
   let data = null;
 
   if (text) {
@@ -346,7 +325,6 @@ async function pagarPost(
 
   return data;
 }
-
 function extractPaymentId(payment) {
   return (
     payment?.id ||
