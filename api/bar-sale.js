@@ -821,8 +821,195 @@ export default async function handler(
   res
 ) {
   try {
+
+    const isSessionRequest =
+      String(
+        req.query?.session || ""
+      ).trim() === "1";
+
+    /*
+     * LOGIN DO STAFF BAR
+     *
+     * O login é tratado dentro desta mesma
+     * Serverless Function para não criar
+     * uma Function adicional no Vercel.
+     */
+    if (
+      isSessionRequest &&
+      req.method === "POST"
+    ) {
+
+      let body = req.body;
+
+      if (
+        typeof body === "string"
+      ) {
+        try {
+          body = JSON.parse(body);
+        } catch {
+          return sendJson(
+            res,
+            400,
+            {
+              success: false,
+              error: "INVALID_JSON",
+            }
+          );
+        }
+      }
+
+      if (
+        !body ||
+        typeof body !== "object"
+      ) {
+        return sendJson(
+          res,
+          400,
+          {
+            success: false,
+            error: "INVALID_JSON",
+          }
+        );
+      }
+
+      const staffId =
+        String(
+          body.staff_id || ""
+        ).trim();
+
+      const staffPin =
+        String(
+          body.staff_pin || ""
+        ).trim();
+
+      const expectedPin =
+        String(
+          process.env.BAR_STAFF_PIN || ""
+        ).trim();
+
+      if (
+        !staffId ||
+        staffId.length > 100
+      ) {
+        return sendJson(
+          res,
+          400,
+          {
+            success: false,
+            error: "INVALID_STAFF_ID",
+          }
+        );
+      }
+
+      if (
+        !staffPin ||
+        !expectedPin ||
+        !timingSafeEqualString(
+          staffPin,
+          expectedPin
+        )
+      ) {
+        return sendJson(
+          res,
+          401,
+          {
+            success: false,
+            error: "INVALID_CREDENTIALS",
+          }
+        );
+      }
+
+      const secret =
+        String(
+          process.env.BAR_SESSION_SECRET ||
+          ""
+        ).trim();
+
+      if (!secret) {
+        console.error(
+          "BAR SESSION: BAR_SESSION_SECRET ausente."
+        );
+
+        return sendJson(
+          res,
+          500,
+          {
+            success: false,
+            error:
+              "SERVER_CONFIGURATION_ERROR",
+          }
+        );
+      }
+
+      const now =
+        Math.floor(
+          Date.now() / 1000
+        );
+
+      const sessionMaxAge =
+        12 * 60 * 60;
+
+      const payload =
+        JSON.stringify({
+          staff_id:
+            staffId,
+          iat:
+            now,
+          exp:
+            now + sessionMaxAge,
+        });
+
+      const encodedPayload =
+        Buffer
+          .from(payload)
+          .toString("base64url");
+
+      const signature =
+        crypto
+          .createHmac(
+            "sha256",
+            secret
+          )
+          .update(
+            encodedPayload
+          )
+          .digest("hex");
+
+      const token =
+        `${encodedPayload}.${signature}`;
+
+      res.setHeader(
+        "Set-Cookie",
+        `bar_session=${encodeURIComponent(
+          token
+        )}; Max-Age=${sessionMaxAge}; Path=/; HttpOnly; Secure; SameSite=Strict`
+      );
+
+      return sendJson(
+        res,
+        200,
+        {
+          success: true,
+          staff_id:
+            staffId,
+        }
+      );
+    }
+
     const session =
       verifyBarSession(req);
+
+    if (!session) {
+      return sendJson(
+        res,
+        401,
+        {
+          success: false,
+          message:
+            "Sessão do Staff Bar inválida ou expirada.",
+        }
+      );
+    }
 
     if (!session) {
       return sendJson(
