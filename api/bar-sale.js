@@ -460,6 +460,7 @@ function validateTopupSettings(
   const maximum =
     settings.topup_max_amount ??
     settings.max_topup;
+  console.log("TOPUP_VALIDATION_DEBUG", { amount, minimum, maximum });
 
   if (
     minimum !== null &&
