@@ -104,7 +104,9 @@ async function findParticipantByPhone(
   const result = await supabaseRequest(
     "event_participants?event_id=eq." +
       encodeURIComponent(eventId) +
-      "&status=eq.ACTIVE&select=id,event_id,full_name,phone,short_code,status&limit=1000",
+      "&status=eq.ACTIVE&phone=eq." +
+      encodeURIComponent(normalizedPhone) +
+      "&select=id,event_id,full_name,phone,short_code,status&limit=2",
     {
       method: "GET"
     }
@@ -117,16 +119,9 @@ async function findParticipantByPhone(
     };
   }
 
-  const participant =
-    result.data.find(
-      (item) =>
-        normalizePhone(item.phone) ===
-        normalizedPhone
-    );
-
   return {
     error: false,
-    participant: participant || null
+    participant: result.data[0] || null
   };
 }
 
@@ -418,15 +413,32 @@ async function handleClientRegister(body, res) {
   });
 }
 
-async function findActiveParticipants(eventId) {
-  return supabaseRequest(
+async function findParticipantsByName(
+  eventId,
+  normalizedName
+) {
+  const result = await supabaseRequest(
     "event_participants?event_id=eq." +
       encodeURIComponent(eventId) +
-      "&status=eq.ACTIVE&select=id,event_id,full_name,phone,short_code,status&limit=1000",
+      "&status=eq.ACTIVE&full_name=ilike." +
+      encodeURIComponent(normalizedName) +
+      "&select=id,event_id,full_name,phone,short_code,status&limit=2",
     {
       method: "GET"
     }
   );
+
+  if (!result.ok || !Array.isArray(result.data)) {
+    return {
+      error: true,
+      result
+    };
+  }
+
+  return {
+    error: false,
+    participants: result.data
+  };
 }
 
 async function handleClientIdentify(body, res) {
@@ -508,44 +520,33 @@ async function handleClientIdentify(body, res) {
     });
   }
 
-  const participantsResult =
-    await findActiveParticipants(eventId);
-
-  if (
-    !participantsResult.ok ||
-    !Array.isArray(participantsResult.data)
-  ) {
-    console.error(
-      "CLIENT IDENTIFY: erro ao procurar participantes. HTTP " +
-        participantsResult.status
-    );
-
-    return sendJson(res, 500, {
-      success: false,
-      error: "PARTICIPANT_LOOKUP_FAILED"
-    });
-  }
-
-  const participants =
-    participantsResult.data;
-
   /*
    * CONTACTO TEM PRIORIDADE.
    *
-   * Se o contacto existir, encontra o participante
-   * mesmo que o nome esteja errado.
+   * A pesquisa é feita diretamente no Supabase.
+   * Não carregamos todos os participantes.
    */
   if (normalizedPhone) {
-    const phoneMatches =
-      participants.filter(
-        (item) =>
-          normalizePhone(item.phone) ===
-          normalizedPhone
+    const phoneResult =
+      await findParticipantByPhone(
+        eventId,
+        normalizedPhone
       );
 
-    if (phoneMatches.length === 1) {
+    if (phoneResult.error) {
+      console.error(
+        "CLIENT IDENTIFY: erro ao procurar participante pelo contacto."
+      );
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "PARTICIPANT_LOOKUP_FAILED"
+      });
+    }
+
+    if (phoneResult.participant) {
       const participant =
-        phoneMatches[0];
+        phoneResult.participant;
 
       return sendJson(res, 200, {
         success: true,
@@ -558,16 +559,6 @@ async function handleClientIdentify(body, res) {
         }
       });
     }
-
-    if (phoneMatches.length > 1) {
-      return sendJson(res, 409, {
-        success: false,
-        found: false,
-        error: "MULTIPLE_CONTACT_MATCHES",
-        message:
-          "Foram encontrados vários registos para este contacto. Contacte a organização."
-      });
-    }
   }
 
   /*
@@ -576,12 +567,25 @@ async function handleClientIdentify(body, res) {
    * O nome precisa ser único para revelar o Short Code.
    */
   if (normalizedName) {
-    const nameMatches =
-      participants.filter(
-        (item) =>
-          normalizeName(item.full_name) ===
-          normalizedName
+    const nameResult =
+      await findParticipantsByName(
+        eventId,
+        normalizedName
       );
+
+    if (nameResult.error) {
+      console.error(
+        "CLIENT IDENTIFY: erro ao procurar participante pelo nome."
+      );
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "PARTICIPANT_LOOKUP_FAILED"
+      });
+    }
+
+    const nameMatches =
+      nameResult.participants;
 
     if (nameMatches.length === 1) {
       const participant =
