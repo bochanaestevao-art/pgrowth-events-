@@ -1,3 +1,4 @@
+cat > api/event-registration.js <<'EOF'
 import crypto from "node:crypto";
 
 const SUPABASE_URL =
@@ -417,6 +418,207 @@ async function handleClientRegister(body, res) {
   });
 }
 
+async function findActiveParticipants(eventId) {
+  return supabaseRequest(
+    "event_participants?event_id=eq." +
+      encodeURIComponent(eventId) +
+      "&status=eq.ACTIVE&select=id,event_id,full_name,phone,short_code,status&limit=1000",
+    {
+      method: "GET"
+    }
+  );
+}
+
+async function handleClientIdentify(body, res) {
+  const eventId = String(
+    body.event_id || body.eventId || ""
+  ).trim();
+
+  const fullName = String(
+    body.full_name || body.fullName || body.name || ""
+  ).trim();
+
+  const rawPhone = String(
+    body.phone || body.contact || ""
+  ).trim();
+
+  const normalizedName =
+    normalizeName(fullName);
+
+  const normalizedPhone =
+    normalizePhone(rawPhone);
+
+  if (!isUuid(eventId)) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_EVENT_ID"
+    });
+  }
+
+  if (!normalizedName && !normalizedPhone) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "IDENTIFICATION_DATA_REQUIRED"
+    });
+  }
+
+  if (
+    normalizedName &&
+    (normalizedName.length < 3 ||
+      normalizedName.length > 150)
+  ) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_FULL_NAME"
+    });
+  }
+
+  if (
+    normalizedPhone &&
+    (normalizedPhone.length < 9 ||
+      normalizedPhone.length > 15)
+  ) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_PHONE"
+    });
+  }
+
+  const eventResult = await getEvent(eventId);
+
+  if (!eventResult.ok) {
+    console.error(
+      "CLIENT IDENTIFY: erro ao consultar evento. HTTP " +
+        eventResult.status
+    );
+
+    return sendJson(res, 500, {
+      success: false,
+      error: "EVENT_LOOKUP_FAILED"
+    });
+  }
+
+  if (
+    !Array.isArray(eventResult.data) ||
+    eventResult.data.length === 0
+  ) {
+    return sendJson(res, 404, {
+      success: false,
+      error: "EVENT_NOT_FOUND"
+    });
+  }
+
+  const participantsResult =
+    await findActiveParticipants(eventId);
+
+  if (
+    !participantsResult.ok ||
+    !Array.isArray(participantsResult.data)
+  ) {
+    console.error(
+      "CLIENT IDENTIFY: erro ao procurar participantes. HTTP " +
+        participantsResult.status
+    );
+
+    return sendJson(res, 500, {
+      success: false,
+      error: "PARTICIPANT_LOOKUP_FAILED"
+    });
+  }
+
+  const participants =
+    participantsResult.data;
+
+  /*
+   * CONTACTO TEM PRIORIDADE.
+   *
+   * Se o contacto existir, encontra o participante
+   * mesmo que o nome esteja errado.
+   */
+  if (normalizedPhone) {
+    const phoneMatches =
+      participants.filter(
+        (item) =>
+          normalizePhone(item.phone) ===
+          normalizedPhone
+      );
+
+    if (phoneMatches.length === 1) {
+      const participant =
+        phoneMatches[0];
+
+      return sendJson(res, 200, {
+        success: true,
+        found: true,
+        matched_by: "phone",
+        participant: {
+          full_name: participant.full_name,
+          phone: participant.phone,
+          short_code: participant.short_code
+        }
+      });
+    }
+
+    if (phoneMatches.length > 1) {
+      return sendJson(res, 409, {
+        success: false,
+        found: false,
+        error: "MULTIPLE_CONTACT_MATCHES",
+        message:
+          "Foram encontrados vários registos para este contacto. Contacte a organização."
+      });
+    }
+  }
+
+  /*
+   * Se não encontrou pelo contacto, tenta pelo nome.
+   *
+   * O nome precisa ser único para revelar o Short Code.
+   */
+  if (normalizedName) {
+    const nameMatches =
+      participants.filter(
+        (item) =>
+          normalizeName(item.full_name) ===
+          normalizedName
+      );
+
+    if (nameMatches.length === 1) {
+      const participant =
+        nameMatches[0];
+
+      return sendJson(res, 200, {
+        success: true,
+        found: true,
+        matched_by: "name",
+        participant: {
+          full_name: participant.full_name,
+          phone: participant.phone,
+          short_code: participant.short_code
+        }
+      });
+    }
+
+    if (nameMatches.length > 1) {
+      return sendJson(res, 409, {
+        success: false,
+        found: false,
+        error: "MULTIPLE_NAME_MATCHES",
+        message:
+          "Encontrámos mais de uma pessoa com esse nome. Informe o contacto correto para identificar o seu registo."
+      });
+    }
+  }
+
+  return sendJson(res, 404, {
+    success: false,
+    found: false,
+    error: "PARTICIPANT_NOT_FOUND",
+    message:
+      "Não encontrámos um registo com os dados informados."
+  });
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -458,16 +660,6 @@ export default async function handler(req, res) {
     });
   }
 
-  /*
-   * NOVO SITE CLIENTE
-   *
-   * Quando operation = CLIENT_REGISTER,
-   * usa o novo fluxo de participante + Short Code + carteira.
-   *
-   * O fluxo antigo do Behind the Sunset continua
-   * funcionando quando operation não é CLIENT_REGISTER.
-   */
-
   const operation =
     String(body.operation || "").trim().toUpperCase();
 
@@ -490,9 +682,28 @@ export default async function handler(req, res) {
     }
   }
 
+  if (operation === "CLIENT_IDENTIFY") {
+    try {
+      return await handleClientIdentify(
+        body,
+        res
+      );
+    } catch (error) {
+      console.error(
+        "CLIENT IDENTIFY: erro inesperado.",
+        error
+      );
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "CLIENT_IDENTIFY_FAILED"
+      });
+    }
+  }
+
   /*
    * FLUXO EXISTENTE DE REGISTO DE EVENTOS
-   * Não alterado para preservar o Behind the Sunset.
+   * Preservado para o Behind the Sunset.
    */
 
   const eventSlug =
@@ -597,3 +808,4 @@ export default async function handler(req, res) {
     });
   }
 }
+EOF

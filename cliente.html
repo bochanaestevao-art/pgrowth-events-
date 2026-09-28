@@ -678,7 +678,7 @@
       );
     }
 
-    function identifyShortCode() {
+        async function identifyShortCode() {
       const name =
         document
           .getElementById("identifyName")
@@ -691,19 +691,70 @@
           .value
           .trim();
 
-      if (!name || !phone) {
+      if (!name && !phone) {
         showMessage(
           "shortCodeMessage",
-          "Preencha o nome e o contacto."
+          "Digite o nome ou o contacto."
         );
         return;
       }
 
       showMessage(
         "shortCodeMessage",
-        "Identificação preparada. Vamos ligar esta ação à API na próxima etapa."
+        "A procurar o seu Short Code..."
       );
-    }
+
+      try {
+        const response = await fetch(
+          "/api/event-registration",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              operation: "CLIENT_IDENTIFY",
+              event_id: CLIENT_EVENT_ID,
+              full_name: name,
+              phone: phone
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success || !data.found) {
+          showMessage(
+            "shortCodeMessage",
+            data.message ||
+              "Não encontrámos um registo com os dados informados."
+          );
+          return;
+        }
+
+        const participant =
+          data.participant || {};
+
+        showMessage(
+          "shortCodeMessage",
+          "SHORT CODE: " +
+            (participant.short_code || "não disponível") +
+            "\n\nNome: " +
+            (participant.full_name || name)
+        );
+
+      } catch (error) {
+        console.error(
+          "IDENTIFICAR SHORT CODE:",
+          error
+        );
+
+        showMessage(
+          "shortCodeMessage",
+          "Não foi possível identificar o Short Code. Tente novamente."
+        );
+      }
+        }
   </script>
 
 </body>
