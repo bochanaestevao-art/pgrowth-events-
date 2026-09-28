@@ -1,4 +1,3 @@
-cat > api/event-registration.js <<'EOF'
 import crypto from "node:crypto";
 
 const SUPABASE_URL =
