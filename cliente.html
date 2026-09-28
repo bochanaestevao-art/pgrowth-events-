@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PGrowth Events — Área do Cliente</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0b0b0b;
+      color: #ffffff;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 24px 18px 40px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: 2px;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      color: #bdbdbd;
+      font-size: 14px;
+    }
+
+    .card {
+      background: #151515;
+      border: 1px solid #2b2b2b;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 20px;
+    }
+
+    .card p {
+      margin: 0 0 18px;
+      color: #bdbdbd;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .buttons {
+      display: grid;
+      gap: 12px;
+    }
+
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 15px 16px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #ffffff;
+      color: #000000;
+    }
+
+    button:active {
+      transform: scale(0.99);
+    }
+
+    .secondary {
+      background: #222222;
+      color: #ffffff;
+      border: 1px solid #3a3a3a;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .section {
+      margin-top: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      font-size: 14px;
+      color: #dddddd;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid #3a3a3a;
+      background: #0e0e0e;
+      color: #ffffff;
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #ffffff;
+    }
+
+    .method-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .method-button {
+      padding: 12px 6px;
+      font-size: 13px;
+      background: #222222;
+      color: #ffffff;
+      border: 1px solid #3a3a3a;
+    }
+
+    .method-button.active {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+    }
+
+    .message {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #202020;
+      color: #dddddd;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .back {
+      margin-top: 14px;
+      background: transparent;
+      color: #bbbbbb;
+      border: 1px solid #333333;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 28px;
+      color: #777777;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="container">
+
+    <header class="header">
+      <div class="logo">PGROWTH EVENTS</div>
+      <div class="subtitle">Área do Cliente</div>
+    </header>
+
+    <!-- MENU PRINCIPAL -->
+    <section id="mainMenu" class="card">
+      <h2>Área do Cliente</h2>
+      <p>
+        Aceda aos serviços da sua carteira e aos dados do seu evento.
+      </p>
+
+      <div class="buttons">
+        <button onclick="showSection('registerSection')">
+          REGISTO
+        </button>
+
+        <button onclick="showSection('topupSection')">
+          RECARREGAR
+        </button>
+
+        <button onclick="showSection('balanceSection')">
+          CONSULTAR SALDO
+        </button>
+
+        <button onclick="showSection('shortCodeSection')">
+          IDENTIFICAR SHORT CODE
+        </button>
+      </div>
+    </section>
+
+
+    <!-- REGISTO -->
+    <section id="registerSection" class="card hidden">
+      <h2>Registo</h2>
+
+      <p>
+        Faça o seu registo para utilizar os serviços do evento.
+      </p>
+
+      <div class="section">
+        <label for="registerName">Nome completo</label>
+        <input
+          id="registerName"
+          type="text"
+          placeholder="Digite o seu nome"
+          autocomplete="name"
+        >
+      </div>
+
+      <div class="section">
+        <label for="registerPhone">Contacto</label>
+        <input
+          id="registerPhone"
+          type="tel"
+          placeholder="Ex.: 84xxxxxxx"
+          autocomplete="tel"
+        >
+      </div>
+
+      <div class="section">
+        <button onclick="submitRegistration()">
+          REGISTAR
+        </button>
+      </div>
+
+      <div id="registerMessage" class="message hidden"></div>
+
+      <button class="back" onclick="showMainMenu()">
+        VOLTAR
+      </button>
+    </section>
+
+
+    <!-- RECARREGAR -->
+    <section id="topupSection" class="card hidden">
+      <h2>Recarregar carteira</h2>
+
+      <p>
+        Escolha o método de pagamento e indique o valor que pretende
+        adicionar à sua carteira.
+      </p>
+
+      <div class="section">
+        <label>Short Code</label>
+        <input
+          id="topupShortCode"
+          type="text"
+          placeholder="Digite o seu Short Code"
+          autocomplete="off"
+        >
+      </div>
+
+      <div class="section">
+        <label>Método de pagamento</label>
+
+        <div class="method-buttons">
+          <button
+            id="methodEmola"
+            class="method-button"
+            onclick="selectTopupMethod('EMOLA')"
+          >
+            eMOLA
+          </button>
+
+          <button
+            id="methodMpesa"
+            class="method-button"
+            onclick="selectTopupMethod('MPESA')"
+          >
+            M-Pesa
+          </button>
+
+          <button
+            id="methodCash"
+            class="method-button"
+            onclick="selectTopupMethod('CASH')"
+          >
+            CASH
+          </button>
+        </div>
+      </div>
+
+      <div class="section">
+        <label for="topupAmount">Valor da recarga</label>
+        <input
+          id="topupAmount"
+          type="number"
+          min="1"
+          step="0.01"
+          placeholder="Ex.: 500"
+          inputmode="decimal"
+        >
+      </div>
+
+      <div class="section">
+        <button onclick="submitTopup()">
+          CONTINUAR
+        </button>
+      </div>
+
+      <div id="topupMessage" class="message hidden"></div>
+
+      <button class="back" onclick="showMainMenu()">
+        VOLTAR
+      </button>
+    </section>
+
+
+    <!-- CONSULTAR SALDO -->
+    <section id="balanceSection" class="card hidden">
+      <h2>Consultar saldo</h2>
+
+      <p>
+        Digite o seu Short Code para consultar o saldo da carteira.
+      </p>
+
+      <div class="section">
+        <label for="balanceShortCode">Short Code</label>
+        <input
+          id="balanceShortCode"
+          type="text"
+          placeholder="Ex.: ABC123"
+          autocomplete="off"
+        >
+      </div>
+
+      <div class="section">
+        <button onclick="consultBalance()">
+          CONSULTAR SALDO
+        </button>
+      </div>
+
+      <div id="balanceMessage" class="message hidden"></div>
+
+      <button class="back" onclick="showMainMenu()">
+        VOLTAR
+      </button>
+    </section>
+
+
+    <!-- IDENTIFICAR SHORT CODE -->
+    <section id="shortCodeSection" class="card hidden">
+      <h2>Identificar Short Code</h2>
+
+      <p>
+        Utilize os seus dados de identificação para localizar o
+        Short Code associado ao seu registo.
+      </p>
+
+      <div class="section">
+        <label for="identifyName">Nome completo</label>
+        <input
+          id="identifyName"
+          type="text"
+          placeholder="Digite o seu nome"
+          autocomplete="name"
+        >
+      </div>
+
+      <div class="section">
+        <label for="identifyPhone">Contacto</label>
+        <input
+          id="identifyPhone"
+          type="tel"
+          placeholder="Ex.: 84xxxxxxx"
+          autocomplete="tel"
+        >
+      </div>
+
+      <div class="section">
+        <button onclick="identifyShortCode()">
+          IDENTIFICAR
+        </button>
+      </div>
+
+      <div id="shortCodeMessage" class="message hidden"></div>
+
+      <button class="back" onclick="showMainMenu()">
+        VOLTAR
+      </button>
+    </section>
+
+
+    <footer class="footer">
+      PGrowth Events
+    </footer>
+
+  </main>
+
+
+  <script>
+    let selectedTopupMethod = null;
+
+    const CLIENT_EVENT_ID =
+      "182bd22d-2428-4c51-9c14-11e8e91ab211";
+
+    const sections = [
+      "registerSection",
+      "topupSection",
+      "balanceSection",
+      "shortCodeSection"
+    ];
+
+    function hideAllSections() {
+      sections.forEach(function(id) {
+        const element = document.getElementById(id);
+
+        if (element) {
+          element.classList.add("hidden");
+        }
+      });
+    }
+
+    function showSection(id) {
+      hideAllSections();
+
+      const element = document.getElementById(id);
+
+      if (element) {
+        element.classList.remove("hidden");
+
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
+      }
+    }
+
+    function showMainMenu() {
+      hideAllSections();
+
+      document
+        .getElementById("mainMenu")
+        .classList.remove("hidden");
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
+
+    function selectTopupMethod(method) {
+      selectedTopupMethod = method;
+
+      document
+        .getElementById("methodEmola")
+        .classList.toggle(
+          "active",
+          method === "EMOLA"
+        );
+
+      document
+        .getElementById("methodMpesa")
+        .classList.toggle(
+          "active",
+          method === "MPESA"
+        );
+
+      document
+        .getElementById("methodCash")
+        .classList.toggle(
+          "active",
+          method === "CASH"
+        );
+    }
+
+    function showMessage(elementId, message) {
+      const element =
+        document.getElementById(elementId);
+
+      if (!element) {
+        return;
+      }
+
+      element.textContent = message;
+      element.classList.remove("hidden");
+    }
+
+    async function submitRegistration() {
+      const name =
+        document
+          .getElementById("registerName")
+          .value
+          .trim();
+
+      const phone =
+        document
+          .getElementById("registerPhone")
+          .value
+          .trim();
+
+      const messageElement =
+        document.getElementById("registerMessage");
+
+      if (messageElement) {
+        messageElement.classList.add("hidden");
+      }
+
+      if (!name || name.length < 3) {
+        showMessage(
+          "registerMessage",
+          "Digite o seu nome completo."
+        );
+        return;
+      }
+
+      if (!phone) {
+        showMessage(
+          "registerMessage",
+          "Digite o seu contacto."
+        );
+        return;
+      }
+
+      showMessage(
+        "registerMessage",
+        "A processar o seu registo..."
+      );
+
+      try {
+        const response = await fetch(
+          "/api/event-registration",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              operation: "CLIENT_REGISTER",
+              event_id: CLIENT_EVENT_ID,
+              full_name: name,
+              phone: phone
+            })
+          }
+        );
+
+        const data =
+          await response.json();
+
+        if (!response.ok || !data.success) {
+          showMessage(
+            "registerMessage",
+            data && data.error
+              ? "Não foi possível concluir o registo. Código: " +
+                data.error
+              : "Não foi possível concluir o registo."
+          );
+          return;
+        }
+
+        const shortCode =
+          data.participant &&
+          data.participant.short_code
+            ? data.participant.short_code
+            : "";
+
+        if (shortCode) {
+          showMessage(
+            "registerMessage",
+            data.existing
+              ? "Este contacto já está registado. O seu Short Code é: " +
+                shortCode +
+                ". Guarde este código."
+              : "REGISTO CONCLUÍDO — O seu Short Code é: " +
+                shortCode +
+                " — Guarde este código."
+          );
+        } else {
+          showMessage(
+            "registerMessage",
+            "REGISTO CONCLUÍDO."
+          );
+        }
+
+        document
+          .getElementById("registerName")
+          .value = "";
+
+        document
+          .getElementById("registerPhone")
+          .value = "";
+
+      } catch (error) {
+        console.error(
+          "CLIENT REGISTER:",
+          error
+        );
+
+        showMessage(
+          "registerMessage",
+          "Erro de comunicação com o servidor. Tente novamente."
+        );
+      }
+    }
+
+    function submitTopup() {
+      const shortCode =
+        document
+          .getElementById("topupShortCode")
+          .value
+          .trim();
+
+      const amount =
+        document
+          .getElementById("topupAmount")
+          .value
+          .trim();
+
+      if (!shortCode) {
+        showMessage(
+          "topupMessage",
+          "Digite o seu Short Code."
+        );
+        return;
+      }
+
+      if (!selectedTopupMethod) {
+        showMessage(
+          "topupMessage",
+          "Escolha eMOLA, M-Pesa ou CASH."
+        );
+        return;
+      }
+
+      if (!amount || Number(amount) <= 0) {
+        showMessage(
+          "topupMessage",
+          "Digite um valor de recarga válido."
+        );
+        return;
+      }
+
+      showMessage(
+        "topupMessage",
+        "Recarga selecionada: " +
+        selectedTopupMethod +
+        " — " +
+        amount +
+        " MT. A ligação ao backend será feita na próxima etapa."
+      );
+    }
+
+    function consultBalance() {
+      const shortCode =
+        document
+          .getElementById("balanceShortCode")
+          .value
+          .trim();
+
+      if (!shortCode) {
+        showMessage(
+          "balanceMessage",
+          "Digite o seu Short Code."
+        );
+        return;
+      }
+
+      showMessage(
+        "balanceMessage",
+        "Consulta preparada para o Short Code " +
+        shortCode +
+        "."
+      );
+    }
+
+    function identifyShortCode() {
+      const name =
+        document
+          .getElementById("identifyName")
+          .value
+          .trim();
+
+      const phone =
+        document
+          .getElementById("identifyPhone")
+          .value
+          .trim();
+
+      if (!name || !phone) {
+        showMessage(
+          "shortCodeMessage",
+          "Preencha o nome e o contacto."
+        );
+        return;
+      }
+
+      showMessage(
+        "shortCodeMessage",
+        "Identificação preparada. Vamos ligar esta ação à API na próxima etapa."
+      );
+    }
+  </script>
+
+</body>
+</html>
