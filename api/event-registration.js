@@ -1,3 +1,5 @@
+import crypto from "node:crypto";
+
 const SUPABASE_URL =
   String(process.env.SUPABASE_URL || "").trim();
 
@@ -44,6 +46,377 @@ async function supabaseRequest(path, options) {
   };
 }
 
+function normalizePhone(value) {
+  let digits = String(value || "").replace(/\D/g, "");
+
+  if (digits.startsWith("258")) {
+    digits = digits.slice(3);
+  }
+
+  return digits;
+}
+
+function normalizeName(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
+function isUuid(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    String(value || "").trim()
+  );
+}
+
+function generateShortCode() {
+  const alphabet =
+    "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  let code = "";
+
+  for (let i = 0; i < 6; i++) {
+    const index =
+      crypto.randomInt(0, alphabet.length);
+
+    code += alphabet[index];
+  }
+
+  return code;
+}
+
+async function getEvent(eventId) {
+  return supabaseRequest(
+    "events?id=eq." +
+      encodeURIComponent(eventId) +
+      "&select=id,status&limit=1",
+    {
+      method: "GET"
+    }
+  );
+}
+
+async function findParticipantByPhone(
+  eventId,
+  normalizedPhone
+) {
+  const result = await supabaseRequest(
+    "event_participants?event_id=eq." +
+      encodeURIComponent(eventId) +
+      "&status=eq.ACTIVE&select=id,event_id,full_name,phone,short_code,status&limit=1000",
+    {
+      method: "GET"
+    }
+  );
+
+  if (!result.ok || !Array.isArray(result.data)) {
+    return {
+      error: true,
+      result
+    };
+  }
+
+  const participant =
+    result.data.find(
+      (item) =>
+        normalizePhone(item.phone) ===
+        normalizedPhone
+    );
+
+  return {
+    error: false,
+    participant: participant || null
+  };
+}
+
+async function shortCodeExists(shortCode) {
+  const result = await supabaseRequest(
+    "event_participants?short_code=eq." +
+      encodeURIComponent(shortCode) +
+      "&select=id&limit=1",
+    {
+      method: "GET"
+    }
+  );
+
+  if (!result.ok) {
+    return {
+      error: true,
+      result
+    };
+  }
+
+  return {
+    error: false,
+    exists:
+      Array.isArray(result.data) &&
+      result.data.length > 0
+  };
+}
+
+async function createParticipant({
+  eventId,
+  fullName,
+  phone,
+  shortCode
+}) {
+  return supabaseRequest(
+    "event_participants",
+    {
+      method: "POST",
+      headers: {
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify({
+        event_id: eventId,
+        full_name: fullName,
+        phone: phone,
+        short_code: shortCode,
+        status: "ACTIVE"
+      })
+    }
+  );
+}
+
+async function createWallet({
+  eventId,
+  participantId
+}) {
+  return supabaseRequest(
+    "wallet_accounts",
+    {
+      method: "POST",
+      headers: {
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify({
+        event_id: eventId,
+        participant_id: participantId,
+        balance: 0,
+        status: "ACTIVE"
+      })
+    }
+  );
+}
+
+async function handleClientRegister(body, res) {
+  const eventId = String(
+    body.event_id || body.eventId || ""
+  ).trim();
+
+  const fullName = String(
+    body.full_name || body.fullName || ""
+  ).trim();
+
+  const rawPhone = String(
+    body.phone || body.contact || ""
+  ).trim();
+
+  if (!isUuid(eventId)) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_EVENT_ID"
+    });
+  }
+
+  if (!fullName || fullName.length < 3 || fullName.length > 150) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_FULL_NAME"
+    });
+  }
+
+  const phone = normalizePhone(rawPhone);
+
+  if (
+    !phone ||
+    phone.length < 9 ||
+    phone.length > 15
+  ) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_PHONE"
+    });
+  }
+
+  const eventResult = await getEvent(eventId);
+
+  if (!eventResult.ok) {
+    console.error(
+      "CLIENT REGISTER: erro ao consultar evento. HTTP " +
+        eventResult.status
+    );
+
+    return sendJson(res, 500, {
+      success: false,
+      error: "EVENT_LOOKUP_FAILED"
+    });
+  }
+
+  if (
+    !Array.isArray(eventResult.data) ||
+    eventResult.data.length === 0
+  ) {
+    return sendJson(res, 404, {
+      success: false,
+      error: "EVENT_NOT_FOUND"
+    });
+  }
+
+  const participantResult =
+    await findParticipantByPhone(
+      eventId,
+      phone
+    );
+
+  if (participantResult.error) {
+    console.error(
+      "CLIENT REGISTER: erro ao procurar participante."
+    );
+
+    return sendJson(res, 500, {
+      success: false,
+      error: "PARTICIPANT_LOOKUP_FAILED"
+    });
+  }
+
+  if (participantResult.participant) {
+    const participant =
+      participantResult.participant;
+
+    return sendJson(res, 200, {
+      success: true,
+      existing: true,
+      message:
+        "Este contacto já está registado neste evento.",
+      participant: {
+        id: participant.id,
+        full_name: participant.full_name,
+        phone: participant.phone,
+        short_code: participant.short_code
+      }
+    });
+  }
+
+  let participant = null;
+
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const shortCode = generateShortCode();
+
+    const existsResult =
+      await shortCodeExists(shortCode);
+
+    if (existsResult.error) {
+      console.error(
+        "CLIENT REGISTER: erro ao verificar Short Code."
+      );
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "SHORT_CODE_CHECK_FAILED"
+      });
+    }
+
+    if (existsResult.exists) {
+      continue;
+    }
+
+    const createResult =
+      await createParticipant({
+        eventId,
+        fullName,
+        phone,
+        shortCode
+      });
+
+    if (createResult.ok) {
+      participant =
+        Array.isArray(createResult.data)
+          ? createResult.data[0]
+          : createResult.data;
+
+      break;
+    }
+
+    if (
+      createResult.status === 409 ||
+      createResult.status === 23505
+    ) {
+      continue;
+    }
+
+    console.error(
+      "CLIENT REGISTER: erro ao criar participante. HTTP " +
+        createResult.status
+    );
+
+    return sendJson(res, 500, {
+      success: false,
+      error: "PARTICIPANT_CREATE_FAILED"
+    });
+  }
+
+  if (!participant) {
+    return sendJson(res, 500, {
+      success: false,
+      error: "SHORT_CODE_GENERATION_FAILED"
+    });
+  }
+
+  const walletResult =
+    await createWallet({
+      eventId,
+      participantId: participant.id
+    });
+
+  if (!walletResult.ok) {
+    console.error(
+      "CLIENT REGISTER: erro ao criar carteira. HTTP " +
+        walletResult.status
+    );
+
+    await supabaseRequest(
+      "event_participants?id=eq." +
+        encodeURIComponent(participant.id),
+      {
+        method: "PATCH",
+        body: JSON.stringify({
+          status: "INACTIVE"
+        })
+      }
+    );
+
+    return sendJson(res, 500, {
+      success: false,
+      error: "WALLET_CREATE_FAILED"
+    });
+  }
+
+  const wallet =
+    Array.isArray(walletResult.data)
+      ? walletResult.data[0]
+      : walletResult.data;
+
+  return sendJson(res, 201, {
+    success: true,
+    existing: false,
+    message:
+      "REGISTO CONCLUÍDO. Guarde o seu Short Code.",
+    participant: {
+      id: participant.id,
+      full_name: participant.full_name,
+      phone: participant.phone,
+      short_code: participant.short_code
+    },
+    wallet: {
+      id: wallet && wallet.id
+        ? wallet.id
+        : null,
+      balance: 0
+    }
+  });
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -84,6 +457,43 @@ export default async function handler(req, res) {
       error: "INVALID_JSON"
     });
   }
+
+  /*
+   * NOVO SITE CLIENTE
+   *
+   * Quando operation = CLIENT_REGISTER,
+   * usa o novo fluxo de participante + Short Code + carteira.
+   *
+   * O fluxo antigo do Behind the Sunset continua
+   * funcionando quando operation não é CLIENT_REGISTER.
+   */
+
+  const operation =
+    String(body.operation || "").trim().toUpperCase();
+
+  if (operation === "CLIENT_REGISTER") {
+    try {
+      return await handleClientRegister(
+        body,
+        res
+      );
+    } catch (error) {
+      console.error(
+        "CLIENT REGISTER: erro inesperado.",
+        error
+      );
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "CLIENT_REGISTER_FAILED"
+      });
+    }
+  }
+
+  /*
+   * FLUXO EXISTENTE DE REGISTO DE EVENTOS
+   * Não alterado para preservar o Behind the Sunset.
+   */
 
   const eventSlug =
     String(body.eventSlug || "").trim();
