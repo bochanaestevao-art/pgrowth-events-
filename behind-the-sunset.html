@@ -276,13 +276,6 @@ video {
       line-height: 1.6;
     }
 
-    .success-close {
-      margin-top: 25px;
-      min-width: 190px;
-      border: 0;
-      cursor: pointer;
-    }
-
     @keyframes successPulse {
       0%, 100% { box-shadow: 0 0 0 10px rgba(255,25,55,.06); }
       50% { box-shadow: 0 0 0 17px rgba(255,25,55,0); }
@@ -419,9 +412,6 @@ video {
         Esperamos por ti no dia 03 de outubro.
       </p>
 
-      <button class="button success-close" id="success-close" type="button">
-        CONTINUAR
-      </button>
     </div>
   </div>
   <footer>
@@ -436,13 +426,11 @@ video {
       const button = document.getElementById("submit-button");
       const status = document.getElementById("form-status");
             const successModal = document.getElementById("success-modal");
-      const successClose = document.getElementById("success-close");
 
       function openSuccessModal() {
         successModal.classList.add("show");
         successModal.setAttribute("aria-hidden", "false");
         document.body.style.overflow = "hidden";
-        successClose.focus();
       }
 
       function closeSuccessModal() {
@@ -450,8 +438,6 @@ video {
         successModal.setAttribute("aria-hidden", "true");
         document.body.style.overflow = "";
       }
-
-      successClose.addEventListener("click", closeSuccessModal);
 
       successModal.addEventListener("click", (event) => {
         if (event.target === successModal) {
