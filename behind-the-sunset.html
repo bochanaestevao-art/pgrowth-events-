@@ -68,8 +68,13 @@
       animation: poster-in .8s ease-out both, poster-glow 5s ease-in-out 1s infinite;
     }
     .poster {
-      display: block; width: 100%; height: auto; border-radius: 13px;
-      background: #17070b;
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 13px;
+  background: #17070b;
+  animation: poster-breathe 7s ease-in-out infinite;
+  transform-origin: center center;
     }
     .poster-fallback {
       padding: 34px 16px; color: var(--muted); font-size: .9rem;
@@ -107,11 +112,20 @@
       box-shadow: 0 18px 55px rgba(0,0,0,.22);
     }
     .video-frame {
-      overflow: hidden; border-radius: 14px; background: #000;
-      border: 1px solid rgba(255,255,255,.09); aspect-ratio: 16 / 9;
-    }
-    video { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; }
-    .video-note { color: var(--muted); text-align: center; font-size: .83rem; margin: 13px 0 0; }
+  overflow: hidden;
+  border-radius: 14px;
+  background: #000;
+  border: 1px solid rgba(255,255,255,.09);
+  aspect-ratio: 10 / 13;
+}
+
+video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
     .field { display: flex; flex-direction: column; gap: 7px; }
     .field.full { grid-column: 1 / -1; }
@@ -162,11 +176,151 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
     }
+        .success-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, .82);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity .3s ease, visibility .3s ease;
+    }
+
+    .success-modal.show {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .success-box {
+      position: relative;
+      width: min(100%, 430px);
+      padding: 34px 26px 28px;
+      text-align: center;
+      border: 1px solid rgba(255, 50, 75, .45);
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(255, 30, 60, .18), transparent 45%),
+        linear-gradient(145deg, #16070a, #080808);
+      box-shadow:
+        0 30px 90px rgba(0,0,0,.65),
+        0 0 45px rgba(255, 20, 50, .12);
+      transform: translateY(28px) scale(.92);
+      transition: transform .45s cubic-bezier(.2,.8,.2,1);
+      overflow: hidden;
+    }
+
+    .success-modal.show .success-box {
+      transform: translateY(0) scale(1);
+    }
+
+    .success-box::before {
+      content: "";
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      left: 50%;
+      top: -110px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: rgba(255, 25, 55, .16);
+      filter: blur(20px);
+    }
+
+    .success-icon {
+      position: relative;
+      width: 82px;
+      height: 82px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 70, 90, .8);
+      background: rgba(255, 25, 55, .1);
+      box-shadow: 0 0 0 10px rgba(255, 25, 55, .06);
+      animation: successPulse 2s ease-in-out infinite;
+    }
+
+    .success-icon::after {
+      content: "✓";
+      font-size: 42px;
+      font-weight: 900;
+      color: #ff4964;
+      animation: successCheck .5s .15s ease both;
+    }
+
+    .success-title {
+      margin: 0;
+      font-size: clamp(1.7rem, 7vw, 2.25rem);
+      line-height: 1.05;
+      font-weight: 900;
+      letter-spacing: -.03em;
+    }
+
+    .success-title span {
+      color: #ff4964;
+    }
+
+    .success-text {
+      margin: 14px auto 0;
+      max-width: 340px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .success-close {
+      margin-top: 25px;
+      min-width: 190px;
+      border: 0;
+      cursor: pointer;
+    }
+
+    @keyframes successPulse {
+      0%, 100% { box-shadow: 0 0 0 10px rgba(255,25,55,.06); }
+      50% { box-shadow: 0 0 0 17px rgba(255,25,55,0); }
+    }
+
+    @keyframes successCheck {
+      from {
+        opacity: 0;
+        transform: scale(.45) rotate(-20deg);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) rotate(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .success-box,
+      .success-icon,
+      .success-icon::after {
+        animation: none;
+        transition: none;
+      }
+    }
+    @keyframes poster-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+
+  70% {
+    transform: scale(1.018);
+  }
+    }
   </style>
 </head>
 <body>
   <header class="page topbar">
-    <div class="brand">PGrowth <span>Events</span></div>
+    <div class="brand"><span style="color:#fff">PGrowth</span> <span style="color:#ff233f">Events</span> <span style="color:#fff"> & Elton</span> <span style="color:#ff233f">Tomas</span></div>
     <a class="top-cta" href="#inscricao">Inscrever-me</a>
   </header>
 
@@ -198,17 +352,22 @@
     </section>
 
     <section class="page" id="video" aria-labelledby="video-title">
-      <h2 class="section-heading" id="video-title">Vídeo <span style="color:var(--red)">promocional</span></h2>
-      <p class="section-intro">Entra no ambiente do evento. O vídeo será reproduzido aqui.</p>
-      <div class="video-card">
-        <div class="video-frame">
-          <video controls playsinline preload="metadata" poster="heaven-poster-final.jpg">
-            <source src="promo-heaven.mp4" type="video/mp4">
-            O teu navegador não suporta a reprodução deste vídeo.
-          </video>
-        </div>
-        <p class="video-note">Se o vídeo não aparecer, confirma se <strong>promo-heaven.mp4</strong> está na mesma pasta desta página.</p>
-      </div>
+  <h2 class="section-heading" id="video-title">Viva o <span style="color:var(--red)">HEAVEN</span></h2>
+
+  <div class="video-card">
+    <div class="video-frame">
+      <video
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="auto"
+        poster="heaven-poster-final.jpg"
+      >
+        <source src="promo-heaven.mp4" type="video/mp4">
+      </video>
+    </div>
+  </div>
     </section>
 
     <section class="page" id="inscricao" aria-labelledby="form-title">
@@ -240,7 +399,31 @@
       </div>
     </section>
   </main>
+  <div
+    id="success-modal"
+    class="success-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="success-title"
+    aria-hidden="true"
+  >
+    <div class="success-box">
+      <div class="success-icon" aria-hidden="true"></div>
 
+      <h2 class="success-title" id="success-title">
+        Inscrição <span>confirmada!</span>
+      </h2>
+
+      <p class="success-text">
+        A tua inscrição no HEAVEN foi recebida com sucesso.
+        Esperamos por ti no dia 03 de outubro.
+      </p>
+
+      <button class="button success-close" id="success-close" type="button">
+        CONTINUAR
+      </button>
+    </div>
+  </div>
   <footer>
     <div><strong>HEAVEN</strong></div>
     <div>03 de outubro de 2026 · Ponta-Gêa</div>
@@ -252,7 +435,29 @@
       const form = document.getElementById("registration-form");
       const button = document.getElementById("submit-button");
       const status = document.getElementById("form-status");
+            const successModal = document.getElementById("success-modal");
+      const successClose = document.getElementById("success-close");
 
+      function openSuccessModal() {
+        successModal.classList.add("show");
+        successModal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+        successClose.focus();
+      }
+
+      function closeSuccessModal() {
+        successModal.classList.remove("show");
+        successModal.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+      }
+
+      successClose.addEventListener("click", closeSuccessModal);
+
+      successModal.addEventListener("click", (event) => {
+        if (event.target === successModal) {
+          closeSuccessModal();
+        }
+      });
       function showStatus(message, type) {
         status.textContent = message;
         status.className = "form-status show " + type;
@@ -295,9 +500,11 @@
           let result = {};
           try { result = await response.json(); } catch (_) {}
 
-          if (response.ok && result && result.success === true) {
+                    if (response.ok && result && result.success === true) {
             form.reset();
-            showStatus("Inscrição recebida com sucesso! Guarda esta confirmação. Obrigado.", "success");
+            status.className = "form-status";
+            status.textContent = "";
+            openSuccessModal();
           } else {
             const knownMessages = {
               INVALID_NAME: "O nome indicado não é válido. Confirma e tenta novamente.",
