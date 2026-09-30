@@ -1,543 +1,321 @@
-<!DOCTYPE html>
-<html lang="pt">
+<!doctype html>
+<html lang="pt-MZ">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="BEHIND THE SUNSET — Pgrowth Events">
-<title>BEHIND THE SUNSET | Pgrowth Events</title>
-
-<style>
-*{
-  box-sizing:border-box;
-}
-
-html{
-  scroll-behavior:smooth;
-}
-
-body{
-  margin:0;
-  background:#080808;
-  color:#fff;
-  font-family:Arial,Helvetica,sans-serif;
-}
-
-.container{
-  width:min(100%,620px);
-  margin:0 auto;
-  padding-bottom:40px;
-}
-
-.hero{
-  width:100%;
-  background:#000;
-  overflow:hidden;
-}
-
-.hero img{
-  display:block;
-  width:100%;
-  height:auto;
-}
-
-.content{
-  padding:24px 18px;
-}
-
-.brand{
-  text-align:center;
-  font-size:12px;
-  letter-spacing:2px;
-  color:#aaa;
-  margin-bottom:18px;
-}
-
-h1{
-  margin:0;
-  text-align:center;
-  font-size:30px;
-  line-height:1.15;
-  letter-spacing:.5px;
-}
-
-.info{
-  margin:22px 0;
-  padding:18px;
-  border:1px solid #292929;
-  border-radius:14px;
-  background:#111;
-}
-
-.info p{
-  margin:9px 0;
-  font-size:15px;
-}
-
-.info strong{
-  color:#d6b36a;
-}
-
-.form{
-  margin-top:24px;
-}
-
-label{
-  display:block;
-  margin:16px 0 7px;
-  font-size:14px;
-  font-weight:bold;
-}
-
-input{
-  width:100%;
-  padding:14px;
-  border:1px solid #333;
-  border-radius:10px;
-  background:#151515;
-  color:#fff;
-  font-size:16px;
-  outline:none;
-  font-family:Arial,Helvetica,sans-serif;
-}
-
-input:focus{
-  border-color:#d6b36a;
-}
-
-input:disabled{
-  opacity:.65;
-}
-
-button{
-  width:100%;
-  margin-top:24px;
-  padding:16px;
-  border:0;
-  border-radius:10px;
-  background:#d6b36a;
-  color:#080808;
-  font-size:16px;
-  font-weight:bold;
-  cursor:pointer;
-  font-family:Arial,Helvetica,sans-serif;
-}
-
-button:disabled{
-  opacity:.6;
-  cursor:not-allowed;
-}
-
-.msg{
-  display:none;
-  margin-top:18px;
-  padding:15px;
-  border-radius:10px;
-  text-align:center;
-  line-height:1.5;
-}
-
-.success{
-  background:#102516;
-  border:1px solid #245b31;
-  color:#b9e6c2;
-}
-
-.success strong{
-  display:block;
-  margin-bottom:7px;
-  font-size:18px;
-}
-
-.error{
-  background:#2a1111;
-  border:1px solid #6b2929;
-  color:#ffbaba;
-}
-
-.footer{
-  margin-top:30px;
-  text-align:center;
-  color:#777;
-  font-size:12px;
-}
-
-/*
- * MOBILE
- * Reduz o cartaz para que a informação e o formulário
- * apareçam muito mais cedo na tela.
- */
-@media (max-width:600px){
-  .hero{
-    height:90vh;
-    min-height:230px;
-    max-height:550px;
-  }
-
-  .hero img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    object-position:center center;
-  }
-}
-
-  .content{
-    padding:18px 16px;
-  }
-
-  .brand{
-    margin-bottom:12px;
-    font-size:11px;
-  }
-
-  h1{
-    font-size:25px;
-  }
-
-  .info{
-    margin:16px 0;
-    padding:14px;
-  }
-
-  .info p{
-    margin:7px 0;
-    font-size:14px;
-  }
-
-  .form{
-    margin-top:18px;
-  }
-
-  label{
-    margin-top:13px;
-  }
-
-  button{
-    margin-top:20px;
-  }
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090607">
+  <meta name="description" content="HEAVEN — inscrição para o evento. Música, drinks e good vibes.">
+  <title>HEAVEN | Inscrição</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #090607;
+      --panel: #14090c;
+      --panel-2: #1b0b0f;
+      --red: #ff1738;
+      --red-2: #b60020;
+      --text: #fff8f8;
+      --muted: #c8b7bb;
+      --line: rgba(255, 255, 255, .12);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 50% 0%, rgba(145, 0, 25, .27), transparent 48rem),
+        linear-gradient(180deg, #090607 0%, #100609 55%, #080607 100%);
+      color: var(--text);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+    a { color: inherit; }
+    .page { width: min(100% - 28px, 1040px); margin-inline: auto; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 14px; padding: 20px 0;
+    }
+    .brand {
+      font-size: .9rem; font-weight: 900; letter-spacing: .28em;
+      text-transform: uppercase;
+    }
+    .brand span { color: var(--red); }
+    .top-cta {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 42px; padding: 9px 16px; border-radius: 999px;
+      border: 1px solid rgba(255, 23, 56, .65); background: rgba(255, 23, 56, .1);
+      text-decoration: none; font-size: .84rem; font-weight: 800;
+    }
+    .hero { padding: 10px 0 34px; text-align: center; }
+    .eyebrow {
+      color: #ff8a9b; text-transform: uppercase; letter-spacing: .22em;
+      font-size: .73rem; font-weight: 850; margin: 6px 0 15px;
+    }
+    h1 {
+      margin: 0 0 18px; font-size: clamp(2.3rem, 9vw, 5.2rem);
+      line-height: .95; letter-spacing: -.055em; font-weight: 950;
+      text-shadow: 0 0 32px rgba(255, 23, 56, .2);
+    }
+    h1 span { color: var(--red); }
+    .hero-copy { color: var(--muted); max-width: 620px; margin: 0 auto 24px; }
+    .poster-wrap {
+      position: relative; width: min(100%, 590px); margin: 0 auto;
+      padding: 8px; border: 1px solid rgba(255, 23, 56, .45);
+      border-radius: 20px; background: rgba(255, 23, 56, .055);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.025), 0 18px 65px rgba(0,0,0,.42),
+                  0 0 38px rgba(255, 23, 56, .13);
+      animation: poster-in .8s ease-out both, poster-glow 5s ease-in-out 1s infinite;
+    }
+    .poster {
+      display: block; width: 100%; height: auto; border-radius: 13px;
+      background: #17070b;
+    }
+    .poster-fallback {
+      padding: 34px 16px; color: var(--muted); font-size: .9rem;
+    }
+    .event-facts {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px; margin: 22px auto 0; max-width: 700px;
+    }
+    .fact {
+      padding: 14px 10px; border: 1px solid var(--line); border-radius: 15px;
+      background: rgba(255,255,255,.035);
+    }
+    .fact-label {
+      color: #ff8a9b; font-size: .68rem; font-weight: 850;
+      letter-spacing: .13em; text-transform: uppercase;
+    }
+    .fact-value { font-size: .96rem; font-weight: 800; margin-top: 4px; }
+    .button {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 9px; min-height: 50px; padding: 13px 22px; border: 0;
+      border-radius: 999px; background: linear-gradient(135deg, #ff2848, #c90028);
+      color: white; font: inherit; font-weight: 900; text-decoration: none;
+      cursor: pointer; box-shadow: 0 10px 30px rgba(255, 23, 56, .2);
+      transition: transform .18s ease, filter .18s ease;
+    }
+    .button:hover { transform: translateY(-2px); filter: brightness(1.08); }
+    .hero .button { margin-top: 24px; width: min(100%, 300px); }
+    section { padding: 34px 0; }
+    .section-heading { text-align: center; margin: 0 0 8px; font-size: clamp(1.7rem, 6vw, 2.7rem); line-height: 1.1; }
+    .section-intro { color: var(--muted); text-align: center; max-width: 590px; margin: 0 auto 22px; }
+    .video-card, .form-card {
+      max-width: 760px; margin: 0 auto; border: 1px solid var(--line);
+      border-radius: var(--radius); padding: clamp(14px, 3vw, 24px);
+      background: linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+      box-shadow: 0 18px 55px rgba(0,0,0,.22);
+    }
+    .video-frame {
+      overflow: hidden; border-radius: 14px; background: #000;
+      border: 1px solid rgba(255,255,255,.09); aspect-ratio: 16 / 9;
+    }
+    video { display: block; width: 100%; height: 100%; object-fit: contain; background: #000; }
+    .video-note { color: var(--muted); text-align: center; font-size: .83rem; margin: 13px 0 0; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .field { display: flex; flex-direction: column; gap: 7px; }
+    .field.full { grid-column: 1 / -1; }
+    label { font-size: .88rem; font-weight: 800; }
+    input {
+      width: 100%; min-height: 49px; padding: 12px 14px; border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.17); outline: none;
+      color: var(--text); background: rgba(0,0,0,.25); font: inherit;
+    }
+    input::placeholder { color: #8e7d81; }
+    input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(255,23,56,.14); }
+    .hint { color: var(--muted); font-size: .78rem; margin: 0; }
+    .form-actions { margin-top: 18px; }
+    .form-actions .button { width: 100%; }
+    .form-status {
+      display: none; margin-top: 16px; padding: 13px 15px; border-radius: 12px;
+      font-size: .9rem; overflow-wrap: anywhere;
+    }
+    .form-status.show { display: block; }
+    .form-status.success { color: #d8ffe5; border: 1px solid #287a4a; background: rgba(25,140,75,.14); }
+    .form-status.error { color: #ffe0e5; border: 1px solid #9f2036; background: rgba(180,0,35,.15); }
+    .form-status.info { color: #fff0c7; border: 1px solid #806525; background: rgba(160,120,20,.12); }
+    .privacy-note { color: var(--muted); text-align: center; font-size: .78rem; margin: 14px 0 0; }
+    footer { padding: 26px 0 36px; text-align: center; color: #9e8b90; font-size: .8rem; }
+    footer strong { color: #fff; letter-spacing: .12em; }
+    @keyframes poster-in {
+      from { opacity: 0; transform: translateY(18px) scale(.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes poster-glow {
+      0%, 100% { box-shadow: 0 18px 65px rgba(0,0,0,.42), 0 0 24px rgba(255,23,56,.1); }
+      50% { box-shadow: 0 18px 65px rgba(0,0,0,.42), 0 0 42px rgba(255,23,56,.22); }
+    }
+    @media (max-width: 600px) {
+      .page { width: min(100% - 20px, 1040px); }
+      .topbar { padding: 15px 0; }
+      .brand { letter-spacing: .18em; font-size: .8rem; }
+      .top-cta { min-height: 38px; padding: 8px 12px; font-size: .77rem; }
+      .hero { padding-top: 8px; }
+      .event-facts { gap: 7px; }
+      .fact { padding: 11px 6px; }
+      .fact-value { font-size: .83rem; }
+      .fact-label { font-size: .59rem; letter-spacing: .08em; }
+      section { padding: 27px 0; }
+      .form-grid { grid-template-columns: 1fr; }
+      .field.full { grid-column: auto; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+    }
+  </style>
 </head>
-
 <body>
+  <header class="page topbar">
+    <div class="brand">PGrowth <span>Events</span></div>
+    <a class="top-cta" href="#inscricao">Inscrever-me</a>
+  </header>
 
-<div class="container">
+  <main>
+    <section class="page hero" aria-labelledby="page-title">
+      <p class="eyebrow">Uma experiência para recordar</p>
+      <h1 id="page-title">HEA<span>VEN</span></h1>
+      <p class="hero-copy">Música, ambiente e boas vibrações. Faz a tua inscrição para o evento.</p>
 
-  <div class="hero">
-    <img
-      src="behind-the-sunset.jpg"
-      alt="BEHIND THE SUNSET"
-      loading="eager"
-    >
-  </div>
-
-  <div class="content">
-
-    <div class="brand">
-      PGROWTH EVENTS • EXPERIÊNCIA DIGITAL
-    </div>
-
-    <h1>BEHIND THE SUNSET</h1>
-
-    <div class="info">
-      <p>📍 <strong>Local:</strong> Ponta - Gea</p>
-      <p>📅 <strong>Data:</strong> 26 de Setembro — Sábado</p>
-      <p>🕒 <strong>Hora:</strong> 15H00</p>
-      <p>👤 <strong>Organização:</strong> Elton Tomas</p>
-    </div>
-
-    <div class="form">
-
-      <form
-        id="registrationForm"
-        accept-charset="UTF-8"
-        autocomplete="on"
-      >
-
-        <label for="fullName">
-          Nome completo *
-        </label>
-
-        <input
-          id="fullName"
-          name="fullName"
-          type="text"
-          placeholder="Digite o seu nome completo"
-          autocomplete="name"
-          maxlength="100"
-          required
+      <div class="poster-wrap">
+        <img
+          class="poster"
+          src="heaven-poster-final.jpg"
+          alt="Cartaz oficial do evento Behind the Sunset, marcado para 03 de outubro, às 15 horas, em Ponta-Gêa (Heaven)."
+          fetchpriority="high"
+          onerror="this.hidden=true;document.getElementById('poster-fallback').hidden=false;"
         >
-
-        <label for="phone">
-          Contacto *
-        </label>
-
-        <input
-          id="phone"
-          name="phone"
-          type="tel"
-          placeholder="Digite o seu contacto"
-          autocomplete="tel"
-          maxlength="30"
-          required
-        >
-
-        <label for="email">
-  Email <span class="optional">(OPCIONAL)</span>
-        </label>
-
-        <input
-  id="email"
-  name="email"
-  type="email"
-  maxlength="254"
-  autocomplete="email"
-  placeholder="seuemail@exemplo.com"
-
-        >
-
-        <button
-          id="submitBtn"
-          type="submit"
-        >
-          REGISTAR
-        </button>
-
-      </form>
-
-      <div
-        id="successMsg"
-        class="msg success"
-        role="status"
-        aria-live="polite"
-      >
-        <strong>✓ REGISTO CONFIRMADO</strong>
-        O seu registo para o
-        <strong>BEHIND THE SUNSET</strong>
-        foi realizado com sucesso.
-        <br><br>
-        <strong>26 de Setembro — 15H00</strong>
-        <br>
-        Ponta - Gea
-        <br><br>
-        Obrigado pela sua inscrição!
+        <div id="poster-fallback" class="poster-fallback" hidden>
+          O cartaz será apresentado assim que o ficheiro <strong>heaven-poster-final.jpg</strong> estiver na pasta do site.
+        </div>
       </div>
 
-      <div
-        id="errorMsg"
-        class="msg error"
-        role="alert"
-        aria-live="assertive"
-      ></div>
+      <div class="event-facts" aria-label="Informações do evento">
+        <div class="fact"><div class="fact-label">Data</div><div class="fact-value">03 Out. 2026</div></div>
+        <div class="fact"><div class="fact-label">Hora</div><div class="fact-value">15h00</div></div>
+        <div class="fact"><div class="fact-label">Local</div><div class="fact-value">Ponta-Gêa · Heaven</div></div>
+      </div>
+      <a class="button" href="#inscricao">QUERO INSCREVER-ME <span aria-hidden="true">→</span></a>
+    </section>
 
-    </div>
+    <section class="page" id="video" aria-labelledby="video-title">
+      <h2 class="section-heading" id="video-title">Vídeo <span style="color:var(--red)">promocional</span></h2>
+      <p class="section-intro">Entra no ambiente do evento. O vídeo será reproduzido aqui.</p>
+      <div class="video-card">
+        <div class="video-frame">
+          <video controls playsinline preload="metadata" poster="heaven-poster-final.jpg">
+            <source src="promo-heaven.mp4" type="video/mp4">
+            O teu navegador não suporta a reprodução deste vídeo.
+          </video>
+        </div>
+        <p class="video-note">Se o vídeo não aparecer, confirma se <strong>promo-heaven.mp4</strong> está na mesma pasta desta página.</p>
+      </div>
+    </section>
 
-    <div class="footer">
-      Pgrowth Events
-    </div>
+    <section class="page" id="inscricao" aria-labelledby="form-title">
+      <h2 class="section-heading" id="form-title">Faz a tua <span style="color:var(--red)">inscrição</span></h2>
+      <p class="section-intro">Preenche os teus dados. Confirma que o contacto telefónico está correto.</p>
 
-  </div>
+      <div class="form-card">
+        <form id="registration-form">
+          <div class="form-grid">
+            <div class="field full">
+              <label for="fullName">Nome completo *</label>
+              <input id="fullName" name="fullName" type="text" autocomplete="name" maxlength="120" placeholder="Escreve o teu nome completo" required>
+            </div>
+            <div class="field">
+              <label for="phone">Contacto telefónico *</label>
+              <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="30" placeholder="Ex.: 84 123 4567" required>
+            </div>
+            <div class="field">
+              <label for="email">E-mail (opcional)</label>
+              <input id="email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="nome@exemplo.com">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="button" id="submit-button" type="submit">CONFIRMAR INSCRIÇÃO</button>
+          </div>
+          <div id="form-status" class="form-status" role="status" aria-live="polite"></div>
+          <p class="privacy-note">Os dados são enviados para registar a tua inscrição neste evento.</p>
+        </form>
+      </div>
+    </section>
+  </main>
 
-</div>
+  <footer>
+    <div><strong>HEAVEN</strong></div>
+    <div>03 de outubro de 2026 · Ponta-Gêa</div>
+    <div style="margin-top:8px">Powered by PGrowth Events</div>
+  </footer>
 
-<script>
-"use strict";
+  <script>
+    (() => {
+      const form = document.getElementById("registration-form");
+      const button = document.getElementById("submit-button");
+      const status = document.getElementById("form-status");
 
-const form =
-  document.getElementById("registrationForm");
+      function showStatus(message, type) {
+        status.textContent = message;
+        status.className = "form-status show " + type;
+      }
 
-const submitBtn =
-  document.getElementById("submitBtn");
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!form.reportValidity()) return;
 
-const successMsg =
-  document.getElementById("successMsg");
+        const fullName = document.getElementById("fullName").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const email = document.getElementById("email").value.trim();
 
-const errorMsg =
-  document.getElementById("errorMsg");
-
-let submitting = false;
-
-form.addEventListener(
-  "submit",
-  async function(e){
-
-    e.preventDefault();
-
-    /*
-     * Proteção contra duplo clique e múltiplos envios
-     * enquanto o primeiro pedido ainda está em andamento.
-     */
-    if(submitting){
-      return;
-    }
-
-    successMsg.style.display = "none";
-    errorMsg.style.display = "none";
-
-    const fullName =
-      document
-        .getElementById("fullName")
-        .value
-        .trim();
-
-    const phone =
-      document
-        .getElementById("phone")
-        .value
-        .trim();
-
-    const email =
-      document
-        .getElementById("email")
-        .value
-        .trim();
-
-    if(fullName.length < 3){
-      showError(
-        "Introduza o nome completo."
-      );
-      return;
-    }
-
-    if(phone.length < 9){
-      showError(
-        "Introduza um contacto válido."
-      );
-      return;
-    }
-
-    if(email && email.length < 3){
-  showMessage(
-    "Introduza um email válido ou deixe o campo vazio.",
-    "error"
-  );
-  return;
-    }
-
-    submitting = true;
-
-    submitBtn.disabled = true;
-    submitBtn.textContent = "A REGISTAR...";
-
-    try{
-
-      const response = await fetch(
-        "/api/event-registration",
-        {
-          method:"POST",
-
-          headers:{
-            "Content-Type":
-              "application/json",
-            "Accept":
-              "application/json"
-          },
-
-          body:JSON.stringify({
-            eventSlug:
-              "behind-the-sunset",
-
-            eventName:
-              "BEHIND THE SUNSET",
-
-            fullName:
-              fullName,
-
-            phone:
-              phone,
-
-            email:
-              email
-          })
+        if (fullName.length < 2) {
+          showStatus("Introduz o teu nome completo.", "error");
+          return;
         }
-      );
+        if (phone.length < 7) {
+          showStatus("Confirma o número de telefone e tenta novamente.", "error");
+          return;
+        }
 
-      let result = null;
+        button.disabled = true;
+        button.textContent = "A ENVIAR INSCRIÇÃO…";
+        showStatus("A enviar os teus dados. Aguarda, por favor.", "info");
 
-      try{
-        result = await response.json();
-      }catch{
-        result = null;
-      }
+        try {
+          const response = await fetch("/api/event-registration", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              eventSlug: "heaven",
+              eventName: "HEAVEN",
+              fullName,
+              phone,
+              email
+            })
+          });
 
-      /*
-       * O backend retorna:
-       *
-       * {
-       *   success: true,
-       *   registration: {...}
-       * }
-       *
-       * Não usamos "result.ok".
-       */
-      if(
-        !response.ok ||
-        !result ||
-        result.success !== true
-      ){
+          let result = {};
+          try { result = await response.json(); } catch (_) {}
 
-        throw new Error(
-          result?.error ||
-          result?.message ||
-          "Não foi possível realizar o registo. Tente novamente."
-        );
-      }
-
-      /*
-       * Só mostramos CONFIRMADO depois
-       * de a API responder success:true.
-       */
-      successMsg.style.display = "block";
-
-      form.reset();
-
-      successMsg.scrollIntoView({
-        behavior:"smooth",
-        block:"center"
+          if (response.ok && result && result.success === true) {
+            form.reset();
+            showStatus("Inscrição recebida com sucesso! Guarda esta confirmação. Obrigado.", "success");
+          } else {
+            const knownMessages = {
+              INVALID_NAME: "O nome indicado não é válido. Confirma e tenta novamente.",
+              INVALID_PHONE: "O contacto telefónico não é válido. Confirma e tenta novamente.",
+              INVALID_EMAIL: "O e-mail indicado não é válido. Corrige-o ou deixa o campo vazio.",
+              MISSING_FIELDS: "Preenche o nome e o contacto telefónico."
+            };
+            const errorCode = result && (result.error || result.code);
+            showStatus(knownMessages[errorCode] || "Não foi possível concluir a inscrição agora. Verifica a ligação e tenta novamente.", "error");
+          }
+        } catch (_) {
+          showStatus("Falha de ligação. Verifica a internet e tenta novamente.", "error");
+        } finally {
+          button.disabled = false;
+          button.textContent = "CONFIRMAR INSCRIÇÃO";
+        }
       });
-
-    }catch(error){
-
-      console.error(
-        "Erro no registo:",
-        error
-      );
-
-      showError(
-        "Não foi possível concluir o registo. " +
-        "Verifique a sua ligação e tente novamente."
-      );
-
-    }finally{
-
-      /*
-       * Liberta o botão depois que a operação
-       * terminou. Assim outra pessoa pode usar
-       * o mesmo telefone posteriormente.
-       */
-      submitting = false;
-
-      submitBtn.disabled = false;
-      submitBtn.textContent = "REGISTAR";
-    }
-
-  }
-);
-
-function showError(message){
-
-  successMsg.style.display = "none";
-
-  errorMsg.textContent = message;
-
-  errorMsg.style.display = "block";
-
-  errorMsg.scrollIntoView({
-    behavior:"smooth",
-    block:"center"
-  });
-}
-</script>
-
+    })();
+  </script>
 </body>
 </html>
