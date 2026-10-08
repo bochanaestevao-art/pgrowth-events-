@@ -622,6 +622,706 @@ async function handleClientIdentify(body, res) {
   });
 }
 
+
+function generateTopupReference(eventId) {
+  const eventPart = String(eventId)
+    .replace(/[^a-zA-Z0-9]/g, "")
+    .slice(0, 12);
+
+  const randomPart = crypto
+    .randomBytes(8)
+    .toString("hex");
+
+  return [
+    "BAR-TOPUP",
+    eventPart,
+    "CLIENT",
+    Date.now(),
+    randomPart,
+  ].join("-");
+}
+
+function generateIdempotencyKey(reference) {
+  return `bar-topup-${reference}`;
+}
+
+function getPagarConfig() {
+  const baseUrl =
+    String(process.env.PAGAR_API_BASE_URL || "").trim();
+
+  const apiKey =
+    String(process.env.PAGAR_API_KEY || "").trim();
+
+  const signingSecret =
+    String(process.env.PAGAR_SIGNING_SECRET || "").trim();
+
+  if (!baseUrl || !apiKey || !signingSecret) {
+    throw new Error("PAGAR_CONFIGURATION_MISSING");
+  }
+
+  return {
+    baseUrl: baseUrl.replace(/\/+$/, ""),
+    apiKey,
+    signingSecret,
+  };
+}
+
+async function pagarPost(path, body, idempotencyKey) {
+  const {
+    baseUrl,
+    apiKey,
+    signingSecret,
+  } = getPagarConfig();
+
+  const timestamp = Date.now().toString();
+
+  const nonce = crypto
+    .randomBytes(18)
+    .toString("base64url");
+
+  const rawBody = JSON.stringify(body);
+
+  const bodyHash = crypto
+    .createHash("sha256")
+    .update(rawBody)
+    .digest("hex");
+
+  const url = `${baseUrl}${path}`;
+  const canonicalPath = new URL(url).pathname;
+
+  const canonical = [
+    timestamp,
+    nonce,
+    "POST",
+    canonicalPath,
+    bodyHash,
+  ].join("\n");
+
+  const signature = crypto
+    .createHmac("sha256", signingSecret)
+    .update(canonical)
+    .digest("hex");
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Authorization: `Bearer ${apiKey}`,
+      "Pagar-Api-Key": apiKey,
+      "X-Pagar-Timestamp": timestamp,
+      "X-Pagar-Nonce": nonce,
+      "X-Pagar-Signature": `v1=${signature}`,
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: rawBody,
+  });
+
+  const text = await response.text();
+
+  let data = null;
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+  }
+
+  if (!response.ok) {
+    const error = new Error(
+      typeof data === "string"
+        ? data
+        : data?.message ||
+          data?.error ||
+          data?.details ||
+          `Pagar HTTP ${response.status}`
+    );
+
+    error.status = response.status;
+    error.details = data;
+
+    throw error;
+  }
+
+  return data;
+}
+
+function extractPaymentId(payment) {
+  return (
+    payment?.id ||
+    payment?.payment?.id ||
+    payment?.payment_id ||
+    payment?.paymentId ||
+    payment?.data?.id ||
+    payment?.data?.payment_id ||
+    payment?.data?.payment?.id ||
+    null
+  );
+}
+
+function extractPaymentStatus(payment) {
+  return String(
+    payment?.status ||
+      payment?.payment?.status ||
+      payment?.payment_status ||
+      payment?.paymentStatus ||
+      payment?.data?.status ||
+      payment?.data?.payment?.status ||
+      ""
+  ).toUpperCase();
+}
+
+async function getClientParticipant(eventId, shortCode) {
+  const result = await supabaseRequest(
+    "event_participants?event_id=eq." +
+      encodeURIComponent(eventId) +
+      "&short_code=eq." +
+      encodeURIComponent(shortCode) +
+      "&status=eq.ACTIVE" +
+      "&select=id,event_id,full_name,phone,short_code,status" +
+      "&limit=1",
+    {
+      method: "GET"
+    }
+  );
+
+  if (!result.ok || !Array.isArray(result.data)) {
+    return {
+      error: true,
+      result
+    };
+  }
+
+  return {
+    error: false,
+    participant: result.data[0] || null
+  };
+}
+
+async function getClientWallet(eventId, participantId) {
+  const result = await supabaseRequest(
+    "wallet_accounts?event_id=eq." +
+      encodeURIComponent(eventId) +
+      "&participant_id=eq." +
+      encodeURIComponent(participantId) +
+      "&status=eq.ACTIVE" +
+      "&select=id,event_id,participant_id,balance,status" +
+      "&limit=1",
+    {
+      method: "GET"
+    }
+  );
+
+  if (!result.ok || !Array.isArray(result.data)) {
+    return {
+      error: true,
+      result
+    };
+  }
+
+  return {
+    error: false,
+    wallet: result.data[0] || null
+  };
+}
+
+async function getClientWalletSettings(eventId) {
+  const result = await supabaseRequest(
+    "wallet_settings?event_id=eq." +
+      encodeURIComponent(eventId) +
+      "&select=id,event_id,min_topup,max_topup,currency,topup_enabled,topup_min_amount,topup_max_amount" +
+      "&limit=1",
+    {
+      method: "GET"
+    }
+  );
+
+  if (!result.ok || !Array.isArray(result.data)) {
+    return {
+      error: true,
+      result
+    };
+  }
+
+  return {
+    error: false,
+    settings: result.data[0] || null
+  };
+}
+
+function validateClientTopupAmount(amount, settings) {
+  if (!settings) {
+    throw new Error("WALLET_SETTINGS_NOT_FOUND");
+  }
+
+  if (settings.topup_enabled === false) {
+    throw new Error("TOPUP_DISABLED");
+  }
+
+  if (!Number.isFinite(amount) || amount < 100) {
+    throw new Error("BELOW_MIN_TOPUP");
+  }
+}
+
+async function createClientPendingTopup({
+  eventId,
+  participantId,
+  walletId,
+  amount,
+  reference,
+  paymentMethod,
+  description
+}) {
+  const result = await supabaseRequest(
+    "wallet_topups",
+    {
+      method: "POST",
+      headers: {
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify({
+        event_id: eventId,
+        wallet_id: walletId,
+        participant_id: participantId,
+        amount,
+        payment_status: "PENDING",
+        payment_reference: reference,
+        payment_id: null,
+        payment_method: paymentMethod,
+        staff_id: null,
+        description:
+          description || "Recarga pelo site do cliente"
+      })
+    }
+  );
+
+  if (
+    !result.ok ||
+    !Array.isArray(result.data) ||
+    !result.data[0]
+  ) {
+    throw new Error("TOPUP_CREATION_FAILED");
+  }
+
+  return result.data[0];
+}
+
+async function updateClientPendingTopupPayment(
+  reference,
+  paymentId
+) {
+  return supabaseRequest(
+    "wallet_topups?payment_reference=eq." +
+      encodeURIComponent(reference) +
+      "&payment_status=eq.PENDING",
+    {
+      method: "PATCH",
+      headers: {
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify({
+        payment_id: paymentId || null
+      })
+    }
+  );
+}
+
+async function markClientTopupFailed(
+  reference,
+  description
+) {
+  return supabaseRequest(
+    "wallet_topups?payment_reference=eq." +
+      encodeURIComponent(reference) +
+      "&payment_status=eq.PENDING",
+    {
+      method: "PATCH",
+      headers: {
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify({
+        payment_status: "FAILED",
+        description: description || null
+      })
+    }
+  );
+}
+
+async function handleClientBalance(body, res) {
+  const eventId = String(
+    body.event_id || body.eventId || ""
+  ).trim();
+
+  const shortCode = String(
+    body.short_code || body.shortCode || ""
+  ).trim().toUpperCase();
+
+  if (!isUuid(eventId)) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_EVENT_ID"
+    });
+  }
+
+  if (!shortCode || shortCode.length > 20) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_SHORT_CODE"
+    });
+  }
+
+  const eventResult = await getEvent(eventId);
+
+  if (
+    !eventResult.ok ||
+    !Array.isArray(eventResult.data) ||
+    eventResult.data.length === 0
+  ) {
+    return sendJson(res, 404, {
+      success: false,
+      error: "EVENT_NOT_FOUND"
+    });
+  }
+
+  const participantResult =
+    await getClientParticipant(
+      eventId,
+      shortCode
+    );
+
+  if (participantResult.error) {
+    return sendJson(res, 500, {
+      success: false,
+      error: "PARTICIPANT_LOOKUP_FAILED"
+    });
+  }
+
+  if (!participantResult.participant) {
+    return sendJson(res, 404, {
+      success: false,
+      error: "PARTICIPANT_NOT_FOUND",
+      message:
+        "Short Code não encontrado ou inativo."
+    });
+  }
+
+  const walletResult =
+    await getClientWallet(
+      eventId,
+      participantResult.participant.id
+    );
+
+  if (walletResult.error) {
+    return sendJson(res, 500, {
+      success: false,
+      error: "WALLET_LOOKUP_FAILED"
+    });
+  }
+
+  if (!walletResult.wallet) {
+    return sendJson(res, 404, {
+      success: false,
+      error: "WALLET_NOT_FOUND"
+    });
+  }
+
+  return sendJson(res, 200, {
+    success: true,
+    operation: "CLIENT_BALANCE",
+    participant: {
+      full_name:
+        participantResult.participant.full_name,
+      short_code:
+        participantResult.participant.short_code
+    },
+    wallet: {
+      balance:
+        Number(walletResult.wallet.balance || 0),
+      currency: "MZN",
+      status:
+        walletResult.wallet.status
+    }
+  });
+}
+
+async function handleClientTopup(body, res) {
+  const eventId = String(
+    body.event_id || body.eventId || ""
+  ).trim();
+
+  const shortCode = String(
+    body.short_code || body.shortCode || ""
+  ).trim().toUpperCase();
+
+  const paymentMethod = String(
+    body.payment_method ||
+      body.paymentMethod ||
+      ""
+  ).trim().toUpperCase();
+
+  const amount = Number(body.amount);
+
+  if (!isUuid(eventId)) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_EVENT_ID"
+    });
+  }
+
+  if (!shortCode || shortCode.length > 20) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_SHORT_CODE"
+    });
+  }
+
+  if (
+    !["EMOLA", "MPESA", "CASH"].includes(
+      paymentMethod
+    )
+  ) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_PAYMENT_METHOD"
+    });
+  }
+
+  const eventResult = await getEvent(eventId);
+
+  if (
+    !eventResult.ok ||
+    !Array.isArray(eventResult.data) ||
+    eventResult.data.length === 0
+  ) {
+    return sendJson(res, 404, {
+      success: false,
+      error: "EVENT_NOT_FOUND"
+    });
+  }
+
+  if (
+    String(eventResult.data[0].status || "").toUpperCase() !==
+    "OPEN"
+  ) {
+    return sendJson(res, 409, {
+      success: false,
+      error: "EVENT_CLOSED",
+      message:
+        "O evento não está aberto para recargas."
+    });
+  }
+
+  const participantResult =
+    await getClientParticipant(
+      eventId,
+      shortCode
+    );
+
+  if (participantResult.error) {
+    return sendJson(res, 500, {
+      success: false,
+      error: "PARTICIPANT_LOOKUP_FAILED"
+    });
+  }
+
+  const participant =
+    participantResult.participant;
+
+  if (!participant) {
+    return sendJson(res, 404, {
+      success: false,
+      error: "PARTICIPANT_NOT_FOUND",
+      message:
+        "Short Code não encontrado ou inativo."
+    });
+  }
+
+  const walletResult =
+    await getClientWallet(
+      eventId,
+      participant.id
+    );
+
+  if (walletResult.error) {
+    return sendJson(res, 500, {
+      success: false,
+      error: "WALLET_LOOKUP_FAILED"
+    });
+  }
+
+  const wallet = walletResult.wallet;
+
+  if (!wallet) {
+    return sendJson(res, 404, {
+      success: false,
+      error: "WALLET_NOT_FOUND"
+    });
+  }
+
+  const settingsResult =
+    await getClientWalletSettings(eventId);
+
+  if (settingsResult.error) {
+    return sendJson(res, 500, {
+      success: false,
+      error: "WALLET_SETTINGS_LOOKUP_FAILED"
+    });
+  }
+
+  try {
+    validateClientTopupAmount(
+      amount,
+      settingsResult.settings
+    );
+  } catch (error) {
+    const messages = {
+      INVALID_AMOUNT:
+        "Digite um valor de recarga válido.",
+      BELOW_MIN_TOPUP:
+        "O valor da recarga está abaixo do mínimo permitido.",
+      TOPUP_DISABLED:
+        "As recargas estão desativadas para este evento.",
+      WALLET_SETTINGS_NOT_FOUND:
+        "Configuração da carteira não encontrada."
+    };
+
+    return sendJson(res, 400, {
+      success: false,
+      error: error.message,
+      message:
+        messages[error.message] ||
+        "Não foi possível validar a recarga."
+    });
+  }
+
+  if (paymentMethod === "CASH") {
+    return sendJson(res, 200, {
+      success: true,
+      operation: "CLIENT_TOPUP",
+      payment_method: "CASH",
+      status: "STAFF_REQUIRED",
+      amount,
+      participant: {
+        full_name: participant.full_name,
+        short_code: participant.short_code
+      },
+      message:
+        "Para recarga em CASH, dirija-se ao Staff Bar. O saldo será atualizado após a confirmação do pagamento."
+    });
+  }
+
+  const payerPhone =
+    normalizePhone(participant.phone);
+
+  if (!payerPhone) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "PARTICIPANT_PHONE_REQUIRED",
+      message:
+        "O participante não possui contacto válido para realizar o pagamento."
+    });
+  }
+
+  const reference =
+    generateTopupReference(eventId);
+
+  const description =
+    `BLACK OUT — Recarga ${paymentMethod} | ${participant.full_name} | ${reference}`;
+
+  await createClientPendingTopup({
+    eventId,
+    participantId: participant.id,
+    walletId: wallet.id,
+    amount,
+    reference,
+    paymentMethod,
+    description
+  });
+
+  try {
+    const payment = await pagarPost(
+      "/payments",
+      {
+        amountMzn: amount,
+        method: paymentMethod,
+        payerPhone,
+        title:
+          "BLACK OUT — RECARGA DE CARTEIRA",
+        description,
+        reference
+      },
+      generateIdempotencyKey(reference)
+    );
+
+    const paymentId =
+      extractPaymentId(payment);
+
+    const paymentStatus =
+      extractPaymentStatus(payment);
+
+    if (!paymentId) {
+      throw new Error("PAGAR_PAYMENT_ID_MISSING");
+    }
+
+    const updateResult =
+      await updateClientPendingTopupPayment(
+        reference,
+        paymentId
+      );
+
+    if (!updateResult.ok) {
+      console.error(
+        "CLIENT TOPUP: pagamento Pagar criado, mas falhou a atualização do payment_id.",
+        {
+          reference,
+          paymentId
+        }
+      );
+
+      return sendJson(res, 502, {
+        success: false,
+        error: "TOPUP_PAYMENT_SYNC_FAILED",
+        message:
+          "O pagamento foi iniciado, mas não foi possível sincronizar a recarga. Não repita o pagamento; contacte o suporte."
+      });
+    }
+
+    return sendJson(res, 200, {
+      success: true,
+      operation: "CLIENT_TOPUP",
+      status: "PENDING",
+      payment_status:
+        paymentStatus || "PENDING",
+      payment_reference: reference,
+      payment_id: paymentId,
+      payment_method: paymentMethod,
+      amount,
+      participant: {
+        full_name: participant.full_name,
+        short_code: participant.short_code
+      },
+      message:
+        "Pagamento criado. O saldo será creditado somente após a confirmação do pagamento."
+    });
+  } catch (error) {
+    try {
+      await markClientTopupFailed(
+        reference,
+        `Falha ao criar pagamento Pagar: ${error.message}`
+      );
+    } catch (markError) {
+      console.error(
+        "CLIENT TOPUP: falha ao marcar pagamento como FAILED.",
+        markError
+      );
+    }
+
+    throw error;
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -665,6 +1365,64 @@ export default async function handler(req, res) {
 
   const operation =
     String(body.operation || "").trim().toUpperCase();
+
+
+  if (operation === "CLIENT_BALANCE") {
+    try {
+      return await handleClientBalance(
+        body,
+        res
+      );
+    } catch (error) {
+      console.error(
+        "CLIENT BALANCE: erro inesperado.",
+        error
+      );
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "CLIENT_BALANCE_FAILED"
+      });
+    }
+  }
+
+  if (operation === "CLIENT_TOPUP") {
+    try {
+      return await handleClientTopup(
+        body,
+        res
+      );
+    } catch (error) {
+      console.error(
+        "CLIENT TOPUP: erro inesperado.",
+        error
+      );
+
+      const known = {
+        PAGAR_CONFIGURATION_MISSING:
+          "Configuração do pagamento indisponível.",
+        PAGAR_PAYMENT_ID_MISSING:
+          "O serviço de pagamento não devolveu uma referência válida.",
+        TOPUP_CREATION_FAILED:
+          "Não foi possível registrar a recarga.",
+        PARTICIPANT_PHONE_REQUIRED:
+          "O participante não possui contacto válido para realizar o pagamento."
+      };
+
+      const safeError =
+        known[error?.message]
+          ? error.message
+          : "CLIENT_TOPUP_FAILED";
+
+      return sendJson(res, 500, {
+        success: false,
+        error: safeError,
+        message:
+          known[error?.message] ||
+          "Não foi possível iniciar a recarga."
+      });
+    }
+  }
 
   if (operation === "CLIENT_REGISTER") {
     try {

@@ -608,7 +608,7 @@
       }
     }
 
-    function submitTopup() {
+    async function submitTopup() {
       const shortCode =
         document
           .getElementById("topupShortCode")
@@ -637,7 +637,9 @@
         return;
       }
 
-      if (!amount || Number(amount) <= 0) {
+      const numericAmount = Number(amount);
+
+      if (!amount || !Number.isFinite(numericAmount) || numericAmount <= 0) {
         showMessage(
           "topupMessage",
           "Digite um valor de recarga válido."
@@ -647,15 +649,85 @@
 
       showMessage(
         "topupMessage",
-        "Recarga selecionada: " +
-        selectedTopupMethod +
-        " — " +
-        amount +
-        " MT. A ligação ao backend será feita na próxima etapa."
+        "A processar a sua recarga..."
       );
+
+      try {
+        const response = await fetch(
+          "/api/event-registration",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              operation: "CLIENT_TOPUP",
+              event_id: CLIENT_EVENT_ID,
+              short_code: shortCode,
+              amount: numericAmount,
+              payment_method: selectedTopupMethod
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          showMessage(
+            "topupMessage",
+            data.message ||
+              "Não foi possível iniciar a recarga. Tente novamente."
+          );
+          return;
+        }
+
+        if (data.status === "STAFF_REQUIRED") {
+          showMessage(
+            "topupMessage",
+            "RECARGA EM CASH\n\n" +
+            "Dirija-se ao Staff Bar e informe o seu Short Code e o valor da recarga. " +
+            "O saldo será atualizado pelo funcionário."
+          );
+          return;
+        }
+
+        if (data.status === "PENDING") {
+          showMessage(
+            "topupMessage",
+            "PAGAMENTO INICIADO\n\n" +
+            "Método: " +
+            (data.payment_method || selectedTopupMethod) +
+            "\nValor: " +
+            Number(data.amount || numericAmount).toFixed(2) +
+            " MT\n\n" +
+            "Referência: " +
+            (data.payment_reference || "gerada pelo sistema") +
+            "\n\n" +
+            "Conclua o pagamento. O saldo da carteira só será atualizado após a confirmação do pagamento."
+          );
+          return;
+        }
+
+        showMessage(
+          "topupMessage",
+          data.message ||
+            "Recarga processada."
+        );
+
+      } catch (error) {
+        console.error(
+          "CLIENT TOPUP:",
+          error
+        );
+
+        showMessage(
+          "topupMessage",
+          "Erro de comunicação com o servidor. Tente novamente."
+        );
+      }
     }
 
-    function consultBalance() {
+    async function consultBalance() {
       const shortCode =
         document
           .getElementById("balanceShortCode")
@@ -672,10 +744,66 @@
 
       showMessage(
         "balanceMessage",
-        "Consulta preparada para o Short Code " +
-        shortCode +
-        "."
+        "A consultar o seu saldo..."
       );
+
+      try {
+        const response = await fetch(
+          "/api/event-registration",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              operation: "CLIENT_BALANCE",
+              event_id: CLIENT_EVENT_ID,
+              short_code: shortCode
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          showMessage(
+            "balanceMessage",
+            data.message ||
+              "Não foi possível consultar o saldo."
+          );
+          return;
+        }
+
+        const participant =
+          data.participant || {};
+
+        const wallet =
+          data.wallet || {};
+
+        showMessage(
+          "balanceMessage",
+          "SALDO DA CARTEIRA\n\n" +
+          "Nome: " +
+          (participant.full_name || "—") +
+          "\nShort Code: " +
+          (participant.short_code || shortCode) +
+          "\n\nSaldo disponível: " +
+          Number(wallet.balance || 0).toFixed(2) +
+          " " +
+          (wallet.currency || "MZN")
+        );
+
+      } catch (error) {
+        console.error(
+          "CLIENT BALANCE:",
+          error
+        );
+
+        showMessage(
+          "balanceMessage",
+          "Erro de comunicação com o servidor. Tente novamente."
+        );
+      }
     }
 
         async function identifyShortCode() {
