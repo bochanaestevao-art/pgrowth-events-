@@ -460,7 +460,6 @@ function validateTopupSettings(
   const maximum =
     settings.topup_max_amount ??
     settings.max_topup;
-  console.log("TOPUP_VALIDATION_DEBUG", { amount, minimum, maximum });
 
   if (
     minimum !== null &&
@@ -746,6 +745,44 @@ async function processSale({
     }
   );
 }
+async function processPosSale({
+
+  eventId,
+
+  shortCode,
+
+  items,
+
+  staffId,
+
+}) {
+
+  return supabaseRequest(
+
+    "/rest/v1/rpc/process_bar_pos_sale",
+
+    {
+
+      method: "POST",
+
+      body: JSON.stringify({
+
+        p_event_id: eventId,
+
+        p_short_code: shortCode,
+
+        p_items: items,
+
+        p_staff_id: staffId || null,
+
+      }),
+
+    }
+
+  );
+
+}
+
 
 function mapErrorMessage(error) {
   const message =
@@ -1186,6 +1223,94 @@ export default async function handler(
         }
       );
     }
+if (operation === "POS_SALE") {
+
+  const items = Array.isArray(body.items)
+
+    ? body.items
+
+    : [];
+
+
+
+  if (!items.length) {
+
+    return sendJson(res, 400, {
+
+      success: false,
+
+      message: "Selecione pelo menos um produto.",
+
+    });
+
+  }
+
+
+
+  const normalizedItems = items.map((item) => ({
+
+    product_id: String(item?.product_id || "").trim(),
+
+    quantity: Number(item?.quantity),
+
+  }));
+
+
+
+  const invalidItem = normalizedItems.find(
+
+    (item) =>
+
+      !item.product_id ||
+
+      !Number.isInteger(item.quantity) ||
+
+      item.quantity <= 0
+
+  );
+
+
+
+  if (invalidItem) {
+
+    return sendJson(res, 400, {
+
+      success: false,
+
+      message: "Produto ou quantidade inválida.",
+
+    });
+
+  }
+
+
+
+  const result = await processPosSale({
+
+    eventId,
+
+    shortCode,
+
+    items: normalizedItems,
+
+    staffId: session.staff_id,
+
+  });
+
+
+
+  return sendJson(res, 200, {
+
+    success: true,
+
+    operation: "POS_SALE",
+
+    ...(result && typeof result === "object" ? result : {}),
+
+  });
+
+}
+
 
     if (
       operation === "SALE"
@@ -1461,7 +1586,7 @@ export default async function handler(
       {
         success: false,
         message:
-          "Operação inválida. Use SALE, TOPUP ou TOPUP_PAYMENT.",
+          "Operação inválida. Use SALE, POS_SALE, TOPUP ou TOPUP_PAYMENT."
       }
     );
   } catch (error) {

@@ -574,21 +574,10 @@
               Método
             </label>
 
-            <select id="topupMethod">
 
-  <option value="CASH">
-    CASH
-  </option>
-
-  <option value="MPESA">
-    M-Pesa / Pagar
-  </option>
-
-  <option value="EMOLA">
-    eMOLA / Pagar
-  </option>
-
-            </select>
+<select id="topupMethod">
+  <option value="CASH">CASH — Dinheiro recebido</option>
+</select>
 
           </div>
 
@@ -719,12 +708,23 @@
       ></div>
 
 
-      <button
-        id="sellBtn"
-        class="primary"
+  <button
+    id="sellBtn"
+    class="primary"
+  >
+    PAGAR COM CARTEIRA
+  </button>
+
+  <button
+    id="posBtn"
+    class="primary"
+    style="margin-top: 10px;"
+  >
+    PAGAMENTO FEITO POR POS
+  </button>
       >
         CONFIRMAR VENDA
-      </button>
+      </>
 
     </section>
 
@@ -753,16 +753,15 @@
           0
         </div>
 
-        <div class="small">
-          Novo saldo
+        <div id="resultBalanceBlock">
+
+  <div class="small">Novo saldo</div>
+
+  <div id="resultBalance" class="result-balance">0</div>
+
         </div>
 
         <div
-          id="resultBalance"
-          class="result-balance"
-        >
-          0
-        </div>
 
         <br>
 
@@ -1884,216 +1883,117 @@
   }
 
 
-  async function sell() {
+  async function sell(operation = "SALE") {
 
     if (!participant) {
       return;
     }
 
+    if (operation !== "SALE" && operation !== "POS_SALE") {
+      return;
+    }
 
     const items =
       Object.entries(cart)
-        .map(
-          ([product_id, quantity]) => ({
-            product_id,
-            quantity:
-              Number(quantity)
-          })
-        )
-        .filter(
-          item =>
-            item.quantity > 0
-        );
-
+        .map(([product_id, quantity]) => ({
+          product_id,
+          quantity: Number(quantity)
+        }))
+        .filter(item => item.quantity > 0);
 
     if (!items.length) {
-
       showMessage(
         $("saleMessage"),
         "Selecione pelo menos um produto.",
         "error"
       );
-
       return;
-
     }
 
+    clearMessage($("saleMessage"));
 
-    clearMessage(
-      $("saleMessage")
-    );
-
-
-    $("sellBtn").disabled =
-      true;
-
+    $("sellBtn").disabled = true;
+    $("posBtn").disabled = true;
 
     try {
+      const response = await fetch("/api/bar-sale", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          operation,
+          event_id: EVENT_ID,
+          short_code: participant.short_code,
+          items
+        })
+      });
 
-      const response =
-        await fetch(
-          "/api/bar-sale",
-          {
-            method: "POST",
-            credentials: "include",
-            headers: {
-              "Content-Type":
-                "application/json"
-            },
-            body: JSON.stringify({
+      const data = await response.json();
 
-              operation: "SALE",
-
-              event_id:
-                EVENT_ID,
-
-              short_code:
-                participant.short_code,
-
-              items
-
-            })
-          }
-        );
-
-
-      const data =
-        await response.json();
-
-
-      if (
-        response.status ===
-        401
-      ) {
-
+      if (response.status === 401) {
         logoutLocal();
-
         return;
-
       }
 
-
-      if (!response.ok) {
-
+      if (!response.ok || data.success === false) {
         let message =
+          data.message ||
+          data.error ||
           "A venda não foi concluída.";
 
-
-        if (
-          data.error ===
-          "INSUFFICIENT_BALANCE"
-        ) {
-
-          message =
-            "Saldo insuficiente.";
-
+        if (data.error === "INSUFFICIENT_BALANCE") {
+          message = "Saldo insuficiente.";
+        } else if (data.error === "EVENT_CLOSED") {
+          message = "O evento está fechado.";
+        } else if (data.error === "PARTICIPANT_NOT_FOUND") {
+          message = "Cliente não encontrado.";
+        } else if (data.error === "WALLET_NOT_FOUND") {
+          message = "Carteira do cliente não encontrada.";
         }
 
-
-        if (
-          data.error ===
-          "EVENT_CLOSED"
-        ) {
-
-          message =
-            "O evento está fechado.";
-
-        }
-
-
-        if (
-          data.error ===
-          "PARTICIPANT_NOT_FOUND"
-        ) {
-
-          message =
-            "Cliente não encontrado.";
-
-        }
-
-
-        if (
-          data.error ===
-          "WALLET_NOT_FOUND"
-        ) {
-
-          message =
-            "Carteira do cliente não encontrada.";
-
-        }
-
-
-        showMessage(
-          $("saleMessage"),
-          message,
-          "error"
-        );
-
-
-        $("sellBtn").disabled =
-          false;
-
+        showMessage($("saleMessage"), message, "error");
         return;
-
       }
 
+      $("resultTotal").textContent = money(data.total);
 
-      $("resultTotal")
-        .textContent =
-        money(
-          data.total
-        );
+      const isPos = operation === "POS_SALE";
 
+      $("resultBalanceBlock").style.display =
+        isPos ? "none" : "";
 
-      $("resultBalance")
-        .textContent =
-        money(
-          data.balance_after
-        );
+      if (!isPos) {
+        $("resultBalance").textContent =
+          money(data.balance_after);
 
+        participant.balance = Number(data.balance_after);
 
-      participant.balance =
-        Number(
-          data.balance_after ||
-          0
-        );
+        $("customerBalance").textContent =
+          money(participant.balance);
+      }
 
+      $("cartCard").classList.add("hidden");
+      $("resultCard").classList.remove("hidden");
 
-      $("customerBalance")
-        .textContent =
-        money(
-          participant.balance
-        );
-
-
-      $("cartCard")
-        .classList
-        .add("hidden");
-
-
-      $("resultCard")
-        .classList
-        .remove("hidden");
-
-
-    } catch {
-
+    } catch (error) {
       showMessage(
         $("saleMessage"),
         "Erro de comunicação com o servidor.",
         "error"
       );
-
-
-      $("sellBtn").disabled =
-        false;
-
+    } finally {
+      $("sellBtn").disabled = false;
+      $("posBtn").disabled = false;
     }
 
   }
 
 
   function newSale() {
+
+    $("resultBalanceBlock").style.display = "";
 
     cart = {};
 
@@ -2250,10 +2150,14 @@
     );
 
 
-  $("sellBtn")
-    .addEventListener(
+  $("sellBtn").addEventListener(
       "click",
-      sell
+      () => sell("SALE")
+    );
+
+  $("posBtn").addEventListener(
+      "click",
+      () => sell("POS_SALE")
     );
 
 
