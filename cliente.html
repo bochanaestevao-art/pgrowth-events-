@@ -295,7 +295,7 @@
         </div>
       </div>
 
-      <div class="section">
+      <div id="topupAmountSection" class="section">
         <label for="topupAmount">Valor da recarga</label>
         <input
           id="topupAmount"
@@ -307,7 +307,7 @@
         >
       </div>
 
-      <div class="section">
+      <div id="topupContinueSection" class="section">
         <button onclick="submitTopup()">
           CONTINUAR
         </button>
@@ -315,7 +315,20 @@
 
       <div id="topupMessage" class="message hidden"></div>
 
-      <button class="back" onclick="showMainMenu()">
+      <div id="cashInfo" class="message hidden">
+        <p>
+          <strong>RECARGA EM CASH</strong><br>
+          Para pagar em dinheiro, dirija-se ao balcão do evento
+          ou ao Staff Bar. Informe o seu Short Code e o valor.
+          O funcionário registará a recarga e o saldo será atualizado
+          após a confirmação do pagamento.
+        </p>
+        <button type="button" class="back" onclick="backToTopupMethods()">
+          VOLTAR
+        </button>
+      </div>
+
+      <button id="topupMainBack" class="back" onclick="showMainMenu()">
         VOLTAR
       </button>
     </section>
@@ -457,26 +470,45 @@
     function selectTopupMethod(method) {
       selectedTopupMethod = method;
 
-      document
-        .getElementById("methodEmola")
-        .classList.toggle(
-          "active",
-          method === "EMOLA"
-        );
+      document.getElementById("methodEmola")
+        .classList.toggle("active", method === "EMOLA");
 
-      document
-        .getElementById("methodMpesa")
-        .classList.toggle(
-          "active",
-          method === "MPESA"
-        );
+      document.getElementById("methodMpesa")
+        .classList.toggle("active", method === "MPESA");
 
-      document
-        .getElementById("methodCash")
-        .classList.toggle(
-          "active",
-          method === "CASH"
-        );
+      document.getElementById("methodCash")
+        .classList.toggle("active", method === "CASH");
+
+      const isCash = method === "CASH";
+
+      document.getElementById("cashInfo")
+        .classList.toggle("hidden", !isCash);
+
+      document.getElementById("topupAmountSection")
+        .classList.toggle("hidden", isCash);
+
+      document.getElementById("topupContinueSection")
+        .classList.toggle("hidden", isCash);
+
+      document.getElementById("topupMainBack")
+        .classList.toggle("hidden", isCash);
+
+      document.getElementById("topupMessage")
+        .classList.add("hidden");
+    }
+
+    function backToTopupMethods() {
+      selectedTopupMethod = "";
+
+      document.getElementById("methodEmola").classList.remove("active");
+      document.getElementById("methodMpesa").classList.remove("active");
+      document.getElementById("methodCash").classList.remove("active");
+
+      document.getElementById("cashInfo").classList.add("hidden");
+      document.getElementById("topupAmountSection").classList.remove("hidden");
+      document.getElementById("topupContinueSection").classList.remove("hidden");
+      document.getElementById("topupMainBack").classList.remove("hidden");
+      document.getElementById("topupMessage").classList.add("hidden");
     }
 
     function showMessage(elementId, message) {
@@ -573,11 +605,13 @@
           showMessage(
             "registerMessage",
             data.existing
-              ? "Este contacto já está registado. O seu Short Code é: " +
-                shortCode +
-                ". Guarde este código."
-              : "REGISTO CONCLUÍDO — O seu Short Code é: " +
-                shortCode +
+              ? "Este contacto já está registado em nome de " +
+                (data.participant.full_name || "um participante") +
+                ". Short Code: " + shortCode +
+                ". Se o nome não corresponder, confirme o contacto utilizado."
+              : "REGISTO CONCLUÍDO para " +
+                (data.participant.full_name || name) +
+                " — Short Code: " + shortCode +
                 " — Guarde este código."
           );
         } else {

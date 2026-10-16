@@ -1160,6 +1160,30 @@ async function handleClientTopup(body, res) {
     });
   }
 
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return sendJson(res, 400, {
+      success: false,
+      error: "INVALID_AMOUNT",
+      message: "Digite um valor de recarga válido."
+    });
+  }
+
+  if (paymentMethod === "CASH") {
+    return sendJson(res, 200, {
+      success: true,
+      operation: "CLIENT_TOPUP",
+      payment_method: "CASH",
+      status: "STAFF_REQUIRED",
+      amount,
+      participant: {
+        full_name: participant.full_name,
+        short_code: participant.short_code
+      },
+      message:
+        "Para recarga em CASH, dirija-se ao Staff Bar. O saldo será atualizado após a confirmação do pagamento."
+    });
+  }
+
   const settingsResult =
     await getClientWalletSettings(eventId);
 
@@ -1193,22 +1217,6 @@ async function handleClientTopup(body, res) {
       message:
         messages[error.message] ||
         "Não foi possível validar a recarga."
-    });
-  }
-
-  if (paymentMethod === "CASH") {
-    return sendJson(res, 200, {
-      success: true,
-      operation: "CLIENT_TOPUP",
-      payment_method: "CASH",
-      status: "STAFF_REQUIRED",
-      amount,
-      participant: {
-        full_name: participant.full_name,
-        short_code: participant.short_code
-      },
-      message:
-        "Para recarga em CASH, dirija-se ao Staff Bar. O saldo será atualizado após a confirmação do pagamento."
     });
   }
 
