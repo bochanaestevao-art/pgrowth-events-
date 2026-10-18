@@ -1,204 +1,273 @@
-import crypto from "node:crypto";
+import crypto from "crypto";
+const TICKET_GENERATION_SECRET = process.env.TICKET_GENERATION_SECRET;
+
 
 export const config = {
   api: {
-    bodyParser: false,
-  },
+    bodyParser: false
+  }
 };
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_SERVICE_ROLE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY;
+function sendJson(res, status, data) {
+  res.statusCode = status;
 
-const PAGAR_WEBHOOK_SECRET =
-  process.env.PAGAR_WEBHOOK_SECRET;
-
-const SITE_URL =
-  process.env.SITE_URL ||
-  "https://pgrowth-events.vercel.app";
-
-function json(res, status, data) {
-  return res.status(status).json(data);
-}
-
-function readRawBody(req) {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-
-    req.on("data", (chunk) => {
-      chunks.push(
-        Buffer.isBuffer(chunk)
-          ? chunk
-          : Buffer.from(chunk)
-      );
-    });
-
-    req.on("end", () => {
-      resolve(
-        Buffer.concat(chunks).toString("utf8")
-      );
-    });
-
-    req.on("error", reject);
-  });
-}
-
-function verifySignature(rawBody, header) {
-  if (!PAGAR_WEBHOOK_SECRET) {
-    return {
-      valid: false,
-      reason:
-        "PAGAR_WEBHOOK_SECRET não configurado",
-    };
-  }
-
-  if (!header) {
-    return {
-      valid: false,
-      reason:
-        "Pagar-Signature não recebido",
-    };
-  }
-
-  const parts = {};
-
-  for (const part of String(header).split(",")) {
-    const index = part.indexOf("=");
-
-    if (index === -1) continue;
-
-    const key = part.slice(0, index).trim();
-    const value = part.slice(index + 1).trim();
-
-    if (!parts[key]) {
-      parts[key] = [];
-    }
-
-    parts[key].push(value);
-  }
-
-  const timestamp = parts.t?.[0];
-  const receivedSignatures = parts.v1 || [];
-
-  if (
-    !timestamp ||
-    !/^\d+$/.test(timestamp)
-  ) {
-    return {
-      valid: false,
-      reason: "Timestamp inválido",
-    };
-  }
-
-  if (!receivedSignatures.length) {
-    return {
-      valid: false,
-      reason: "v1 da assinatura ausente",
-    };
-  }
-
-  const timestampSeconds = Number(timestamp);
-  const nowSeconds = Math.floor(
-    Date.now() / 1000
+  res.setHeader(
+    "Content-Type",
+    "application/json; charset=utf-8"
   );
 
-  if (
-    Math.abs(
-      nowSeconds - timestampSeconds
-    ) > 300
-  ) {
-    return {
-      valid: false,
-      reason: "Timestamp expirado",
-    };
+  res.setHeader(
+    "Cache-Control",
+    "no-store"
+  );
+
+  res.end(JSON.stringify(data));
+}
+
+function getHeader(req, name) {
+  const value =
+    req.headers?.[name.toLowerCase()];
+
+  if (Array.isArray(value)) {
+    return value[0];
   }
 
-  const signedPayload =
-    `${timestamp}.${rawBody}`;
+  return value || "";
+}
 
-  const expectedSignature =
-    crypto
-      .createHmac(
-        "sha256",
-        PAGAR_WEBHOOK_SECRET
-      )
-      .update(signedPayload)
-      .digest("hex");
+function timingSafeEqualString(a, b) {
+  const aa = Buffer.from(
+    String(a || ""),
+    "utf8"
+  );
 
-  const expectedBuffer =
-    Buffer.from(
-      expectedSignature,
-      "hex"
-    );
+  const bb = Buffer.from(
+    String(b || ""),
+    "utf8"
+  );
 
-  for (
-    const receivedSignature
-    of receivedSignatures
+  if (aa.length !== bb.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(
+    aa,
+    bb
+  );
+}
+
+async function readRawBody(req) {
+  const chunks = [];
+
+  for await (
+    const chunk of req
   ) {
-    if (
-      !/^[a-f0-9]{64}$/i.test(
-        receivedSignature
-      )
-    ) {
+    chunks.push(
+      Buffer.isBuffer(chunk)
+        ? chunk
+        : Buffer.from(chunk)
+    );
+  }
+
+  return Buffer.concat(chunks);
+}
+
+function verifyWebhookSignature(
+  rawBody,
+  signatureHeader,
+  secret
+) {
+  if (
+    !signatureHeader ||
+    !secret
+  ) {
+    return false;
+  }
+
+  /*
+   * Formato esperado:
+   *
+   * t=timestamp,v1=signature
+   *
+   * Também aceitamos múltiplos valores v1.
+   */
+  const parts =
+    String(signatureHeader)
+      .split(",");
+
+  let timestamp = null;
+  const signatures = [];
+
+  for (const part of parts) {
+    const index =
+      part.indexOf("=");
+
+    if (index === -1) {
       continue;
     }
 
-    const receivedBuffer =
-      Buffer.from(
-        receivedSignature,
-        "hex"
-      );
+    const key =
+      part
+        .slice(0, index)
+        .trim();
 
-    if (
-      receivedBuffer.length ===
-        expectedBuffer.length &&
-      crypto.timingSafeEqual(
-        receivedBuffer,
-        expectedBuffer
-      )
-    ) {
-      return {
-        valid: true,
-        reason: null,
-      };
+    const value =
+      part
+        .slice(index + 1)
+        .trim();
+
+    if (key === "t") {
+      timestamp = value;
+    }
+
+    if (key === "v1") {
+      signatures.push(value);
     }
   }
 
-  return {
-    valid: false,
-    reason:
-      "Assinatura HMAC não corresponde",
-  };
+  if (
+    !timestamp ||
+    signatures.length === 0
+  ) {
+    return false;
+  }
+
+  const timestampNumber =
+    Number(timestamp);
+
+  if (
+    !Number.isFinite(
+      timestampNumber
+    )
+  ) {
+    return false;
+  }
+
+  /*
+   * Aceita somente timestamps recentes.
+   */
+  const now =
+    Math.floor(
+      Date.now() / 1000
+    );
+
+  const age =
+    Math.abs(
+      now - timestampNumber
+    );
+
+  if (age > 300) {
+    return false;
+  }
+
+  /*
+   * Assinatura:
+   *
+   * timestamp + "." + rawBody
+   */
+  const signedPayload =
+    `${timestamp}.${rawBody.toString("utf8")}`;
+
+  const expected =
+    crypto
+      .createHmac(
+        "sha256",
+        secret
+      )
+      .update(
+        signedPayload
+      )
+      .digest("hex");
+
+  for (
+    const received of signatures
+  ) {
+    if (
+      timingSafeEqualString(
+        received,
+        expected
+      )
+    ) {
+      return true;
+    }
+
+    /*
+     * Compatibilidade com header
+     * eventualmente enviado como v1=...
+     */
+    if (
+      timingSafeEqualString(
+        received.replace(
+          /^v1=/i,
+          ""
+        ),
+        expected
+      )
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
-async function supabase(
-  path,
-  options = {}
-) {
+function getSupabaseConfig() {
+  const url =
+    process.env.SUPABASE_URL;
+
+  const serviceRoleKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+
   if (
-    !SUPABASE_URL ||
-    !SUPABASE_SERVICE_ROLE_KEY
+    !url ||
+    !serviceRoleKey
   ) {
     throw new Error(
-      "Variáveis do Supabase não configuradas"
+      "Configuração do Supabase não encontrada"
     );
   }
 
-  const response = await fetch(
-    `${SUPABASE_URL}/rest/v1/${path}`,
-    {
-      ...options,
-      headers: {
-        apikey:
-          SUPABASE_SERVICE_ROLE_KEY,
-        Authorization:
-          `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        "Content-Type":
-          "application/json",
-        ...(options.headers || {}),
-      },
-    }
-  );
+  return {
+    url:
+      url.replace(
+        /\/+$/,
+        ""
+      ),
+
+    key:
+      serviceRoleKey
+  };
+}
+
+async function supabaseRequest(
+  path,
+  options = {}
+) {
+  const {
+    url,
+    key
+  } = getSupabaseConfig();
+
+  const response =
+    await fetch(
+      `${url}${path}`,
+      {
+        ...options,
+
+        headers: {
+          "Content-Type":
+            "application/json",
+
+          "apikey":
+            key,
+
+          "Authorization":
+            `Bearer ${key}`,
+
+          ...(options.headers || {})
+        }
+      }
+    );
 
   const text =
     await response.text();
@@ -207,21 +276,28 @@ async function supabase(
 
   if (text) {
     try {
-      data = JSON.parse(text);
+      data =
+        JSON.parse(text);
     } catch {
-      data = text;
+      data =
+        text;
     }
   }
 
   if (!response.ok) {
-    const error = new Error(
-      data?.message ||
-        data?.hint ||
+    const error =
+      new Error(
+        data?.message ||
+        data?.error ||
+        text ||
         "Erro no Supabase"
-    );
+      );
 
-    error.status = response.status;
-    error.data = data;
+    error.status =
+      response.status;
+
+    error.data =
+      data;
 
     throw error;
   }
@@ -229,192 +305,324 @@ async function supabase(
   return data;
 }
 
-async function registerOrGetEvent(
+async function registerWebhookEvent(
   eventId,
   eventType,
   paymentId,
   payload
 ) {
-  const inserted =
-    await supabase(
-      "pagar_webhook_events",
+  const rows =
+    await supabaseRequest(
+      "/rest/v1/pagar_webhook_events?on_conflict=event_id",
       {
         method: "POST",
+
         headers: {
-          Prefer:
-            "return=representation,resolution=ignore-duplicates",
+          "Prefer":
+            "return=representation,resolution=ignore-duplicates"
         },
-        body: JSON.stringify({
-          event_id: eventId,
-          event_type:
-            eventType || null,
-          payment_id:
-            paymentId || null,
-          payload,
-        }),
+
+        body:
+          JSON.stringify({
+            event_id:
+              eventId,
+
+            event_type:
+              eventType ||
+              null,
+
+            payment_id:
+              paymentId ||
+              null,
+
+            payload:
+              payload
+          })
       }
     );
 
-  if (
-    Array.isArray(inserted) &&
-    inserted.length > 0
-  ) {
-    return inserted[0];
-  }
+  /*
+   * Se veio uma linha, este evento é novo.
+   * Se veio vazio, o evento já existia.
+   */
+  return {
+    isNew:
+      Array.isArray(rows) &&
+      rows.length > 0,
 
-  const existing =
-    await supabase(
-      `pagar_webhook_events?event_id=eq.${encodeURIComponent(
-        eventId
-      )}&limit=1`,
-      {
-        method: "GET",
-      }
-    );
-
-  return Array.isArray(existing) &&
-    existing.length
-    ? existing[0]
-    : null;
+    row:
+      Array.isArray(rows)
+        ? rows[0] || null
+        : null
+  };
 }
 
-async function markProcessed(eventId) {
-  await supabase(
-    `pagar_webhook_events?event_id=eq.${encodeURIComponent(
-      eventId
-    )}`,
+async function claimWebhookEvent(eventId, token) {
+  const result = await supabaseRequest(
+    "/rest/v1/rpc/claim_pagar_webhook_event",
     {
-      method: "PATCH",
-      headers: {
-        Prefer: "return=minimal",
-      },
+      method: "POST",
       body: JSON.stringify({
-        processed_at:
-          new Date().toISOString(),
-      }),
+        p_event_id: eventId,
+        p_processing_token: token
+      })
     }
   );
+
+  return result === true;
 }
 
-async function markOrderPaid(payment) {
-  const reference =
-    payment?.reference;
-
-  const paymentId =
-    payment?.id ||
-    payment?.paymentId ||
-    null;
-
-  if (!reference) {
-    throw new Error(
-      "Pagamento sem reference"
-    );
-  }
-
-  if (!paymentId) {
-    throw new Error(
-      "Pagamento sem id"
-    );
-  }
-
-  const result =
-    await supabase(
-      `blackout_orders?order_reference=eq.${encodeURIComponent(
-        reference
-      )}`,
+async function markWebhookProcessed(eventId, token) {
+  try {
+    const rows = await supabaseRequest(
+      "/rest/v1/pagar_webhook_events" +
+        "?event_id=eq." + encodeURIComponent(eventId) +
+        "&processing_token=eq." + encodeURIComponent(token) +
+        "&processed_at=is.null",
       {
         method: "PATCH",
         headers: {
-          Prefer:
-            "return=representation",
+          "Prefer": "return=representation"
         },
         body: JSON.stringify({
-          payment_status: "PAID",
-          pagar_payment_id:
-            paymentId,
-          payment_reference:
-            reference,
-          paid_at:
-            new Date().toISOString(),
-        }),
+          processed_at: new Date().toISOString(),
+          processing_token: null,
+          processing_started_at: null
+        })
       }
     );
 
-  if (
-    !Array.isArray(result) ||
-    result.length === 0
-  ) {
-    throw new Error(
-      `Pedido não encontrado: ${reference}`
-    );
-  }
+    if (!Array.isArray(rows) || rows.length !== 1) {
+      throw new Error("WEBHOOK_EVENT_FINISH_NOT_CONFIRMED");
+    }
+  } catch (error) {
+    try {
+      await releaseWebhookClaim(eventId, token);
+    } catch (releaseError) {
+      console.error(
+        "PAGAR WEBHOOK CLAIM RELEASE ERROR:",
+        releaseError.message
+      );
+    }
 
-  return result[0];
+    throw error;
+  }
 }
 
-async function markOrderFailed(payment) {
-  const reference =
-    payment?.reference;
-
-  if (!reference) {
-    return;
-  }
-
-  const paymentId =
-    payment?.id ||
-    payment?.paymentId ||
-    null;
-
-  await supabase(
-    `blackout_orders?order_reference=eq.${encodeURIComponent(
-      reference
-    )}&payment_status=neq.PAID`,
+async function releaseWebhookClaim(eventId, token) {
+  await supabaseRequest(
+    "/rest/v1/pagar_webhook_events" +
+      "?event_id=eq." + encodeURIComponent(eventId) +
+      "&processing_token=eq." + encodeURIComponent(token) +
+      "&processed_at=is.null",
     {
       method: "PATCH",
       headers: {
-        Prefer: "return=minimal",
+        "Prefer": "return=minimal"
       },
       body: JSON.stringify({
-        payment_status: "FAILED",
-        pagar_payment_id:
-          paymentId,
-        payment_reference:
-          reference,
-      }),
+        processing_token: null,
+        processing_started_at: null
+      })
     }
   );
 }
 
-async function generateTicket(order) {
-  const secret =
-    process.env.TICKET_GENERATION_SECRET;
+function getPaymentFromEvent(event) {
+  if (
+    event?.data?.payment
+  ) {
+    return event.data.payment;
+  }
 
-  if (!secret) {
+  if (
+    event?.payment
+  ) {
+    return event.payment;
+  }
+
+  if (
+    event?.data?.object
+  ) {
+    return event.data.object;
+  }
+
+  if (
+    event?.data &&
+    typeof event.data === "object"
+  ) {
+    return event.data;
+  }
+
+  return null;
+}
+
+function getPaymentId(payment) {
+  return (
+    payment?.id ||
+    payment?.paymentId ||
+    payment?.payment_id ||
+    null
+  );
+}
+
+function getPaymentReference(
+  payment
+) {
+  return (
+    payment?.reference ||
+    payment?.paymentReference ||
+    payment?.payment_reference ||
+    null
+  );
+}
+
+function getPaymentStatus(
+  payment
+) {
+  return String(
+    payment?.status ||
+      ""
+  )
+    .trim()
+    .toUpperCase();
+}
+
+async function markOrderPaid(
+  payment
+) {
+  const reference =
+    getPaymentReference(
+      payment
+    );
+
+  const paymentId =
+    getPaymentId(
+      payment
+    );
+
+  if (!reference) {
     throw new Error(
-      "TICKET_GENERATION_SECRET não configurado"
+      "PAYMENT_REFERENCE_MISSING"
+    );
+  }
+
+  const rows =
+    await supabaseRequest(
+      `/rest/v1/blackout_orders?order_reference=eq.${encodeURIComponent(reference)}`,
+      {
+        method:
+          "PATCH",
+
+        headers: {
+          "Prefer":
+            "return=representation"
+        },
+
+        body:
+          JSON.stringify({
+            payment_status:
+              "PAID",
+
+            pagar_payment_id:
+              paymentId,
+
+            payment_reference:
+              reference,
+
+            paid_at:
+              new Date().toISOString()
+          })
+      }
+    );
+
+  if (
+    !Array.isArray(rows) ||
+    rows.length === 0
+  ) {
+    throw new Error(
+      "ORDER_NOT_FOUND"
+    );
+  }
+
+  return rows[0];
+}
+
+async function markOrderFailed(
+  payment
+) {
+  const reference =
+    getPaymentReference(
+      payment
+    );
+
+  if (!reference) {
+    throw new Error(
+      "PAYMENT_REFERENCE_MISSING"
+    );
+  }
+
+  const rows =
+    await supabaseRequest(
+      `/rest/v1/blackout_orders?order_reference=eq.${encodeURIComponent(reference)}&payment_status=neq.PAID`,
+      {
+        method:
+          "PATCH",
+
+        headers: {
+          "Prefer":
+            "return=representation"
+        },
+
+        body:
+          JSON.stringify({
+            payment_status:
+              "FAILED"
+          })
+      }
+    );
+
+  return (
+    Array.isArray(rows) &&
+    rows.length > 0
+  );
+}
+
+async function generateTicket(
+  order
+) {
+  /*
+   * Mantemos a geração do bilhete através
+   * da API existente.
+   */
+  const siteUrl =
+    process.env.SITE_URL;
+
+  if (!siteUrl) {
+    throw new Error(
+      "SITE_URL não configurado"
     );
   }
 
   const response =
     await fetch(
-      `${SITE_URL}/api/generate-ticket`,
+      `${siteUrl.replace(/\/+$/, "")}/api/generate-ticket`,
       {
-        method: "POST",
-        headers: {
-          "Content-Type":
-            "application/json",
+        method:
+          "POST",
 
-          /*
-           * IMPORTANTE:
-           * generate-ticket verifica este header.
-           */
-          "x-ticket-generation-secret":
-            secret,
-        },
-        body: JSON.stringify({
-          orderReference:
-            order.order_reference,
-        }),
+        headers: {
+  "Content-Type":
+    "application/json",
+  "x-ticket-generation-secret":
+    TICKET_GENERATION_SECRET
+},
+
+        body:
+          JSON.stringify({
+            orderReference:
+              order.order_reference
+          })
       }
     );
 
@@ -423,322 +631,686 @@ async function generateTicket(order) {
 
   let data = null;
 
-  try {
-    data = text
-      ? JSON.parse(text)
-      : null;
-  } catch {
-    data = {
-      raw: text,
-    };
+  if (text) {
+    try {
+      data =
+        JSON.parse(text);
+    } catch {
+      data =
+        text;
+    }
   }
 
   if (!response.ok) {
     throw new Error(
       data?.message ||
-        "Erro ao gerar bilhete"
+      data?.error ||
+      "Falha ao gerar bilhete"
     );
   }
 
   return data;
 }
 
-function getPayment(event) {
-  if (event?.data?.payment) {
-    return event.data.payment;
+
+async function processWalletTopup(payment) {
+  const reference = getPaymentReference(payment);
+  const paymentId = getPaymentId(payment);
+
+  if (!reference) {
+    throw new Error("PAYMENT_REFERENCE_MISSING");
   }
 
-  if (event?.payment) {
-    return event.payment;
+  if (!paymentId) {
+    throw new Error("PAYMENT_ID_MISSING");
   }
 
-  if (event?.data?.object) {
-    return event.data.object;
+  if (!String(reference).startsWith("BAR-TOPUP-")) {
+    return { handled: false };
   }
 
-  if (event?.data) {
-    return event.data;
+  // Aceitar apenas o campo documentado pelo Pagar.
+  const rawAmount = payment?.amountMzn;
+
+  if (
+    rawAmount === null ||
+    rawAmount === undefined ||
+    String(rawAmount).trim() === ""
+  ) {
+    throw new Error("PAYMENT_AMOUNT_MISSING");
   }
 
-  return null;
+  const amountMzn = Number(rawAmount);
+
+  if (!Number.isFinite(amountMzn) || amountMzn <= 0) {
+    throw new Error("PAYMENT_AMOUNT_INVALID");
+  }
+
+  const currency = String(payment?.currency || "")
+    .trim()
+    .toUpperCase();
+
+  if (currency !== "MZN") {
+    throw new Error("PAYMENT_CURRENCY_INVALID");
+  }
+
+  const result = await supabaseRequest(
+    "/rest/v1/rpc/process_wallet_topup_payment_v2",
+    {
+      method: "POST",
+      headers: {
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify({
+        p_payment_reference: reference,
+        p_payment_id: String(paymentId),
+        p_amount_mzn: amountMzn,
+        p_currency: currency,
+        p_description:
+          `Recarga confirmada pelo Pagar — ${reference}`
+      })
+    }
+  );
+
+  return {
+    handled: true,
+    result
+  };
+}
+
+async function processPaymentSucceeded(
+  payment
+) {
+  const reference =
+    getPaymentReference(
+      payment
+    );
+
+  const paymentId =
+    getPaymentId(
+      payment
+    );
+
+  /*
+   * ------------------------------------------------------------
+   * WALLET TOPUP
+   * ------------------------------------------------------------
+   */
+  if (
+    String(
+      reference || ""
+    ).startsWith(
+      "BAR-TOPUP-"
+    )
+  ) {
+    return processWalletTopup(
+      payment
+    );
+  }
+
+  /*
+   * ------------------------------------------------------------
+   * TICKET ORDER
+   * ------------------------------------------------------------
+   */
+  const order =
+    await markOrderPaid(
+      payment
+    );
+
+  return {
+    handled:
+      true,
+
+    type:
+      "TICKET",
+
+    order,
+    ticket_generation: "QUEUED",
+
+    payment_id:
+      paymentId
+  };
+}
+
+async function processPaymentFailed(
+  payment
+) {
+  const reference =
+    getPaymentReference(
+      payment
+    );
+
+  /*
+   * Recarga de carteira.
+   */
+  if (
+    String(
+      reference || ""
+    ).startsWith(
+      "BAR-TOPUP-"
+    )
+  ) {
+    /*
+     * A recarga continua registrada,
+     * mas passa a FAILED e não é creditada.
+     */
+    const rows =
+      await supabaseRequest(
+        `/rest/v1/wallet_topups?payment_reference=eq.${encodeURIComponent(reference)}&payment_status=eq.PENDING`,
+        {
+          method:
+            "PATCH",
+
+          headers: {
+            "Prefer":
+              "return=representation"
+          },
+
+          body:
+            JSON.stringify({
+              payment_status:
+                "FAILED"
+            })
+        }
+      );
+
+    return {
+      handled:
+        true,
+
+      type:
+        "WALLET_TOPUP",
+
+      status:
+        "FAILED",
+
+      updated:
+        Array.isArray(rows)
+          ? rows.length
+          : 0
+    };
+  }
+
+  /*
+   * Pedido de bilhete.
+   */
+  return {
+    handled:
+      true,
+
+    type:
+      "TICKET",
+
+    failed:
+      await markOrderFailed(
+        payment
+      )
+  };
 }
 
 export default async function handler(
   req,
   res
 ) {
-  if (req.method !== "POST") {
-    return json(res, 405, {
-      success: false,
-      message: "Método não permitido",
-    });
-  }
-
-  try {
-    const rawBody =
-      await readRawBody(req);
-
-    if (!rawBody) {
-      return json(res, 400, {
-        success: false,
-        message: "Body vazio",
-      });
-    }
-
-    const eventId =
-      Array.isArray(
-        req.headers["pagar-event-id"]
-      )
-        ? req.headers[
-            "pagar-event-id"
-          ][0]
-        : req.headers[
-            "pagar-event-id"
-          ];
-
-    const signature =
-      Array.isArray(
-        req.headers["pagar-signature"]
-      )
-        ? req.headers[
-            "pagar-signature"
-          ][0]
-        : req.headers[
-            "pagar-signature"
-          ];
-
-    if (!eventId) {
-      return json(res, 400, {
-        success: false,
-        message:
-          "Pagar-Event-Id ausente",
-      });
-    }
-
-    if (!signature) {
-      return json(res, 401, {
-        success: false,
-        message:
-          "Pagar-Signature ausente",
-      });
-    }
-
-    const verification =
-      verifySignature(
-        rawBody,
-        signature
-      );
-
-    if (!verification.valid) {
-      console.error(
-        "PAGAR WEBHOOK 401:",
-        verification.reason
-      );
-
-      return json(res, 401, {
-        success: false,
-        message:
-          "Assinatura do webhook inválida",
-      });
-    }
-
-    let event;
-
-    try {
-      event =
-        JSON.parse(rawBody);
-    } catch {
-      return json(res, 400, {
-        success: false,
-        message: "JSON inválido",
-      });
-    }
-
-    const eventType =
-      event?.type ||
-      event?.event ||
-      event?.name ||
-      null;
-
-    if (
-      eventType ===
-      "webhook.test"
-    ) {
-      return json(res, 200, {
-        success: true,
-        message:
-          "Webhook test recebido com assinatura válida",
-      });
-    }
-
-    if (
-      eventType !==
-        "payment.succeeded" &&
-      eventType !==
-        "payment.failed"
-    ) {
-      return json(res, 200, {
-        success: true,
-        ignored: true,
-        eventType,
-      });
-    }
-
-    const payment =
-      getPayment(event);
-
-    if (!payment) {
-      return json(res, 400, {
-        success: false,
-        message:
-          "Objeto payment ausente",
-      });
-    }
-
-    const paymentId =
-      payment?.id ||
-      payment?.paymentId ||
-      null;
-
-    console.log(
-      "PAGAR PAYMENT:",
-      JSON.stringify({
-        id: paymentId,
-        reference:
-          payment?.reference || null,
-        status:
-          payment?.status || null,
-      })
+  if (
+    req.method !==
+    "POST"
+  ) {
+    res.setHeader(
+      "Allow",
+      "POST"
     );
 
-    const storedEvent =
-      await registerOrGetEvent(
+    return sendJson(
+      res,
+      405,
+      {
+        success:
+          false,
+
+        error:
+          "METHOD_NOT_ALLOWED"
+      }
+    );
+  }
+
+  const webhookSecret =
+    process.env.PAGAR_WEBHOOK_SECRET;
+
+  if (!webhookSecret) {
+    console.error(
+      "PAGAR WEBHOOK: PAGAR_WEBHOOK_SECRET não configurado"
+    );
+
+    return sendJson(
+      res,
+      500,
+      {
+        success:
+          false,
+
+        error:
+          "WEBHOOK_CONFIG_ERROR"
+      }
+    );
+  }
+
+  const rawBody =
+    await readRawBody(
+      req
+    );
+
+  const signature =
+    getHeader(
+      req,
+      "pagar-signature"
+    );
+
+  /*
+   * Verifica a assinatura ANTES de interpretar
+   * o conteúdo do webhook.
+   */
+  if (
+    !verifyWebhookSignature(
+      rawBody,
+      signature,
+      webhookSecret
+    )
+  ) {
+    console.error(
+      "PAGAR WEBHOOK: assinatura inválida"
+    );
+
+    return sendJson(
+      res,
+      401,
+      {
+        success:
+          false,
+
+        error:
+          "INVALID_SIGNATURE"
+      }
+    );
+  }
+
+  let event;
+
+  try {
+    event =
+      JSON.parse(
+        rawBody.toString(
+          "utf8"
+        )
+      );
+  } catch (error) {
+    console.error(
+      "PAGAR WEBHOOK JSON ERROR:",
+      error.message
+    );
+
+    return sendJson(
+      res,
+      400,
+      {
+        success:
+          false,
+
+        error:
+          "INVALID_JSON"
+      }
+    );
+  }
+
+  const eventId =
+    String(
+      getHeader(
+        req,
+        "pagar-event-id"
+      ) ||
+      event?.id ||
+      event?.eventId ||
+      ""
+    ).trim();
+
+  if (!eventId) {
+    return sendJson(
+      res,
+      400,
+      {
+        success:
+          false,
+
+        error:
+          "EVENT_ID_REQUIRED"
+      }
+    );
+  }
+
+  const eventType =
+    String(
+      event?.type ||
+      event?.event_type ||
+      event?.eventType ||
+      ""
+    ).trim();
+
+  const payment =
+    getPaymentFromEvent(
+      event
+    );
+
+  const paymentId =
+    getPaymentId(
+      payment
+    );
+
+  /*
+   * Registra o evento antes do processamento.
+   *
+   * Se já existir, não processamos novamente.
+   */
+  let registration;
+
+  try {
+    registration =
+      await registerWebhookEvent(
         eventId,
         eventType,
         paymentId,
         event
       );
+  } catch (error) {
+    console.error(
+      "PAGAR WEBHOOK REGISTER ERROR:",
+      error.message
+    );
 
-    if (!storedEvent) {
-      throw new Error(
-        "Não foi possível registrar ou recuperar o webhook."
+    return sendJson(
+      res,
+      500,
+      {
+        success:
+          false,
+
+        error:
+          "WEBHOOK_EVENT_REGISTER_FAILED"
+      }
+    );
+  }
+
+  const processingToken = crypto.randomUUID();
+  let claimed;
+
+  try {
+    claimed = await claimWebhookEvent(eventId, processingToken);
+  } catch (error) {
+    console.error("PAGAR WEBHOOK CLAIM ERROR:", error.message);
+    return sendJson(res, 500, {
+      success: false,
+      error: "WEBHOOK_EVENT_CLAIM_FAILED"
+    });
+  }
+
+  if (!claimed) {
+    return sendJson(res, 200, {
+      success: true,
+      duplicate: true,
+      in_progress: true,
+      event_id: eventId,
+      message: "Evento já processado ou em processamento."
+    });
+  }
+
+  /*
+   * Teste do webhook.
+   */
+  if (
+    eventType ===
+    "webhook.test"
+  ) {
+    try {
+      await markWebhookProcessed(eventId, processingToken);
+    } catch (error) {
+      console.error(
+        "PAGAR WEBHOOK FINISH ERROR (teste):",
+        error.message
+      );
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "WEBHOOK_EVENT_FINISH_FAILED"
+      });
+    }
+
+    return sendJson(
+      res,
+      200,
+      {
+        success:
+          true,
+
+        test:
+          true,
+
+        event_id:
+          eventId
+      }
+    );
+  }
+
+  /*
+   * Eventos que não alteram estado financeiro
+   * podem ser reconhecidos sem processamento.
+   */
+  if (
+    eventType !==
+      "payment.succeeded" &&
+    eventType !==
+      "payment.failed"
+  ) {
+    try {
+      await markWebhookProcessed(eventId, processingToken);
+    } catch (error) {
+      console.error(
+        "PAGAR WEBHOOK FINISH ERROR (ignorado):",
+        error.message
+      );
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "WEBHOOK_EVENT_FINISH_FAILED"
+      });
+    }
+
+    return sendJson(
+      res,
+      200,
+      {
+        success:
+          true,
+
+        ignored:
+          true,
+
+        event_id:
+          eventId,
+
+        event_type:
+          eventType
+      }
+    );
+  }
+
+  if (!payment) {
+    console.error(
+      "PAGAR WEBHOOK: payment não encontrado no evento"
+    );
+
+    await releaseWebhookClaim(eventId, processingToken);
+
+    return sendJson(
+      res,
+      400,
+      {
+        success:
+          false,
+
+        error:
+          "PAYMENT_NOT_FOUND"
+      }
+    );
+  }
+
+  try {
+    /*
+     * ----------------------------------------------------------
+     * PAYMENT SUCCEEDED
+     * ----------------------------------------------------------
+     */
+    if (
+      eventType ===
+      "payment.succeeded"
+    ) {
+      const status =
+        getPaymentStatus(
+          payment
+        );
+
+      /*
+       * Só tratamos como pagamento concluído
+       * quando o próprio Pagar informa PAID.
+       */
+      if (
+        status !==
+        "PAID"
+      ) {
+        await markWebhookProcessed(eventId, processingToken);
+
+        return sendJson(
+          res,
+          200,
+          {
+            success:
+              true,
+
+            ignored:
+              true,
+
+            reason:
+              "PAYMENT_NOT_PAID",
+
+            status,
+
+            event_id:
+              eventId
+          }
+        );
+      }
+
+      const result =
+        await processPaymentSucceeded(
+          payment
+        );
+
+      await markWebhookProcessed(eventId, processingToken);
+
+      return sendJson(
+        res,
+        200,
+        {
+          success:
+            true,
+
+          event_id:
+            eventId,
+
+          event_type:
+            eventType,
+
+          result
+        }
       );
     }
 
     /*
-     * Se já foi processado, acabou.
-     *
-     * Se existe mas processed_at está vazio,
-     * NÃO tratamos como duplicado definitivo.
-     * Tentamos processar novamente.
+     * ----------------------------------------------------------
+     * PAYMENT FAILED
+     * ----------------------------------------------------------
      */
-    if (
-      storedEvent.processed_at &&
-      eventType !== "payment.succeeded"
-    ) {
-      return json(res, 200, {
-        success: true,
-        duplicate: true,
-        eventId,
-      });
-    }
-
     if (
       eventType ===
       "payment.failed"
     ) {
-      await markOrderFailed(
-        payment
-      );
-
-      await markProcessed(
-        eventId
-      );
-
-      return json(res, 200, {
-        success: true,
-        status: "FAILED",
-        eventId,
-      });
-    }
-
-    /*
-     * payment.succeeded só entrega quando
-     * o estado final é PAID.
-     */
-    const paymentStatus =
-      String(
-        payment?.status || ""
-      ).toUpperCase();
-
-    if (paymentStatus !== "PAID") {
-      /*
-       * Não marcamos processed_at.
-       * Se a Pagar reenviar posteriormente
-       * com PAID, este evento ainda poderá
-       * ser processado.
-       */
-      return json(res, 200, {
-        success: true,
-        received: true,
-        eventId,
-        status: paymentStatus,
-      });
-    }
-
-    const order =
-      await markOrderPaid(
-        payment
-      );
-
-    let ticket;
-
-    try {
-      ticket =
-        await generateTicket(
-          order
+      const result =
+        await processPaymentFailed(
+          payment
         );
-    } catch (error) {
-      console.error(
-        "Erro ao gerar bilhete:",
-        error.message
+
+      await markWebhookProcessed(eventId, processingToken);
+
+      return sendJson(
+        res,
+        200,
+        {
+          success:
+            true,
+
+          event_id:
+            eventId,
+
+          event_type:
+            eventType,
+
+          result
+        }
       );
-
-      /*
-       * NÃO marcamos o evento como processado.
-       * Um retry da Pagar poderá recuperar.
-       */
-      return json(res, 500, {
-        success: false,
-        message:
-          "Pagamento confirmado, mas o bilhete não pôde ser gerado.",
-      });
     }
-
-    await markProcessed(
-      eventId
-    );
-
-    return json(res, 200, {
-      success: true,
-      eventId,
-      eventType,
-      paymentId,
-      paymentStatus,
-      orderReference:
-        order.order_reference,
-      ticket,
-    });
   } catch (error) {
     console.error(
-      "PAGAR WEBHOOK ERROR:",
+      "PAGAR WEBHOOK PROCESS ERROR:",
       error
     );
 
-    return json(res, 500, {
-      success: false,
-      message:
-        "Erro interno no webhook",
-    });
+    /*
+     * NÃO marcamos processed_at em caso de erro.
+     *
+     * Isso permite que o Pagar reenvie o webhook
+     * e o evento seja novamente processado.
+     */
+    try {
+      await releaseWebhookClaim(eventId, processingToken);
+    } catch (releaseError) {
+      console.error(
+        "PAGAR WEBHOOK CLAIM RELEASE ERROR:",
+        releaseError.message
+      );
+    }
+
+    return sendJson(
+      res,
+      500,
+      {
+        success:
+          false,
+
+        error:
+          "WEBHOOK_PROCESSING_FAILED",
+
+        detail:
+          error?.message ||
+          "Erro ao processar webhook"
+      }
+    );
   }
+
+  return sendJson(
+    res,
+    200,
+    {
+      success:
+        true
+    }
+  );
 }
