@@ -363,20 +363,18 @@ async function startPayment(){
           const success = document.getElementById("successMessage");
 
 
+
 success.innerHTML =
   "Pagamento confirmado! Seu bilhete está pronto.<br><br>" +
-
-
-"<a href=\"/api/download-ticket?reference=" +
-encodeURIComponent(orderReference) + "\" " +
+  "<a href=\"/api/order-status?reference=" +
+  encodeURIComponent(orderReference) +
+  "&download=1\" " +
   "style=\"display:inline-block;padding:14px 20px;" +
   "background:#d4af37;color:#111;font-weight:800;" +
   "text-decoration:none;border-radius:10px;margin:5px;\">" +
   "⬇ DESCARREGAR PDF" +
   "</a>" +
-
   "<br><br>" +
-
   "<a href=\"" + statusData.pdfUrl + "\" " +
   "target=\"_blank\" rel=\"noopener\" " +
   "style=\"display:inline-block;padding:14px 20px;" +

@@ -220,6 +220,77 @@ export default async function handler(req, res) {
       });
     }
 
+    if (req.query?.download === "1") {
+      let objectPath = String(order.pdf_path).replace(/^\/+/, "");
+
+      if (objectPath.startsWith("tickets/")) {
+        objectPath = objectPath.slice("tickets/".length);
+      }
+
+      if (
+        !objectPath ||
+        objectPath.split("/").some(
+          part => !part || part === "." || part === ".."
+        ) ||
+        !/^[A-Za-z0-9_./-]+$/.test(objectPath)
+      ) {
+        return sendJson(res, 400, {
+          success: false,
+          message: "Caminho do bilhete inválido."
+        });
+      }
+
+      const encodedPath = objectPath
+        .split("/")
+        .map(encodeURIComponent)
+        .join("/");
+
+      const pdfResponse = await fetch(
+        `${SUPABASE_URL}/storage/v1/object/tickets/${encodedPath}`,
+        {
+          method: "GET",
+          headers: {
+            apikey: SUPABASE_SERVICE_ROLE_KEY,
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+          }
+        }
+      );
+
+      if (!pdfResponse.ok) {
+        console.error(
+          "TICKET PDF DOWNLOAD ERROR:",
+          pdfResponse.status
+        );
+
+        return sendJson(res, 502, {
+          success: false,
+          message: "Não foi possível obter o PDF. Tente novamente."
+        });
+      }
+
+      const contentType =
+        pdfResponse.headers.get("content-type") || "";
+
+      if (!contentType.toLowerCase().includes("application/pdf")) {
+        return sendJson(res, 502, {
+          success: false,
+          message: "O ficheiro recebido não é um PDF válido."
+        });
+      }
+
+      const pdf = Buffer.from(await pdfResponse.arrayBuffer());
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        'attachment; filename="bilhete-pgrowth.pdf"'
+      );
+      res.setHeader("Content-Length", String(pdf.length));
+      res.setHeader("Cache-Control", "private, no-store");
+      res.setHeader("X-Content-Type-Options", "nosniff");
+
+      return res.status(200).send(pdf);
+    }
     const pdfUrl =
       await createSignedPdfUrl(
         order.pdf_path
