@@ -860,7 +860,7 @@ function validateClientTopupAmount(amount, settings) {
     throw new Error("TOPUP_DISABLED");
   }
 
-  if (!Number.isFinite(amount) || amount < 100) {
+  if (!Number.isFinite(amount) || amount < 50) {
     throw new Error("BELOW_MIN_TOPUP");
   }
 }

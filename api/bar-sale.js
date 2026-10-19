@@ -458,8 +458,9 @@ function validateTopupSettings(
     settings.min_topup;
 
   const maximum =
-    settings.topup_max_amount ??
-    settings.max_topup;
+    Object.prototype.hasOwnProperty.call(settings, "topup_max_amount")
+      ? settings.topup_max_amount
+      : settings.max_topup;
 
   if (
     minimum !== null &&
