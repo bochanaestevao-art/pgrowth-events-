@@ -1320,6 +1320,11 @@ async function improveCameraFocus(scanner) {
   }
 }
 
+function onScanFailure(errorMessage) {
+  // Falhas normais enquanto a câmara procura um QR válido.
+  // Não interromper o scanner nem mostrar avisos repetitivos.
+}
+
 async function onScanSuccess(
   decodedText
 ) {
