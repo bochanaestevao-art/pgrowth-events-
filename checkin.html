@@ -1130,6 +1130,33 @@ async function ensureScanner() {
  * tenta utilizar a câmera traseira,
  * resolução maior e foco contínuo.
  */
+async function stopScanner() {
+  const scanner = state.scanner;
+
+  if (!scanner) {
+    state.scanning = false;
+    setCameraStatus("CÂMERA PARADA");
+    return;
+  }
+
+  try {
+    if (state.scanning) {
+      await scanner.stop();
+    }
+
+    state.scanning = false;
+    setCameraStatus("CÂMERA PARADA");
+
+  } catch (error) {
+    console.error("ERRO AO PARAR CÂMERA:", error);
+
+    setCameraStatus(
+      "ERRO AO PARAR CÂMERA: " +
+      (error && error.message ? error.message : String(error))
+    );
+  }
+}
+
 async function startScanner() {
 
   if (state.scanning || state.processing || state.starting) {
