@@ -1352,6 +1352,55 @@ function onScanFailure(errorMessage) {
   // Não interromper o scanner nem mostrar avisos repetitivos.
 }
 
+function extractTicketCode(decodedText) {
+const raw = String(decodedText || "").trim();
+
+if (!raw) {
+return "";
+}
+
+// 1. Extrair o código de uma URL completa.
+try {
+const url = new URL(raw);
+const urlCode = url.searchParams.get("code");
+
+```
+if (urlCode) {
+  return String(urlCode).trim().toUpperCase();
+}
+```
+
+} catch {
+// O texto não é uma URL completa.
+}
+
+// 2. Extrair o parâmetro code=.
+const matchFromParameter = raw.match(
+/(?:^|[?&])code=([^&#\s]+)/i
+);
+
+if (matchFromParameter) {
+try {
+return decodeURIComponent(matchFromParameter[1])
+.trim()
+.toUpperCase();
+} catch {
+// Continuar para a próxima tentativa.
+}
+}
+
+// 3. Procurar o código BLACKOUT.
+const matchTicket = raw.match(
+/\bBLACKOUT-2026-[A-Z0-9]+\b/i
+);
+
+if (matchTicket) {
+return matchTicket[0].trim().toUpperCase();
+}
+
+// 4. Se já for um código, usar o texto recebido.
+return raw.toUpperCase();
+}
 async function onScanSuccess(
   decodedText
 ) {
