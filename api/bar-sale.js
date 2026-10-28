@@ -57,22 +57,20 @@ function verifyBarSession(req) {
   const cookies = parseCookies(req);
   const token = cookies.bar_session;
 
-  if (!token) return null;
+  if (!token || typeof token !== "string") return null;
 
   const secret = String(
-  process.env.BAR_SESSION_SECRET || ""
-).trim();
+    process.env.BAR_SESSION_SECRET || ""
+  ).trim();
 
   if (!secret) {
     throw new Error("BAR_SESSION_SECRET não configurado");
   }
 
   const parts = token.split(".");
-
   if (parts.length !== 2) return null;
 
-  const payload = parts[0];
-  const suppliedSignature = parts[1];
+  const [payload, suppliedSignature] = parts;
 
   const expectedSignature = crypto
     .createHmac("sha256", secret)
@@ -93,15 +91,27 @@ function verifyBarSession(req) {
       Buffer.from(payload, "base64url").toString("utf8")
     );
 
-    if (!decoded || !decoded.staff_id) {
+    if (
+      !decoded ||
+      typeof decoded.staff_id !== "string" ||
+      !decoded.staff_id.trim() ||
+      !Number.isSafeInteger(decoded.iat) ||
+      !Number.isSafeInteger(decoded.exp)
+    ) {
       return null;
     }
 
+    const now = Math.floor(Date.now() / 1000);
+    const maxSessionAge = 12 * 60 * 60;
+
     if (
-  decoded.exp &&
-  Math.floor(Date.now() / 1000) > Number(decoded.exp)
-) {
-  return null;
+      decoded.iat <= 0 ||
+      decoded.exp <= decoded.iat ||
+      decoded.iat > now ||
+      decoded.exp - decoded.iat > maxSessionAge ||
+      now >= decoded.exp
+    ) {
+      return null;
     }
 
     return decoded;
@@ -168,6 +178,64 @@ async function supabaseRequest(path, options = {}) {
   return data;
 }
 
+function getBarLoginAttemptKey(secret, scope, value) {
+  return crypto
+    .createHmac("sha256", secret)
+    .update(`bar-login-v1|${scope}|${value}`)
+    .digest("hex");
+}
+
+async function getBarLoginLock(attemptKey) {
+  const rows = await supabaseRequest(
+    "/rest/v1/rpc/check_bar_login_lock",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        p_attempt_key: attemptKey,
+      }),
+    }
+  );
+
+  const result = Array.isArray(rows) ? rows[0] : rows;
+
+  return {
+    failedAttempts: Number(result?.failed_attempts || 0),
+    lockedUntil: result?.locked_until || null,
+    isLocked: result?.is_locked === true,
+  };
+}
+
+async function recordBarLoginFailure(attemptKey) {
+  const rows = await supabaseRequest(
+    "/rest/v1/rpc/record_bar_login_failure",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        p_attempt_key: attemptKey,
+      }),
+    }
+  );
+
+  const result = Array.isArray(rows) ? rows[0] : rows;
+
+  return {
+    failedAttempts: Number(result?.failed_attempts || 0),
+    lockedUntil: result?.locked_until || null,
+    isLocked: result?.is_locked === true,
+  };
+}
+
+async function clearBarLoginFailures(attemptKey) {
+  await supabaseRequest(
+    "/rest/v1/rpc/clear_bar_login_failures",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        p_attempt_key: attemptKey,
+      }),
+    }
+  );
+}
 function normalizeAmount(value) {
   const amount = Number(value);
 
@@ -917,15 +985,134 @@ export default async function handler(
           }
         );
       }
+      const secret =
+        String(
+          process.env.BAR_SESSION_SECRET || ""
+        ).trim();
+
+      if (!secret) {
+        return sendJson(
+          res,
+          500,
+          {
+            success: false,
+            error: "SERVER_CONFIGURATION_ERROR",
+          }
+        );
+      }
+
+      if (!expectedPin) {
+        return sendJson(
+          res,
+          500,
+          {
+            success: false,
+            error: "SERVER_CONFIGURATION_ERROR",
+          }
+        );
+      }
+
+      const forwardedFor =
+        String(
+          req.headers["x-forwarded-for"] || ""
+        ).split(",")[0].trim();
+
+      const clientIp =
+        forwardedFor ||
+        String(req.socket?.remoteAddress || "unknown").trim();
+
+      const ipAttemptKey =
+        getBarLoginAttemptKey(
+          secret,
+          "ip",
+          clientIp.toLowerCase()
+        );
+
+      let ipLock;
+
+      try {
+        ipLock = await getBarLoginLock(ipAttemptKey);
+      } catch (error) {
+        console.error(
+          "BAR LOGIN: não foi possível verificar o bloqueio."
+        );
+
+        return sendJson(
+          res,
+          503,
+          {
+            success: false,
+            error: "AUTHENTICATION_TEMPORARILY_UNAVAILABLE",
+          }
+        );
+      }
+
+      if (ipLock.isLocked) {
+        const remainingSeconds = Math.max(
+          1,
+          Math.ceil(
+            (new Date(ipLock.lockedUntil).getTime() - Date.now()) /
+              1000
+          )
+        );
+
+        res.setHeader(
+          "Retry-After",
+          String(remainingSeconds)
+        );
+
+        return sendJson(
+          res,
+          429,
+          {
+            success: false,
+            error: "LOGIN_TEMPORARILY_LOCKED",
+            retry_after_seconds: remainingSeconds,
+          }
+        );
+      }
 
       if (
         !staffPin ||
-        !expectedPin ||
         !timingSafeEqualString(
           staffPin,
           expectedPin
         )
       ) {
+        let failureResult;
+
+        try {
+          failureResult =
+            await recordBarLoginFailure(ipAttemptKey);
+        } catch (error) {
+          console.error(
+            "BAR LOGIN: não foi possível registar a tentativa falhada."
+          );
+
+          return sendJson(
+            res,
+            503,
+            {
+              success: false,
+              error: "AUTHENTICATION_TEMPORARILY_UNAVAILABLE",
+            }
+          );
+        }
+
+        if (failureResult.isLocked) {
+          res.setHeader("Retry-After", "900");
+
+          return sendJson(
+            res,
+            429,
+            {
+              success: false,
+              error: "LOGIN_TEMPORARILY_LOCKED",
+              retry_after_seconds: 900,
+            }
+          );
+        }
+
         return sendJson(
           res,
           401,
@@ -936,24 +1123,19 @@ export default async function handler(
         );
       }
 
-      const secret =
-        String(
-          process.env.BAR_SESSION_SECRET ||
-          ""
-        ).trim();
-
-      if (!secret) {
+      try {
+        await clearBarLoginFailures(ipAttemptKey);
+      } catch (error) {
         console.error(
-          "BAR SESSION: BAR_SESSION_SECRET ausente."
+          "BAR LOGIN: não foi possível limpar as tentativas anteriores."
         );
 
         return sendJson(
           res,
-          500,
+          503,
           {
             success: false,
-            error:
-              "SERVER_CONFIGURATION_ERROR",
+            error: "AUTHENTICATION_TEMPORARILY_UNAVAILABLE",
           }
         );
       }
