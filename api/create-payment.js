@@ -171,7 +171,7 @@ async function pagarPost(path, body, idempotencyKey) {
     bodyHash,
   ].join("\n");
 
-  const signature = crypto
+  const signature = "v1=" + crypto
     .createHmac("sha256", PAGAR_SIGNING_SECRET)
     .update(canonical)
     .digest("hex");
