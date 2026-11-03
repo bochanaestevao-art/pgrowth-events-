@@ -3,43 +3,364 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#080808">
-<title>BLACK OUT — Amapiano Edition | Pgrowth Events</title>
+<meta name="theme-color" content="#0D3B2C">
+<title>Beira Muscle Show — Treino Híbrido | Pgrowth Events</title>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--gold:#f2a900;--gold2:#ffbf19;--bg:#050505;--card:#151515;--line:#2d2d2d;--muted:#aaa;--danger:#ff6565;--ok:#46d77d}
-body{font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at top,rgba(242,169,0,.15),transparent 35%),var(--bg);color:#fff;min-height:100vh}
-.container{width:min(100%,620px);margin:auto;padding-bottom:40px}
-.hero{background:#000;overflow:hidden}.hero img{display:block;width:100%;height:auto}
-.brand{text-align:center;padding:14px;background:#0c0c0c;color:var(--gold);font-size:11px;font-weight:900;letter-spacing:3px}
-.section{padding:22px 18px 0}.title{font-size:22px;font-weight:900;margin-bottom:14px}.title span{color:var(--gold)}
-.countdown{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.time{background:linear-gradient(145deg,#1b1b1b,#0d0d0d);border:1px solid var(--line);border-radius:12px;padding:12px 4px;text-align:center}
-.num{display:block;color:var(--gold2);font-size:25px;font-weight:900}.lab{font-size:9px;color:var(--muted);text-transform:uppercase}
-.card{background:linear-gradient(145deg,#191919,#0e0e0e);border:1px solid var(--line);border-radius:16px;padding:17px;margin-top:12px}
-.ticket-title{font-size:17px;font-weight:900}.ticket-sub{font-size:12px;color:var(--muted);margin-top:5px}
-.lots{display:grid;gap:9px;margin-top:14px}.lot{border:1px solid #333;border-radius:11px;padding:12px;background:#101010;cursor:pointer}.lot:hover{border-color:var(--gold)}.lot.active{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold);background:rgba(242,169,0,.08)}.lot.disabled{opacity:.4;cursor:not-allowed}
-.row{display:flex;justify-content:space-between;gap:10px}.lotname{font-size:14px;font-weight:900}.price{color:var(--gold2);font-weight:900;white-space:nowrap}.date{font-size:11px;color:var(--muted);margin-top:5px}.status{font-size:10px;font-weight:900;text-transform:uppercase;margin-top:7px}.available{color:var(--ok)}.closed{color:var(--danger)}
-.form{margin-top:18px;background:linear-gradient(145deg,#191919,#0c0c0c);border:1px solid var(--line);border-radius:16px;padding:18px}
-.field{margin-bottom:15px}label{display:block;font-size:13px;font-weight:900;margin-bottom:7px}input{width:100%;padding:14px;border-radius:10px;border:1px solid #363636;background:#0a0a0a;color:#fff;font-size:15px;outline:none}input:focus{border-color:var(--gold)}
-.qty{display:flex;align-items:center;justify-content:space-between;margin-top:4px}.controls{display:flex;align-items:center;gap:12px}.qbtn{width:43px;height:43px;border:1px solid #444;border-radius:10px;background:#151515;color:#fff;font-size:25px}.qbtn:hover{border-color:var(--gold);color:var(--gold)}#quantity{min-width:25px;text-align:center;font-size:20px;font-weight:900}
-.total{margin-top:18px;padding:16px;border-radius:13px;background:rgba(242,169,0,.08);border:1px solid rgba(242,169,0,.35)}.total small{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1px}.total strong{display:block;color:var(--gold2);font-size:29px;margin-top:4px}
-.button{width:100%;margin-top:15px;padding:16px;border:0;border-radius:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#080808;font-size:16px;font-weight:900}
-.msg{display:none;margin-top:12px;padding:12px;border-radius:10px;font-size:13px;line-height:1.45}.msg.show{display:block}.error{color:#ffb0b0;background:rgba(255,101,101,.1);border:1px solid rgba(255,101,101,.35)}.success{color:#aaf0c4;background:rgba(70,215,125,.1);border:1px solid rgba(70,215,125,.35)}
-.notice{text-align:center;color:#777;font-size:11px;line-height:1.5;margin-top:13px}footer{text-align:center;color:#666;font-size:10px;padding:30px 18px}
-@media(max-width:380px){.section{padding-left:13px;padding-right:13px}.num{font-size:21px}}
+
+:root{
+  --green:#0D3B2C;
+  --green2:#184932;
+  --green3:#246344;
+  --lime:#A6CE39;
+  --lime2:#C3E65A;
+  --orange:#F47B20;
+  --bg:#092D23;
+  --card:#123D2E;
+  --line:#35634C;
+  --muted:#C0D2C6;
+  --danger:#ff7777;
+  --ok:#A6CE39;
+}
+
+body{
+  font-family:Arial,Helvetica,sans-serif;
+  background:
+    radial-gradient(circle at top,rgba(166,206,57,.13),transparent 38%),
+    var(--bg);
+  color:#fff;
+  min-height:100vh;
+}
+
+.container{
+  width:min(100%,620px);
+  margin:auto;
+  padding-bottom:40px;
+}
+
+.hero{
+  background:var(--green);
+  overflow:hidden;
+}
+
+.hero img{
+  display:block;
+  width:100%;
+  height:auto;
+}
+
+.brand{
+  text-align:center;
+  padding:14px;
+  background:var(--green2);
+  color:var(--lime);
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:3px;
+}
+
+.section{
+  padding:22px 18px 0;
+}
+
+.title{
+  font-size:22px;
+  font-weight:900;
+  margin-bottom:14px;
+}
+
+.title span{
+  color:var(--lime);
+}
+
+.countdown{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+}
+
+.time{
+  background:linear-gradient(145deg,#20543D,#103728);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px 4px;
+  text-align:center;
+}
+
+.num{
+  display:block;
+  color:var(--lime);
+  font-size:25px;
+  font-weight:900;
+}
+
+.lab{
+  font-size:9px;
+  color:var(--muted);
+  text-transform:uppercase;
+}
+
+.card{
+  background:linear-gradient(145deg,#1B5039,#103728);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:17px;
+  margin-top:12px;
+}
+
+.ticket-title{
+  font-size:17px;
+  font-weight:900;
+}
+
+.ticket-sub{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:5px;
+}
+
+.lots{
+  display:grid;
+  gap:9px;
+  margin-top:14px;
+}
+
+.lot{
+  border:1px solid var(--line);
+  border-radius:11px;
+  padding:12px;
+  background:#103728;
+  cursor:pointer;
+}
+
+.lot:hover{
+  border-color:var(--lime);
+}
+
+.lot.active{
+  border-color:var(--lime);
+  box-shadow:0 0 0 1px var(--lime);
+  background:rgba(166,206,57,.13);
+}
+
+.lot.disabled{
+  opacity:.4;
+  cursor:not-allowed;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.lotname{
+  font-size:14px;
+  font-weight:900;
+}
+
+.price{
+  color:var(--lime);
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.date{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:5px;
+}
+
+.status{
+  font-size:10px;
+  font-weight:900;
+  text-transform:uppercase;
+  margin-top:7px;
+}
+
+.available{
+  color:var(--lime);
+}
+
+.closed{
+  color:var(--danger);
+}
+
+.form{
+  margin-top:18px;
+  background:linear-gradient(145deg,#174832,#0D3326);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:18px;
+}
+
+.field{
+  margin-bottom:15px;
+}
+
+label{
+  display:block;
+  font-size:13px;
+  font-weight:900;
+  margin-bottom:7px;
+}
+
+input,select{
+  width:100%;
+  padding:14px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:#092D23;
+  color:#fff;
+  font-size:15px;
+  outline:none;
+}
+
+input:focus,select:focus{
+  border-color:var(--lime);
+}
+
+.qty{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:4px;
+}
+
+.controls{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.qbtn{
+  width:43px;
+  height:43px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:var(--green2);
+  color:#fff;
+  font-size:25px;
+}
+
+.qbtn:hover{
+  border-color:var(--lime);
+  color:var(--lime);
+}
+
+#quantity{
+  min-width:25px;
+  text-align:center;
+  font-size:20px;
+  font-weight:900;
+}
+
+.total{
+  margin-top:18px;
+  padding:16px;
+  border-radius:13px;
+  background:rgba(166,206,57,.12);
+  border:1px solid rgba(166,206,57,.45);
+}
+
+.total small{
+  display:block;
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+
+.total strong{
+  display:block;
+  color:var(--lime);
+  font-size:29px;
+  margin-top:4px;
+}
+
+.button{
+  width:100%;
+  margin-top:15px;
+  padding:16px;
+  border:0;
+  border-radius:12px;
+  background:linear-gradient(135deg,var(--lime),var(--lime2));
+  color:#123323;
+  font-size:16px;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.button:hover{
+  filter:brightness(1.06);
+}
+
+.msg{
+  display:none;
+  margin-top:12px;
+  padding:12px;
+  border-radius:10px;
+  font-size:13px;
+  line-height:1.45;
+}
+
+.msg.show{
+  display:block;
+}
+
+.error{
+  color:#ffc1c1;
+  background:rgba(255,101,101,.1);
+  border:1px solid rgba(255,101,101,.35);
+}
+
+.success{
+  color:#D8F5A0;
+  background:rgba(166,206,57,.1);
+  border:1px solid rgba(166,206,57,.35);
+}
+
+.notice{
+  text-align:center;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.5;
+  margin-top:13px;
+}
+
+footer{
+  text-align:center;
+  color:var(--muted);
+  font-size:10px;
+  padding:30px 18px;
+  background:var(--green);
+  margin-top:25px;
+}
+
+@media(max-width:380px){
+  .section{
+    padding-left:13px;
+    padding-right:13px;
+  }
+  .num{
+    font-size:21px;
+  }
+}
 </style>
+
 </head>
 <body>
 <div class="container">
 
 <div class="hero">
-  <img src="poster-blackout.jpg" alt="BLACK OUT — Amapiano Edition">
+  <img src="beira-muscle-show-final.jpg"
+     alt="Beira Muscle Show — Treino Híbrido">
 </div>
 <div class="brand">PGROWTH EVENTS • EXPERIÊNCIA DIGITAL</div>
 
 <section class="section">
-  <div class="title">BLACK OUT <span>2026</span></div>
+  <div class="title">TREINO HIBRÍDO <span>2026</span></div>
   <div class="countdown">
     <div class="time"><span class="num" id="days">0</span><span class="lab">Dias</span></div>
     <div class="time"><span class="num" id="hours">0</span><span class="lab">Horas</span></div>
@@ -55,12 +376,6 @@ body{font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at
     <div class="ticket-title">BILHETE NORMAL</div>
     <div class="ticket-sub">Selecione o lote disponível</div>
     <div class="lots" id="normalLots"></div>
-  </div>
-
-  <div class="card">
-    <div class="ticket-title">BILHETE VIP</div>
-    <div class="ticket-sub">Experiência VIP</div>
-    <div class="lots" id="vipLots"></div>
   </div>
 </section>
 
@@ -81,6 +396,14 @@ body{font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at
     <div class="field">
       <label for="bairro">Bairro *</label>
       <input id="bairro" type="text" placeholder="Digite o seu bairro" maxlength="80">
+    </div>
+
+    <div class="field">
+      <label for="paymentMethod">Método de pagamento *</label>
+      <select id="paymentMethod">
+        <option value="EMOLA">e-Mola</option>
+        <option value="MPESA">M-Pesa</option>
+      </select>
     </div>
 
     <div class="qty">
@@ -113,29 +436,30 @@ body{font-family:Arial,Helvetica,sans-serif;background:radial-gradient(circle at
 </section>
 
 <footer>
-BLACK OUT — AMAPIANO EDITION • 17 OUTUBRO 2026 • BEIRA, MOÇAMBIQUE<br>
-Pgrowth Events
+BEIRA MUSCLE SHOW • TREINO HÍBRIDO<br>
+13 NOVEMBRO 2026 • 17H<br>
+VILA LUNA — CALÇADÃO DO MIRAMAR • BEIRA<br>
+PGrowth Events
 </footer>
 </div>
 
 <script>
 "use strict";
 
-const EVENT_DATE = new Date("2026-10-17T00:00:00+02:00");
+  const EVENT_DATE = new Date("2026-11-13T17:00:00+02:00");
 
 const TICKETS = {
   normal: [
-    {id:"normal_lote_1",name:"1º LOTE",price:600,start:"2026-08-10T00:00:00+02:00",end:"2026-09-10T23:59:59+02:00",dateText:"10 AGO – 10 SET"},
-    {id:"normal_lote_2",name:"2º LOTE",price:800,start:"2026-09-11T00:00:00+02:00",end:"2026-10-10T23:59:59+02:00",dateText:"11 SET – 10 OUT"},
-    {id:"normal_lote_3",name:"3º LOTE",price:1000,start:"2026-10-12T00:00:00+02:00",end:"2026-10-16T23:59:59+02:00",dateText:"12 OUT – 16 OUT"},
-    {id:"normal_dia",name:"NO DIA",price:1500,start:"2026-10-17T00:00:00+02:00",end:"2026-10-17T23:59:59+02:00",dateText:"17 OUT"}
+    {
+      id: "normal_lote_unico",
+      name: "LOTE ÚNICO",
+      price: 250,
+      start: "2026-11-03T00:00:00+02:00",
+      end: "2026-11-13T23:59:59+02:00",
+      dateText: "03 NOV – 13 NOV"
+    }
   ],
-  vip: [
-    {id:"vip_lote_1",name:"1º LOTE",price:1500,start:"2026-08-10T00:00:00+02:00",end:"2026-09-10T23:59:59+02:00",dateText:"10 AGO – 10 SET"},
-    {id:"vip_lote_2",name:"2º LOTE",price:2000,start:"2026-09-11T00:00:00+02:00",end:"2026-10-10T23:59:59+02:00",dateText:"11 SET – 10 OUT"},
-    {id:"vip_lote_3",name:"3º LOTE",price:2500,start:"2026-10-12T00:00:00+02:00",end:"2026-10-16T23:59:59+02:00",dateText:"12 OUT – 16 OUT"},
-    {id:"vip_dia",name:"NO DIA",price:3000,start:"2026-10-17T00:00:00+02:00",end:"2026-10-17T23:59:59+02:00",dateText:"17 OUT"}
-  ]
+  vip: []
 };
 
 let selected = null;
@@ -299,7 +623,7 @@ async function startPayment(){
         ticketPrice: Number(selected.price),
         quantity: Number(quantity),
         totalAmount: total,
-        paymentMethod: "EMOLA"
+        paymentMethod: document.getElementById("paymentMethod").value
       })
     });
 
@@ -435,7 +759,6 @@ document
 
 function init(){
   renderTickets("normal","normalLots");
-  renderTickets("vip","vipLots");
   updateTotal();
   updateCountdown();
   setInterval(updateCountdown,1000);
@@ -443,7 +766,6 @@ function init(){
   setInterval(()=>{
     const id=selected ? selected.lotId : null;
     renderTickets("normal","normalLots");
-    renderTickets("vip","vipLots");
     if(id){
       const all=[...TICKETS.normal,...TICKETS.vip];
       const still=all.find(t=>t.id===id && isAvailable(t));

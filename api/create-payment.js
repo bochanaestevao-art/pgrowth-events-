@@ -459,11 +459,11 @@ async function main(req, res) {
       });
     }
 
-    if (method !== "EMOLA") {
+    if (!["EMOLA", "MPESA"].includes(method)) {
       return sendJson(res, 400, {
         success: false,
         message:
-          "Neste momento o pagamento disponível é e-Mola.",
+          "Método de pagamento inválido. Escolha e-Mola ou M-Pesa.",
       });
     }
 
@@ -661,7 +661,7 @@ async function main(req, res) {
 
     const paymentBody = {
       amountMzn: calculatedTotal,
-      method: "EMOLA",
+      method,
       payerPhone: phone,
       title: "BLACK OUT — AMAPIANO EDITION",
       description:

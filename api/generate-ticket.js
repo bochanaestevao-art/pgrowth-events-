@@ -77,7 +77,7 @@ function generateTicketCode() {
     .toString("hex")
     .toUpperCase();
 
-  return `BLACKOUT-2026-${random}`;
+  return `BMS-2026-${random}`;
 }
 
 function createPdf({
@@ -89,9 +89,8 @@ function createPdf({
       size: "A5",
       margin: 36,
       info: {
-        Title:
-          "BLACK OUT — AMAPIANO EDITION",
-        Author: "BLACK OUT",
+        Title: "BEIRA MUSCLE SHOW — TREINO HÍBRIDO",
+Author: "Beira Muscle Show",
         Subject:
           "Bilhetes de entrada",
       },
@@ -117,7 +116,7 @@ function createPdf({
       doc
         .fontSize(26)
         .font("Helvetica-Bold")
-        .text("BLACK OUT", {
+        .text("BEIRA MUSCLE SHOW", {
           align: "center",
         });
 
@@ -125,7 +124,7 @@ function createPdf({
         .moveDown(0.3)
         .fontSize(14)
         .font("Helvetica")
-        .text("AMAPIANO EDITION", {
+        .text("TREINO HÍBRIDO • RUN + EXERCÍCIOS LIVRES", {
           align: "center",
         });
 
