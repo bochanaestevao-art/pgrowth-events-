@@ -19,97 +19,6 @@ const SUPABASE_SERVICE_ROLE_KEY =
  * O backend é a fonte de verdade.
  */
 
-const TICKETS = [
-  {
-    type: "NORMAL",
-    lot: "1º LOTE",
-    id: "normal_lote_1",
-    price: 600,
-    start: "2026-08-10T00:00:00+02:00",
-    end: "2026-09-10T23:59:59+02:00",
-  },
-  {
-    type: "NORMAL",
-    lot: "2º LOTE",
-    id: "normal_lote_2",
-    price: 800,
-    start: "2026-09-11T00:00:00+02:00",
-    end: "2026-10-10T23:59:59+02:00",
-  },
-  {
-    type: "NORMAL",
-    lot: "3º LOTE",
-    id: "normal_lote_3",
-    price: 1000,
-    start: "2026-10-12T00:00:00+02:00",
-    end: "2026-10-16T23:59:59+02:00",
-  },
-  {
-    type: "NORMAL",
-    lot: "NO DIA",
-    id: "normal_dia",
-    price: 1500,
-    start: "2026-10-17T00:00:00+02:00",
-    end: "2026-10-17T23:59:59+02:00",
-  },
-  {
-    type: "VIP",
-    lot: "1º LOTE",
-    id: "vip_lote_1",
-    price: 1500,
-    start: "2026-08-10T00:00:00+02:00",
-    end: "2026-09-10T23:59:59+02:00",
-  },
-  {
-    type: "VIP",
-    lot: "2º LOTE",
-    id: "vip_lote_2",
-    price: 2000,
-    start: "2026-09-11T00:00:00+02:00",
-    end: "2026-10-10T23:59:59+02:00",
-  },
-  {
-    type: "VIP",
-    lot: "3º LOTE",
-    id: "vip_lote_3",
-    price: 2500,
-    start: "2026-10-12T00:00:00+02:00",
-    end: "2026-10-16T23:59:59+02:00",
-  },
-  {
-    type: "VIP",
-    lot: "NO DIA",
-    id: "vip_dia",
-    price: 3000,
-    start: "2026-10-17T00:00:00+02:00",
-    end: "2026-10-17T23:59:59+02:00",
-  },
-];
-
-function clean(value) {
-  return String(value ?? "").trim();
-}
-
-function normalizeTicketType(value) {
-  const normalized = clean(value).toUpperCase();
-
-  if (normalized === "NORMAL") {
-    return "NORMAL";
-  }
-
-  if (normalized === "VIP") {
-    return "VIP";
-  }
-
-  return normalized;
-}
-
-function normalizeLot(value) {
-  return clean(value)
-    .toUpperCase()
-    .replace(/\s+/g, " ");
-}
-
 async function getOfficialTicket(type, lot) {
   const normalizedType = normalizeTicketType(type);
   const normalizedLot = normalizeLot(lot);
@@ -143,12 +52,37 @@ async function getOfficialTicket(type, lot) {
   };
 }
 
+function clean(value) {
+  return String(value ?? "").trim();
+}
+
+function normalizeTicketType(value) {
+  const normalized = clean(value).toUpperCase();
+
+  if (normalized === "NORMAL") {
+    return "NORMAL";
+  }
+
+  if (normalized === "VIP") {
+    return "VIP";
+  }
+
+  return normalized;
+}
+
+function normalizeLot(value) {
+  return clean(value)
+    .toUpperCase()
+    .replace(/\s+/g, " ");
+}
+
+
 function isTicketAvailable(ticket) {
   if (!ticket) {
     return false;
   }
 
-  const now = Date.now();
+   const now = Date.now();
   const start = new Date(ticket.start).getTime();
   const end = new Date(ticket.end).getTime();
 
@@ -248,9 +182,9 @@ async function pagarPost(path, body, idempotencyKey) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${PAGAR_API_KEY}`,
       "Pagar-Api-Key": PAGAR_API_KEY,
-      "X-Pagar-Timestamp": timestamp,
-      "X-Pagar-Nonce": nonce,
-      "X-Pagar-Signature": `v1=${signature}`,
+      "Pagar-Timestamp": timestamp,
+      "Pagar-Nonce": nonce,
+      "Pagar-Signature": signature,
       "Idempotency-Key": idempotencyKey,
     },
     body: rawBody,
@@ -388,11 +322,11 @@ async function main(req, res) {
     );
 
     const method = clean(
-      body.paymentMethod ||
-        body.method ||
-        body.payment_method ||
-        "EMOLA"
-    ).toUpperCase();
+  body.paymentMethod ||
+    body.method ||
+    body.payment_method ||
+    "EMOLA"
+).toUpperCase();
 
     const orderReference = clean(
       body.orderReference ||
@@ -401,8 +335,9 @@ async function main(req, res) {
     );
 
     /*
-     * O frontend ainda pode enviar estes campos.
-     * Eles NÃO são usados como fonte do preço.
+     * O frontend ainda envia estes campos.
+     * Eles são aceitos somente para compatibilidade.
+     * NÃO serão usados como fonte de preço.
      */
     const browserPrice = Number(
       body.ticketPrice ??
@@ -460,11 +395,10 @@ async function main(req, res) {
     }
 
     if (!["EMOLA", "MPESA"].includes(method)) {
-      return sendJson(res, 400, {
-        success: false,
-        message:
-          "Método de pagamento inválido. Escolha e-Mola ou M-Pesa.",
-      });
+  return sendJson(res, 400, {
+    success: false,
+    message: "Método de pagamento inválido.",
+  });
     }
 
     /*
@@ -496,11 +430,9 @@ async function main(req, res) {
     const calculatedTotal = price * qty;
 
     /*
-     * O navegador não pode alterar o preço.
-     * Estes logs servem apenas para detectar tentativa
-     * de manipulação ou divergência do frontend.
+     * Apenas registra no log se o navegador enviou valores
+     * diferentes. O servidor continua usando os valores oficiais.
      */
-
     if (
       Number.isInteger(browserPrice) &&
       browserPrice !== price
@@ -568,10 +500,9 @@ async function main(req, res) {
       );
 
       /*
-       * A mesma referência não pode ser usada para
-       * outro produto ou outro valor.
+       * O mesmo order_reference não pode ser reutilizado
+       * para outro bilhete, preço ou quantidade.
        */
-
       if (
         existingType !== type ||
         existingLot !== lot ||
@@ -587,9 +518,8 @@ async function main(req, res) {
       }
 
       /*
-       * Se já está pago, não criar outro pagamento.
+       * Se já está pago, não cria outro pagamento.
        */
-
       if (existing.payment_status === "PAID") {
         return sendJson(res, 200, {
           success: true,
@@ -608,9 +538,8 @@ async function main(req, res) {
       }
 
       /*
-       * Se já está PROCESSING, devolver o pedido atual.
+       * Se está PROCESSING, devolve o pedido atual.
        */
-
       if (existing.payment_status === "PROCESSING") {
         return sendJson(res, 200, {
           success: true,
@@ -657,17 +586,17 @@ async function main(req, res) {
      */
 
     const idempotencyKey =
-      `blackout-${reference}`;
+  `beira-muscle-show-${reference}`;
 
     const paymentBody = {
-      amountMzn: calculatedTotal,
-      method,
-      payerPhone: phone,
-      title: "BLACK OUT — AMAPIANO EDITION",
-      description:
-        `BLACK OUT — AMAPIANO EDITION | ${type} | ${lot} | ${qty} bilhete(s)`,
-      reference,
-    };
+  amountMzn: calculatedTotal,
+  method,
+  payerPhone: phone,
+  title: "BEIRA MUSCLE SHOW — TREINO HÍBRIDO",
+  description:
+    `BEIRA MUSCLE SHOW — TREINO HÍBRIDO | ${type} | ${lot} | ${qty} bilhete(s)`,
+  reference,
+};
 
     const pagarResponse = await pagarPost(
       "/payments",
@@ -764,7 +693,8 @@ async function main(req, res) {
     );
 
     /*
-     * Tentar marcar o pedido como FAILED.
+     * Se conseguimos identificar uma referência,
+     * tentamos marcar o pedido como FAILED.
      */
     try {
       const body =
@@ -784,7 +714,7 @@ async function main(req, res) {
         );
 
         /*
-         * Nunca alterar um pedido que já esteja PAID.
+         * Não alterar um pedido que já esteja PAID.
          */
         if (
           existing &&

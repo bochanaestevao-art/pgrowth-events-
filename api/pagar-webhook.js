@@ -753,9 +753,14 @@ async function processPaymentSucceeded(
    * TICKET ORDER
    * ------------------------------------------------------------
    */
-  const order =
+    const order =
     await markOrderPaid(
       payment
+    );
+
+  const ticket =
+    await generateTicket(
+      order
     );
 
   return {
@@ -766,13 +771,16 @@ async function processPaymentSucceeded(
       "TICKET",
 
     order,
-    ticket_generation: "QUEUED",
+
+    ticket_generation:
+      "COMPLETED",
+
+    ticket,
 
     payment_id:
       paymentId
   };
 }
-
 async function processPaymentFailed(
   payment
 ) {

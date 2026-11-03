@@ -127,7 +127,20 @@ Author: "Beira Muscle Show",
         .text("TREINO HÍBRIDO • RUN + EXERCÍCIOS LIVRES", {
           align: "center",
         });
+      doc
+        .moveDown(0.3)
+        .fontSize(10)
+        .font("Helvetica-Bold")
+        .text("13 NOVEMBRO 2026 • 17H", {
+          align: "center",
+        });
 
+      doc
+        .fontSize(9)
+        .font("Helvetica")
+        .text("VILA LUNA — CALÇADÃO DO MIRAMAR • BEIRA", {
+          align: "center",
+        });
       doc.moveDown();
 
       doc
