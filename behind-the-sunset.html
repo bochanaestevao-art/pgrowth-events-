@@ -3,19 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#090607">
+  <meta name="theme-color" content="#07140f">
   <meta name="description" content="HEAVEN — inscrição para o evento. Música, drinks e good vibes.">
   <title>HEAVEN | Inscrição</title>
   <style>
     :root {
       color-scheme: dark;
-      --bg: #090607;
-      --panel: #14090c;
-      --panel-2: #1b0b0f;
-      --red: #ff1738;
-      --red-2: #b60020;
-      --text: #fff8f8;
-      --muted: #c8b7bb;
+      --bg: #07140f;
+      --panel: #0d1d16;
+      --panel-2: #12271e;
+      --green: #20d879;
+      --green-2: #078653;
+      --blue: #268cff;
+      --text: #f5fff9;
+      --muted: #b9cfc5;
       --line: rgba(255, 255, 255, .12);
       --radius: 22px;
     }
@@ -24,8 +25,8 @@
     body {
       margin: 0;
       background:
-        radial-gradient(ellipse at 50% 0%, rgba(145, 0, 25, .27), transparent 48rem),
-        linear-gradient(180deg, #090607 0%, #100609 55%, #080607 100%);
+        radial-gradient(ellipse at 50% 0%, rgba(15, 130, 85, .24), transparent 48rem),
+        linear-gradient(180deg, #07140f 0%, #091c20 55%, #07140f 100%);
       color: var(--text);
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       line-height: 1.55;
@@ -40,41 +41,42 @@
       font-size: .9rem; font-weight: 900; letter-spacing: .28em;
       text-transform: uppercase;
     }
-    .brand span { color: var(--red); }
+    .brand span { color: var(--green); }
     .top-cta {
       display: inline-flex; align-items: center; justify-content: center;
       min-height: 42px; padding: 9px 16px; border-radius: 999px;
-      border: 1px solid rgba(255, 23, 56, .65); background: rgba(255, 23, 56, .1);
+      border: 1px solid rgba(32, 216, 121, .65);
+      background: rgba(32, 216, 121, .1);
       text-decoration: none; font-size: .84rem; font-weight: 800;
     }
     .hero { padding: 10px 0 34px; text-align: center; }
     .eyebrow {
-      color: #ff8a9b; text-transform: uppercase; letter-spacing: .22em;
+      color: #70eeb0; text-transform: uppercase; letter-spacing: .22em;
       font-size: .73rem; font-weight: 850; margin: 6px 0 15px;
     }
     h1 {
       margin: 0 0 18px; font-size: clamp(2.3rem, 9vw, 5.2rem);
       line-height: .95; letter-spacing: -.055em; font-weight: 950;
-      text-shadow: 0 0 32px rgba(255, 23, 56, .2);
+      text-shadow: 0 0 32px rgba(32, 216, 121, .2);
     }
-    h1 span { color: var(--red); }
+    h1 span { color: var(--green); }
     .hero-copy { color: var(--muted); max-width: 620px; margin: 0 auto 24px; }
     .poster-wrap {
       position: relative; width: min(100%, 590px); margin: 0 auto;
-      padding: 8px; border: 1px solid rgba(255, 23, 56, .45);
-      border-radius: 20px; background: rgba(255, 23, 56, .055);
+      padding: 8px; border: 1px solid rgba(38, 140, 255, .45);
+      border-radius: 20px; background: rgba(32, 216, 121, .055);
       box-shadow: 0 0 0 1px rgba(255,255,255,.025), 0 18px 65px rgba(0,0,0,.42),
-                  0 0 38px rgba(255, 23, 56, .13);
+                  0 0 38px rgba(38, 140, 255, .13);
       animation: poster-in .8s ease-out both, poster-glow 5s ease-in-out 1s infinite;
     }
     .poster {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 13px;
-  background: #17070b;
-  animation: poster-breathe 7s ease-in-out infinite;
-  transform-origin: center center;
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 13px;
+      background: #10251e;
+      animation: poster-breathe 7s ease-in-out infinite;
+      transform-origin: center center;
     }
     .poster-fallback {
       padding: 34px 16px; color: var(--muted); font-size: .9rem;
@@ -88,16 +90,17 @@
       background: rgba(255,255,255,.035);
     }
     .fact-label {
-      color: #ff8a9b; font-size: .68rem; font-weight: 850;
+      color: #70eeb0; font-size: .68rem; font-weight: 850;
       letter-spacing: .13em; text-transform: uppercase;
     }
     .fact-value { font-size: .96rem; font-weight: 800; margin-top: 4px; }
     .button {
       display: inline-flex; align-items: center; justify-content: center;
       gap: 9px; min-height: 50px; padding: 13px 22px; border: 0;
-      border-radius: 999px; background: linear-gradient(135deg, #ff2848, #c90028);
+      border-radius: 999px;
+      background: linear-gradient(135deg, #20d879, #087fbd);
       color: white; font: inherit; font-weight: 900; text-decoration: none;
-      cursor: pointer; box-shadow: 0 10px 30px rgba(255, 23, 56, .2);
+      cursor: pointer; box-shadow: 0 10px 30px rgba(32, 216, 121, .2);
       transition: transform .18s ease, filter .18s ease;
     }
     .button:hover { transform: translateY(-2px); filter: brightness(1.08); }
@@ -112,20 +115,19 @@
       box-shadow: 0 18px 55px rgba(0,0,0,.22);
     }
     .video-frame {
-  overflow: hidden;
-  border-radius: 14px;
-  background: #000;
-  border: 1px solid rgba(255,255,255,.09);
-  aspect-ratio: 10 / 13;
-}
-
-video {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-}
+      overflow: hidden;
+      border-radius: 14px;
+      background: #000;
+      border: 1px solid rgba(255,255,255,.09);
+      aspect-ratio: 10 / 13;
+    }
+    video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
     .field { display: flex; flex-direction: column; gap: 7px; }
     .field.full { grid-column: 1 / -1; }
@@ -135,8 +137,8 @@ video {
       border: 1px solid rgba(255,255,255,.17); outline: none;
       color: var(--text); background: rgba(0,0,0,.25); font: inherit;
     }
-    input::placeholder { color: #8e7d81; }
-    input:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(255,23,56,.14); }
+    input::placeholder { color: #8da69a; }
+    input:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(32,216,121,.14); }
     .hint { color: var(--muted); font-size: .78rem; margin: 0; }
     .form-actions { margin-top: 18px; }
     .form-actions .button { width: 100%; }
@@ -146,18 +148,19 @@ video {
     }
     .form-status.show { display: block; }
     .form-status.success { color: #d8ffe5; border: 1px solid #287a4a; background: rgba(25,140,75,.14); }
-    .form-status.error { color: #ffe0e5; border: 1px solid #9f2036; background: rgba(180,0,35,.15); }
-    .form-status.info { color: #fff0c7; border: 1px solid #806525; background: rgba(160,120,20,.12); }
+    .form-status.error { color: #dceeff; border: 1px solid #287ac0; background: rgba(20,100,180,.15); }
+    .form-status.info { color: #dceeff; border: 1px solid #267bc2; background: rgba(38,120,190,.12); }
     .privacy-note { color: var(--muted); text-align: center; font-size: .78rem; margin: 14px 0 0; }
-    footer { padding: 26px 0 36px; text-align: center; color: #9e8b90; font-size: .8rem; }
+    footer { padding: 26px 0 36px; text-align: center; color: #9eb8aa; font-size: .8rem; }
     footer strong { color: #fff; letter-spacing: .12em; }
+
     @keyframes poster-in {
       from { opacity: 0; transform: translateY(18px) scale(.985); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
     @keyframes poster-glow {
-      0%, 100% { box-shadow: 0 18px 65px rgba(0,0,0,.42), 0 0 24px rgba(255,23,56,.1); }
-      50% { box-shadow: 0 18px 65px rgba(0,0,0,.42), 0 0 42px rgba(255,23,56,.22); }
+      0%, 100% { box-shadow: 0 18px 65px rgba(0,0,0,.42), 0 0 24px rgba(32,216,121,.1); }
+      50% { box-shadow: 0 18px 65px rgba(0,0,0,.42), 0 0 42px rgba(38,140,255,.22); }
     }
     @media (max-width: 600px) {
       .page { width: min(100% - 20px, 1040px); }
@@ -176,7 +179,8 @@ video {
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
     }
-        .success-modal {
+
+    .success-modal {
       position: fixed;
       inset: 0;
       z-index: 9999;
@@ -204,14 +208,14 @@ video {
       width: min(100%, 430px);
       padding: 34px 26px 28px;
       text-align: center;
-      border: 1px solid rgba(255, 50, 75, .45);
+      border: 1px solid rgba(38, 140, 255, .45);
       border-radius: 24px;
       background:
-        radial-gradient(circle at 50% 0%, rgba(255, 30, 60, .18), transparent 45%),
-        linear-gradient(145deg, #16070a, #080808);
+        radial-gradient(circle at 50% 0%, rgba(32, 216, 121, .18), transparent 45%),
+        linear-gradient(145deg, #10251e, #080e12);
       box-shadow:
         0 30px 90px rgba(0,0,0,.65),
-        0 0 45px rgba(255, 20, 50, .12);
+        0 0 45px rgba(38, 140, 255, .12);
       transform: translateY(28px) scale(.92);
       transition: transform .45s cubic-bezier(.2,.8,.2,1);
       overflow: hidden;
@@ -230,7 +234,7 @@ video {
       top: -110px;
       transform: translateX(-50%);
       border-radius: 50%;
-      background: rgba(255, 25, 55, .16);
+      background: rgba(32, 216, 121, .16);
       filter: blur(20px);
     }
 
@@ -243,9 +247,9 @@ video {
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      border: 2px solid rgba(255, 70, 90, .8);
-      background: rgba(255, 25, 55, .1);
-      box-shadow: 0 0 0 10px rgba(255, 25, 55, .06);
+      border: 2px solid rgba(32, 216, 121, .8);
+      background: rgba(32, 216, 121, .1);
+      box-shadow: 0 0 0 10px rgba(32, 216, 121, .06);
       animation: successPulse 2s ease-in-out infinite;
     }
 
@@ -253,7 +257,7 @@ video {
       content: "✓";
       font-size: 42px;
       font-weight: 900;
-      color: #ff4964;
+      color: #20d879;
       animation: successCheck .5s .15s ease both;
     }
 
@@ -266,7 +270,7 @@ video {
     }
 
     .success-title span {
-      color: #ff4964;
+      color: var(--green);
     }
 
     .success-text {
@@ -277,8 +281,8 @@ video {
     }
 
     @keyframes successPulse {
-      0%, 100% { box-shadow: 0 0 0 10px rgba(255,25,55,.06); }
-      50% { box-shadow: 0 0 0 17px rgba(255,25,55,0); }
+      0%, 100% { box-shadow: 0 0 0 10px rgba(32,216,121,.06); }
+      50% { box-shadow: 0 0 0 17px rgba(32,216,121,0); }
     }
 
     @keyframes successCheck {
@@ -300,20 +304,16 @@ video {
         transition: none;
       }
     }
-    @keyframes poster-breathe {
-  0%, 100% {
-    transform: scale(1);
-  }
 
-  70% {
-    transform: scale(1.018);
-  }
+    @keyframes poster-breathe {
+      0%, 100% { transform: scale(1); }
+      70% { transform: scale(1.018); }
     }
   </style>
 </head>
 <body>
   <header class="page topbar">
-    <div class="brand"><span style="color:#fff">PGrowth</span> <span style="color:#ff233f">Events</span> <span style="color:#fff"> & Elton</span> <span style="color:#ff233f">Tomas</span></div>
+    <div class="brand"><span style="color:#fff">PGrowth</span> <span style="color:#20d879">Events</span> <span style="color:#fff"> & Elton</span> <span style="color:#268cff">Tomas</span></div>
     <a class="top-cta" href="#inscricao">Inscrever-me</a>
   </header>
 
@@ -327,7 +327,7 @@ video {
         <img
           class="poster"
           src="heaven-poster-final.jpg"
-          alt="Cartaz oficial do evento Behind the Sunset, marcado para 03 de outubro, às 15 horas, em Ponta-Gêa (Heaven)."
+          alt="Cartaz oficial do evento HEAVEN, marcado para 07 de novembro de 2026, às 15 horas, em Ponta-Gêa (Heaven)."
           fetchpriority="high"
           onerror="this.hidden=true;document.getElementById('poster-fallback').hidden=false;"
         >
@@ -337,7 +337,7 @@ video {
       </div>
 
       <div class="event-facts" aria-label="Informações do evento">
-        <div class="fact"><div class="fact-label">Data</div><div class="fact-value">03 Out. 2026</div></div>
+        <div class="fact"><div class="fact-label">Data</div><div class="fact-value">07 Nov. 2026</div></div>
         <div class="fact"><div class="fact-label">Hora</div><div class="fact-value">15h00</div></div>
         <div class="fact"><div class="fact-label">Local</div><div class="fact-value">Ponta-Gêa · Heaven</div></div>
       </div>
@@ -345,26 +345,26 @@ video {
     </section>
 
     <section class="page" id="video" aria-labelledby="video-title">
-  <h2 class="section-heading" id="video-title">Viva o <span style="color:var(--red)">HEAVEN</span></h2>
+      <h2 class="section-heading" id="video-title">Viva o <span style="color:var(--green)">HEAVEN</span></h2>
 
-  <div class="video-card">
-    <div class="video-frame">
-      <video
-        autoplay
-        muted
-        loop
-        playsinline
-        preload="auto"
-        poster="heaven-poster-final.jpg"
-      >
-        <source src="promo-heaven.mp4" type="video/mp4">
-      </video>
-    </div>
-  </div>
+      <div class="video-card">
+        <div class="video-frame">
+          <video
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"
+            poster="heaven-poster-final.jpg"
+          >
+            <source src="promo-heaven.mp4" type="video/mp4">
+          </video>
+        </div>
+      </div>
     </section>
 
     <section class="page" id="inscricao" aria-labelledby="form-title">
-      <h2 class="section-heading" id="form-title">Faz a tua <span style="color:var(--red)">inscrição</span></h2>
+      <h2 class="section-heading" id="form-title">Faz a tua <span style="color:var(--green)">inscrição</span></h2>
       <p class="section-intro">Preenche os teus dados. Confirma que o contacto telefónico está correto.</p>
 
       <div class="form-card">
@@ -392,6 +392,7 @@ video {
       </div>
     </section>
   </main>
+
   <div
     id="success-modal"
     class="success-modal"
@@ -409,14 +410,14 @@ video {
 
       <p class="success-text">
         A tua inscrição no HEAVEN foi recebida com sucesso.
-        Esperamos por ti no dia 03 de outubro.
+        Esperamos por ti no dia 07 de novembro de 2026.
       </p>
-
     </div>
   </div>
+
   <footer>
     <div><strong>HEAVEN</strong></div>
-    <div>03 de outubro de 2026 · Ponta-Gêa</div>
+    <div>07 de novembro de 2026 · Ponta-Gêa</div>
     <div style="margin-top:8px">Powered by PGrowth Events</div>
   </footer>
 
@@ -425,7 +426,7 @@ video {
       const form = document.getElementById("registration-form");
       const button = document.getElementById("submit-button");
       const status = document.getElementById("form-status");
-            const successModal = document.getElementById("success-modal");
+      const successModal = document.getElementById("success-modal");
 
       function openSuccessModal() {
         successModal.classList.add("show");
@@ -444,6 +445,7 @@ video {
           closeSuccessModal();
         }
       });
+
       function showStatus(message, type) {
         status.textContent = message;
         status.className = "form-status show " + type;
@@ -486,7 +488,7 @@ video {
           let result = {};
           try { result = await response.json(); } catch (_) {}
 
-                    if (response.ok && result && result.success === true) {
+          if (response.ok && result && result.success === true) {
             form.reset();
             status.className = "form-status";
             status.textContent = "";
