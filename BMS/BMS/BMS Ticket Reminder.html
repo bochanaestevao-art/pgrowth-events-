@@ -529,6 +529,12 @@ input::placeholder {
               REGISTAR ESTE TELEMÓVEL COMO ADMIN
             </button>
 
+            <button id="bmsAdminRecordsButton" class="push-btn" type="button">
+              CONSULTAR POTENCIAIS COMPRADORES
+            </button>
+
+            <div id="bmsAdminRecords" style="display:none; margin-top:15px; text-align:left;"></div>
+
             <button id="bmsAdminTestButton" class="push-btn" type="button">
               ENVIAR NOTIFICAÇÃO DE TESTE
             </button>
@@ -548,6 +554,9 @@ input::placeholder {
 
 
         <div class="field">
+          <label for="referrerName">Nome do aficionado que está a fazer o registo</label>
+          <input id="referrerName" name="referrerName" type="text" placeholder="Introduza o seu nome" minlength="3" maxlength="120" autocomplete="name" required>
+
           <label for="fullName">Nome completo</label>
           <input
             id="fullName"
@@ -780,6 +789,9 @@ form.addEventListener("submit", async function(event) {
   event.preventDefault();
   hideError();
 
+  const referrerName =
+    document.getElementById("referrerName").value.trim();
+
   const fullName =
     document.getElementById("fullName").value.trim();
 
@@ -830,6 +842,7 @@ form.addEventListener("submit", async function(event) {
       },
       body: JSON.stringify({
         operation: "BMS_TICKET_REMINDER",
+        referrerName,
         fullName,
         phone,
         contactMethod,
@@ -1099,6 +1112,12 @@ enablePushButton.addEventListener("click", async function() {
   const bmsAdminRegisterButton =
     document.getElementById("bmsAdminRegisterButton");
 
+  const bmsAdminRecordsButton =
+    document.getElementById("bmsAdminRecordsButton");
+
+  const bmsAdminRecords =
+    document.getElementById("bmsAdminRecords");
+
   const bmsAdminTestButton =
     document.getElementById("bmsAdminTestButton");
 
@@ -1237,6 +1256,57 @@ enablePushButton.addEventListener("click", async function() {
       }
     }
   );
+
+  // CONSULTA PRIVADA DE POTENCIAIS COMPRADORES
+
+  bmsAdminRecordsButton.addEventListener("click", async function() {
+    bmsAdminRecordsButton.disabled = true;
+    bmsAdminMessage("A consultar registos privados...");
+    bmsAdminRecords.style.display = "block";
+    bmsAdminRecords.textContent = "A carregar...";
+
+    try {
+      const result = await bmsAdminRequest("BMS_ADMIN_LIST_REMINDERS");
+      const records = Array.isArray(result.records) ? result.records : [];
+
+      if (records.length === 0) {
+        bmsAdminRecords.textContent = "Ainda não existem potenciais compradores registados.";
+      } else {
+        const safe = value => String(value == null ? "" : value)
+          .replace(/[&<>"']/g, character => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+          })[character]);
+
+        bmsAdminRecords.innerHTML = records.map((record, index) => {
+          const quantityNormal = Number(record.normal_quantity || 0);
+          const quantityVip = Number(record.vip_quantity || 0);
+
+          return '<article style="border:1px solid #806b45;padding:12px;margin:10px 0;border-radius:8px;">' +
+            '<strong>Registo ' + (index + 1) + '</strong>' +
+            '<p>Comprador: ' + safe(record.full_name) + '</p>' +
+            '<p>Telefone: ' + safe(record.phone) + '</p>' +
+            '<p>Contacto: ' + safe(record.contact_method) + '</p>' +
+            '<p>Normal: ' + quantityNormal + ' | VIP: ' + quantityVip + '</p>' +
+            '<p>Data prevista de compra: ' + safe(record.purchase_date) + '</p>' +
+            '<p>Aficionado responsável: ' + safe(record.referrer_name) + '</p>' +
+            '<p>Estado: ' + safe(record.status) + '</p>' +
+          '</article>';
+        }).join("");
+      }
+
+      bmsAdminMessage("Consulta concluída. Registos encontrados: " + records.length);
+
+    } catch (error) {
+      bmsAdminRecords.textContent = "Não foi possível carregar os registos.";
+      bmsAdminMessage(error.message, true);
+    } finally {
+      bmsAdminRecordsButton.disabled = false;
+    }
+  });
 
   // TESTE REAL DE NOTIFICAÇÃO
 

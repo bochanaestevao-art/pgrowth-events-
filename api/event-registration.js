@@ -1488,6 +1488,152 @@ function bmsVerifyAdminSession(req) {
 }
 
 export default async function handler(req, res) {
+  if (req.method === "GET") {
+    const cronSecret = String(process.env.CRON_SECRET || "").trim();
+    const authorization = String(
+      req.headers.authorization || ""
+    );
+
+    if (!cronSecret || authorization !== "Bearer " + cronSecret) {
+      return sendJson(res, 401, {
+        success: false,
+        error: "CRON_AUTH_REQUIRED"
+      });
+    }
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !bmsPushConfigured) {
+      return sendJson(res, 503, {
+        success: false,
+        error: "CRON_CONFIGURATION_ERROR"
+      });
+    }
+
+    try {
+      const today = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Africa/Maputo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(new Date());
+
+      const due = await supabaseRequest(
+        "bms_ticket_reminders?purchase_date=eq." +
+          today +
+          "&admin_alert_sent_at=is.null&select=id&limit=200",
+        { method: "GET" }
+      );
+
+      if (!due.ok) {
+        return sendJson(res, 500, {
+          success: false,
+          error: "CRON_REMINDERS_QUERY_ERROR"
+        });
+      }
+
+      const records = Array.isArray(due.data) ? due.data : [];
+
+      if (records.length === 0) {
+        return sendJson(res, 200, {
+          success: true,
+          sent: 0,
+          message: "NO_REMINDERS_TODAY"
+        });
+      }
+
+      const admins = await supabaseRequest(
+        "bms_push_subscriptions?role=eq.ADMIN&active=eq.true&select=id,endpoint,p256dh,auth",
+        { method: "GET" }
+      );
+
+      if (!admins.ok || !Array.isArray(admins.data) || admins.data.length === 0) {
+        return sendJson(res, 503, {
+          success: false,
+          error: "NO_ACTIVE_ADMIN_DEVICE"
+        });
+      }
+
+      const payload = JSON.stringify({
+        title: "BEIRA MUSCLE SHOW",
+        body: "Tens " + records.length +
+          " potencial(is) comprador(es) para acompanhar hoje. Abre o painel administrativo.",
+        tag: "bms-daily-reminders-" + today,
+        url: "/BMS/BMS%20Ticket%20Reminder.html#bms-admin"
+      });
+
+      let sent = 0;
+
+      for (const row of admins.data) {
+        try {
+          await webpush.sendNotification(
+            {
+              endpoint: row.endpoint,
+              keys: {
+                p256dh: row.p256dh,
+                auth: row.auth
+              }
+            },
+            payload,
+            { TTL: 86400, urgency: "high" }
+          );
+          sent++;
+        } catch (error) {
+          if (error.statusCode === 404 || error.statusCode === 410) {
+            await supabaseRequest(
+              "bms_push_subscriptions?id=eq." + encodeURIComponent(row.id),
+              {
+                method: "PATCH",
+                body: JSON.stringify({ active: false })
+              }
+            );
+          }
+        }
+      }
+
+      if (sent === 0) {
+        return sendJson(res, 502, {
+          success: false,
+          error: "ADMIN_PUSH_DELIVERY_FAILED"
+        });
+      }
+
+      const sentAt = new Date().toISOString();
+
+      for (const record of records) {
+        const marked = await supabaseRequest(
+          "bms_ticket_reminders?id=eq." + encodeURIComponent(record.id),
+          {
+            method: "PATCH",
+            body: JSON.stringify({ admin_alert_sent_at: sentAt })
+          }
+        );
+
+        if (!marked.ok) {
+          console.error("BMS CRON: falha ao marcar registo", record.id);
+        }
+      }
+
+      return sendJson(res, 200, {
+        success: true,
+        records: records.length,
+        sent
+      });
+
+    } catch (error) {
+      console.error("BMS CRON ERROR:", error);
+      return sendJson(res, 500, {
+        success: false,
+        error: "CRON_EXECUTION_ERROR"
+      });
+    }
+  }
+
+  if (req.method !== "POST") {
+    res.setHeader("Allow", "POST, GET");
+    return sendJson(res, 405, {
+      success: false,
+      error: "METHOD_NOT_ALLOWED"
+    });
+  }
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
 
@@ -1699,6 +1845,41 @@ export default async function handler(req, res) {
   // ======================================
   // BMS ADMIN - TESTE REAL DE PUSH
   // ======================================
+
+  if (operation === "BMS_ADMIN_LIST_REMINDERS") {
+    if (!bmsVerifyAdminSession(req)) {
+      return sendJson(res, 401, {
+        success: false,
+        error: "ADMIN_AUTH_REQUIRED"
+      });
+    }
+
+    try {
+      const result = await supabaseRequest(
+        "bms_ticket_reminders?select=id,full_name,phone,purchase_date,ticket_type,status,created_at,contact_method,normal_quantity,vip_quantity,referrer_name&order=purchase_date.asc,created_at.desc&limit=200",
+        { method: "GET" }
+      );
+
+      if (!result.ok) {
+        return sendJson(res, 500, {
+          success: false,
+          error: "ADMIN_REMINDERS_QUERY_ERROR"
+        });
+      }
+
+      res.setHeader("Cache-Control", "no-store");
+      return sendJson(res, 200, {
+        success: true,
+        records: Array.isArray(result.data) ? result.data : []
+      });
+
+    } catch {
+      return sendJson(res, 500, {
+        success: false,
+        error: "ADMIN_REMINDERS_ERROR"
+      });
+    }
+  }
 
   if (operation === "BMS_ADMIN_TEST_PUSH") {
     if (!bmsVerifyAdminSession(req)) {
@@ -1917,6 +2098,9 @@ export default async function handler(req, res) {
       }
   }
   if (operation === "BMS_TICKET_REMINDER") {
+    const referrerName =
+      String(body.referrerName || "").trim();
+
     const fullName =
       String(body.fullName || "").trim();
 
@@ -1934,6 +2118,13 @@ export default async function handler(req, res) {
 
     const vipQuantity =
       Number(body.vipQuantity ?? 0);
+
+    if (referrerName.length < 3 || referrerName.length > 120) {
+      return sendJson(res, 400, {
+        success: false,
+        error: "INVALID_REFERRER_NAME"
+      });
+    }
 
     if (fullName.length < 3 || fullName.length > 120) {
       return sendJson(res, 400, {
@@ -2030,6 +2221,7 @@ export default async function handler(req, res) {
           },
           body: JSON.stringify({
             full_name: fullName,
+            referrer_name: referrerName,
             phone: phone,
             purchase_date: purchaseDate,
             contact_method: contactMethod,

@@ -7,5 +7,11 @@
     "api/generate-ticket.js": {
       "maxDuration": 300
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/event-registration",
+      "schedule": "0 6 * * *"
+    }
+  ]
 }
