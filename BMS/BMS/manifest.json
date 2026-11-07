@@ -1,0 +1,21 @@
+{
+  "id": "./BMS%20Ticket%20Reminder.html",
+  "name": "BMS Ticket Reminder",
+  "short_name": "BMS Reminder",
+  "description": "Sistema de lembretes do Beira Muscle Show",
+  "lang": "pt",
+  "start_url": "./BMS%20Ticket%20Reminder.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080808",
+  "theme_color": "#080808",
+  "icons": [
+    {
+      "src": "./bms-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

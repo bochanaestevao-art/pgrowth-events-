@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#080808"/>
+  <rect x="24" y="24" width="464" height="464" rx="82"
+        fill="none" stroke="#d7ad55" stroke-width="12"/>
+  <text x="256" y="245" text-anchor="middle"
+        font-family="Arial, sans-serif" font-size="145"
+        font-weight="900" fill="#d7ad55">BMS</text>
+  <path d="M110 295 H402" stroke="#b51f2b" stroke-width="12"
+        stroke-linecap="round"/>
+  <text x="256" y="355" text-anchor="middle"
+        font-family="Arial, sans-serif" font-size="34"
+        font-weight="bold" letter-spacing="7" fill="#f5f1e8">REMINDER</text>
+</svg>

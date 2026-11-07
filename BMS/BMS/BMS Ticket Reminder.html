@@ -1,0 +1,1059 @@
+
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#080808">
+<meta name="description" content="BMS Ticket Reminder — Beira Muscle Show 2026">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="BMS Reminder">
+
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./bms-icon.svg" type="image/svg+xml">
+
+<title>BMS | Intenção de Compra</title>
+
+<style>
+:root {
+  --gold: #d7ad55;
+  --red: #b51f2b;
+  --black: #080808;
+  --white: #f5f1e8;
+  --muted: #aaa39a;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--white);
+  background:
+    radial-gradient(circle at 50% 0%, #33230e 0%, transparent 40%),
+    linear-gradient(145deg, #080808, #15100b 55%, #080808);
+  padding: 24px 14px 40px;
+}
+
+.container {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.top-line {
+  height: 4px;
+  width: 75px;
+  background: linear-gradient(90deg, var(--red), var(--gold));
+  margin: 0 auto 22px;
+  border-radius: 10px;
+}
+
+.brand {
+  text-align: center;
+  margin-bottom: 25px;
+  animation: fadeDown .8s ease both;
+}
+
+.brand small {
+  color: var(--gold);
+  letter-spacing: 5px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.brand h1 {
+  font-size: clamp(38px, 11vw, 57px);
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin: 9px 0 4px;
+}
+
+.brand h1 span {
+  color: var(--gold);
+}
+
+.brand p {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+
+.card {
+  background: rgba(20, 18, 15, .96);
+  border: 1px solid rgba(215, 173, 85, .35);
+  border-radius: 18px;
+  padding: 24px 19px;
+  box-shadow: 0 15px 45px rgba(0,0,0,.45);
+  animation: fadeUp .8s ease both;
+}
+
+.card h2 {
+  font-size: 22px;
+  text-align: center;
+  margin-bottom: 9px;
+}
+
+.intro {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.event-info {
+  border-left: 3px solid var(--red);
+  padding: 11px 13px;
+  background: rgba(181,31,43,.09);
+  margin-bottom: 23px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.event-info strong {
+  color: var(--gold);
+}
+
+.field {
+  margin-bottom: 18px;
+}
+
+label, .field-title {
+  display: block;
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+input, select {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 13px;
+  border-radius: 9px;
+  border: 1px solid #494136;
+  outline: none;
+  background: #0d0c0a;
+  color: white;
+  font-size: 15px;
+}
+
+input:focus, select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(215,173,85,.12);
+}
+
+input::placeholder {
+  color: #777;
+}
+
+.contact-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.contact-option {
+  position: relative;
+}
+
+.contact-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.contact-option span {
+  display: block;
+  border: 1px solid #494136;
+  background: #0d0c0a;
+  padding: 14px 8px;
+  border-radius: 9px;
+  text-align: center;
+  font-size: 13px;
+  color: #ddd;
+  cursor: pointer;
+}
+
+.contact-option input:checked + span {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(215,173,85,.09);
+}
+
+.ticket-box {
+  border: 1px solid #393127;
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 13px;
+  background: #100e0b;
+}
+
+.ticket-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.ticket-name {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.ticket-price {
+  color: var(--gold);
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quantity-control input {
+  max-width: 110px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.quantity-control small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.summary {
+  border: 1px solid rgba(215,173,85,.4);
+  border-radius: 12px;
+  padding: 16px;
+  margin: 21px 0;
+  background: rgba(215,173,85,.06);
+}
+
+.summary h3 {
+  color: var(--gold);
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+  color: #d1cbc0;
+  font-size: 13px;
+}
+
+.summary-total {
+  border-top: 1px solid #51452f;
+  padding-top: 12px;
+  margin-top: 12px;
+  font-weight: bold;
+  color: white;
+  font-size: 17px;
+}
+
+.summary-total strong {
+  color: var(--gold);
+}
+
+.notice {
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--muted);
+  text-align: center;
+  margin: 16px 0;
+}
+
+.submit-btn, .return-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  min-height: 52px;
+  background: linear-gradient(100deg, #9d1722, #c52a35);
+  color: white;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: transform .2s, opacity .2s;
+}
+
+.submit-btn:active, .return-btn:active {
+  transform: scale(.98);
+}
+
+.submit-btn:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.message {
+  display: none;
+  border-radius: 9px;
+  padding: 12px;
+  margin-bottom: 15px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.message.error {
+  display: block;
+  color: #ffb8b8;
+  background: rgba(181,31,43,.15);
+  border: 1px solid rgba(181,31,43,.5);
+}
+/* ======================================
+   BMS PUSH NOTIFICATIONS
+====================================== */
+
+.push-section {
+  margin: 22px 0;
+  padding: 20px 16px;
+  background: #100e0b;
+  border: 1px solid rgba(212, 175, 55, .35);
+  border-radius: 14px;
+  text-align: center;
+}
+
+.push-section h3 {
+  color: var(--gold);
+  font-size: 17px;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.push-section p {
+  color: #d0c8bc;
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.push-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--gold);
+  color: #080808;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.push-btn:active {
+  transform: scale(.98);
+}
+
+.push-status {
+  margin-top: 12px;
+  color: #aaa;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.success-screen {
+  display: none;
+  text-align: center;
+  padding: 18px 3px 4px;
+  animation: fadeUp .6s ease both;
+}
+
+.success-icon {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  border: 2px solid var(--gold);
+  color: var(--gold);
+  display: grid;
+  place-items: center;
+  font-size: 38px;
+  animation: pop .6s ease both;
+}
+
+.success-screen h2 {
+  color: var(--gold);
+  font-size: 25px;
+  margin-bottom: 13px;
+}
+
+.success-screen p {
+  color: #d0c8bc;
+  line-height: 1.7;
+  font-size: 14px;
+  margin-bottom: 17px;
+}
+
+.success-summary {
+  background: #100e0b;
+  border: 1px solid #51452f;
+  border-radius: 11px;
+  padding: 15px;
+  margin: 20px 0;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.9;
+}
+
+.success-summary strong {
+  color: var(--gold);
+}
+
+.return-btn {
+  background: linear-gradient(100deg, #8c1720, #b51f2b);
+  margin-top: 10px;
+}
+
+.footer {
+  text-align: center;
+  color: #777067;
+  font-size: 11px;
+  margin-top: 23px;
+  line-height: 1.7;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pop {
+  0% { transform: scale(.5); opacity: 0; }
+  70% { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <div class="top-line"></div>
+
+  <header class="brand">
+    <small>PGROWTH EVENTS APRESENTA</small>
+    <h1>BEIRA <span>MUSCLE</span></h1>
+    <p>SHOW • 2.ª EDIÇÃO 2026</p>
+  </header>
+
+  <main class="card">
+
+    <section id="formSection">
+
+      <h2>Intenção de Compra</h2>
+
+      <p class="intro">
+        Pretende adquirir bilhetes para o Beira Muscle Show?
+        Registe a sua intenção e poderemos entrar em contacto consigo.
+      </p>
+
+            <div class="event-info">
+        <strong>21 DE NOVEMBRO DE 2026</strong><br>
+        10h00 – 20h00<br>
+        Solange Beach Club — Beira
+      </div>
+
+      <!-- BMS PUSH NOTIFICATIONS -->
+
+      <section class="push-section">
+
+        <h3>NOTIFICAÇÕES BMS</h3>
+
+        <p>
+          Receba avisos e novidades do Beira Muscle Show
+          directamente no seu telemóvel.
+        </p>
+
+        <button
+          id="enablePushButton"
+          class="push-btn"
+          type="button"
+        >
+          ACTIVAR NOTIFICAÇÕES
+        </button>
+
+        <div
+          id="pushStatus"
+          class="push-status"
+          role="status"
+          aria-live="polite"
+        >
+          Ative as notificações para acompanhar as novidades do evento.
+        </div>
+
+      </section>
+
+      <form id="reminderForm">
+
+        <div class="field">
+          <label for="fullName">Nome completo</label>
+          <input
+            id="fullName"
+            name="fullName"
+            type="text"
+            placeholder="Introduza o seu nome completo"
+            minlength="3"
+            maxlength="120"
+            autocomplete="name"
+            required>
+        </div>
+
+        <div class="field">
+          <label for="phone">Número de telefone</label>
+          <input
+            id="phone"
+            name="phone"
+            type="tel"
+            placeholder="Ex.: 84 123 4567"
+            minlength="7"
+            maxlength="20"
+            autocomplete="tel"
+            required>
+        </div>
+
+        <div class="field">
+          <span class="field-title">Como prefere ser contactado?</span>
+
+          <div class="contact-options">
+            <label class="contact-option">
+              <input
+                type="radio"
+                name="contactMethod"
+                value="CALL"
+                required>
+              <span>☎ Chamada</span>
+            </label>
+
+            <label class="contact-option">
+              <input
+                type="radio"
+                name="contactMethod"
+                value="WHATSAPP"
+                required>
+              <span>WhatsApp</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-title">Quantidade de bilhetes</span>
+
+          <div class="ticket-box">
+            <div class="ticket-head">
+              <span class="ticket-name">Normal</span>
+              <span class="ticket-price">300 MT / unidade</span>
+            </div>
+
+            <div class="quantity-control">
+              <input
+                id="normalQuantity"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value="0"
+                required>
+              <small>Quantidade de bilhetes Normal</small>
+            </div>
+          </div>
+
+          <div class="ticket-box">
+            <div class="ticket-head">
+              <span class="ticket-name">VIP</span>
+              <span class="ticket-price">750 MT / unidade</span>
+            </div>
+
+            <div class="quantity-control">
+              <input
+                id="vipQuantity"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value="0"
+                required>
+              <small>Quantidade de bilhetes VIP</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="purchaseDate">Data prevista para comprar</label>
+          <input
+            id="purchaseDate"
+            name="purchaseDate"
+            type="date"
+            required>
+        </div>
+
+        <div class="summary">
+          <h3>Resumo da intenção</h3>
+
+          <div class="summary-row">
+            <span>Bilhetes Normal</span>
+            <strong id="normalSummary">0</strong>
+          </div>
+
+          <div class="summary-row">
+            <span>Bilhetes VIP</span>
+            <strong id="vipSummary">0</strong>
+          </div>
+
+          <div class="summary-row">
+            <span>Total de bilhetes</span>
+            <strong id="totalQuantity">0</strong>
+          </div>
+
+          <div class="summary-row summary-total">
+            <span>Valor estimado</span>
+            <strong id="estimatedTotal">0 MT</strong>
+          </div>
+        </div>
+
+        <p class="notice">
+          Este registo representa apenas uma intenção de compra.
+          Não constitui pagamento, reserva ou garantia de disponibilidade
+          de bilhetes. O valor apresentado é uma estimativa.
+        </p>
+
+        <div id="formMessage" class="message"></div>
+
+        <button id="submitButton" class="submit-btn" type="submit">
+          REGISTAR INTENÇÃO DE COMPRA
+        </button>
+
+      </form>
+    </section>
+
+    <section id="successScreen" class="success-screen">
+
+      <div class="success-icon">✓</div>
+
+      <h2>Registo recebido!</h2>
+
+      <p>
+        A sua intenção de compra foi registada com sucesso.
+        Obrigado pelo interesse no Beira Muscle Show!
+      </p>
+
+      <div class="success-summary" id="successSummary"></div>
+
+      <p>
+        Este registo não representa uma reserva nem um pagamento.
+      </p>
+
+      <button id="returnButton" class="return-btn" type="button">
+        REGRESSAR AO REGISTO
+      </button>
+
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    BEIRA MUSCLE SHOW — 2.ª EDIÇÃO 2026<br>
+    PGrowth Events • Beira, Moçambique
+  </footer>
+
+</div>
+
+<script>
+const form = document.getElementById("reminderForm");
+const formSection = document.getElementById("formSection");
+const successScreen = document.getElementById("successScreen");
+const submitButton = document.getElementById("submitButton");
+const returnButton = document.getElementById("returnButton");
+const formMessage = document.getElementById("formMessage");
+
+const normalInput = document.getElementById("normalQuantity");
+const vipInput = document.getElementById("vipQuantity");
+const dateInput = document.getElementById("purchaseDate");
+
+function maputoToday() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Maputo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(new Date());
+
+  const values = {};
+  parts.forEach(part => {
+    values[part.type] = part.value;
+  });
+
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+dateInput.min = maputoToday();
+
+function updateSummary() {
+  const normal = Math.max(0, Number(normalInput.value) || 0);
+  const vip = Math.max(0, Number(vipInput.value) || 0);
+
+  document.getElementById("normalSummary").textContent = normal;
+  document.getElementById("vipSummary").textContent = vip;
+  document.getElementById("totalQuantity").textContent = normal + vip;
+
+  const total = normal * 300 + vip * 750;
+
+  document.getElementById("estimatedTotal").textContent =
+    total.toLocaleString("pt-MZ") + " MT";
+}
+
+normalInput.addEventListener("input", updateSummary);
+vipInput.addEventListener("input", updateSummary);
+
+function showError(message) {
+  formMessage.textContent = message;
+  formMessage.className = "message error";
+}
+
+function hideError() {
+  formMessage.textContent = "";
+  formMessage.className = "message";
+}
+
+form.addEventListener("submit", async function(event) {
+  event.preventDefault();
+  hideError();
+
+  const fullName =
+    document.getElementById("fullName").value.trim();
+
+  const phone =
+    document.getElementById("phone").value.trim();
+
+  const contactMethod =
+    form.querySelector('input[name="contactMethod"]:checked')?.value;
+
+  const normalQuantity = Number(normalInput.value);
+  const vipQuantity = Number(vipInput.value);
+  const purchaseDate = dateInput.value;
+
+  const totalQuantity = normalQuantity + vipQuantity;
+
+  if (!contactMethod) {
+    showError("Escolha como prefere ser contactado.");
+    return;
+  }
+
+  if (
+    !Number.isInteger(normalQuantity) ||
+    !Number.isInteger(vipQuantity) ||
+    normalQuantity < 0 ||
+    vipQuantity < 0 ||
+    totalQuantity < 1 ||
+    totalQuantity > 100 ||
+    normalQuantity > 100 ||
+    vipQuantity > 100
+  ) {
+    showError("Indique uma quantidade válida de bilhetes.");
+    return;
+  }
+
+  if (!purchaseDate || purchaseDate < maputoToday()) {
+    showError("Escolha uma data válida para a compra.");
+    return;
+  }
+
+  submitButton.disabled = true;
+  submitButton.textContent = "A REGISTAR...";
+
+  try {
+    const response = await fetch("/api/event-registration", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        operation: "BMS_TICKET_REMINDER",
+        fullName,
+        phone,
+        contactMethod,
+        normalQuantity,
+        vipQuantity,
+        purchaseDate
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || data.success !== true) {
+      throw new Error(data.message || data.error || "Não foi possível registar. Tente novamente.");
+    }
+
+    const estimatedTotal =
+      normalQuantity * 300 + vipQuantity * 750;
+
+    document.getElementById("successSummary").innerHTML = `
+      <div><strong>Nome:</strong> ${escapeHtml(fullName)}</div>
+      <div><strong>Contacto:</strong> ${escapeHtml(phone)}</div>
+      <div><strong>Normal:</strong> ${normalQuantity}</div>
+      <div><strong>VIP:</strong> ${vipQuantity}</div>
+      <div><strong>Data prevista:</strong> ${escapeHtml(purchaseDate)}</div>
+      <div><strong>Valor estimado:</strong> ${estimatedTotal.toLocaleString("pt-MZ")} MT</div>
+    `;
+
+    formSection.style.display = "none";
+    successScreen.style.display = "block";
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+
+  } catch (error) {
+    showError(
+      error.message === "Failed to fetch"
+        ? "Não foi possível estabelecer ligação. Verifique a internet e tente novamente."
+        : error.message
+    );
+
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "REGISTAR A MINHA INTENÇÃO";
+  }
+});
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, function(character) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[character];
+  });
+}
+
+returnButton.addEventListener("click", function() {
+  form.reset();
+  dateInput.min = maputoToday();
+  hideError();
+  updateSummary();
+
+  successScreen.style.display = "none";
+  formSection.style.display = "block";
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+});
+
+updateSummary();
+
+// ======================================
+// BMS PUSH - SUBSCRIÇÃO DE DISPOSITIVOS
+// ======================================
+
+const enablePushButton =
+  document.getElementById("enablePushButton");
+
+const pushStatus =
+  document.getElementById("pushStatus");
+
+function bmsUpdatePushStatus(message, isError = false) {
+  pushStatus.textContent = message;
+  pushStatus.style.color = isError ? "#ffb8b8" : "#d0c8bc";
+}
+
+function bmsUrlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat(
+    (4 - base64String.length % 4) % 4
+  );
+
+  const base64 = (base64String + padding)
+    .replace(/-/g, "+")
+    .replace(/_/g, "/");
+
+  const rawData = window.atob(base64);
+
+  return Uint8Array.from(
+    [...rawData].map(character => character.charCodeAt(0))
+  );
+}
+
+enablePushButton.addEventListener("click", async function() {
+
+  if (
+    !("serviceWorker" in navigator) ||
+    !("PushManager" in window) ||
+    !("Notification" in window)
+  ) {
+    bmsUpdatePushStatus(
+      "Este navegador não suporta notificações Push.",
+      true
+    );
+    return;
+  }
+
+  if (!window.isSecureContext) {
+    bmsUpdatePushStatus(
+      "As notificações necessitam de uma ligação HTTPS.",
+      true
+    );
+    return;
+  }
+
+  enablePushButton.disabled = true;
+  enablePushButton.textContent = "A ACTIVAR...";
+
+  try {
+
+    let permission = Notification.permission;
+
+    if (permission === "default") {
+      permission = await Notification.requestPermission();
+    }
+
+    if (permission !== "granted") {
+      throw new Error(
+        "A autorização para notificações não foi concedida."
+      );
+    }
+
+    bmsUpdatePushStatus(
+      "A preparar o registo deste dispositivo..."
+    );
+
+    const keyResponse = await fetch(
+      "/api/event-registration",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          operation: "BMS_PUSH_PUBLIC_KEY"
+        })
+      }
+    );
+
+    const keyData = await keyResponse.json();
+
+    if (!keyResponse.ok || !keyData.success || !keyData.publicKey) {
+      throw new Error(
+        "Não foi possível obter a chave de notificações."
+      );
+    }
+
+    const registration =
+      await navigator.serviceWorker.ready;
+
+    let subscription =
+      await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription =
+        await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey:
+            bmsUrlBase64ToUint8Array(keyData.publicKey)
+        });
+    }
+
+    const saveResponse = await fetch(
+      "/api/event-registration",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          operation: "BMS_PUSH_SUBSCRIBE",
+          subscription: subscription.toJSON(),
+          deviceLabel: "BMS Fan Device"
+        })
+      }
+    );
+
+    const saveData = await saveResponse.json();
+
+    if (
+      saveResponse.status === 409 &&
+      saveData.error === "DEVICE_ALREADY_REGISTERED"
+    ) {
+      bmsUpdatePushStatus(
+        "Este dispositivo já está registado para notificações."
+      );
+
+      enablePushButton.textContent = "NOTIFICAÇÕES ACTIVAS";
+      return;
+    }
+
+    if (!saveResponse.ok || !saveData.success) {
+      throw new Error(
+        saveData.message ||
+        "Não foi possível guardar a subscrição."
+      );
+    }
+
+    bmsUpdatePushStatus(
+      "Notificações activadas! Vais receber avisos do Beira Muscle Show."
+    );
+
+    enablePushButton.textContent = "NOTIFICAÇÕES ACTIVAS";
+
+  } catch (error) {
+
+    console.error("BMS Push:", error);
+
+    bmsUpdatePushStatus(
+      error.message || "Não foi possível activar as notificações.",
+      true
+    );
+
+    enablePushButton.disabled = false;
+    enablePushButton.textContent = "TENTAR NOVAMENTE";
+  }
+
+});
+
+// ======================================
+// BMS PWA - SERVICE WORKER
+// ======================================
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", async function() {
+    try {
+      const registration =
+        await navigator.serviceWorker.register(
+          "./service-worker.js"
+        );
+
+      console.log(
+        "BMS Service Worker ativo:",
+        registration.scope
+      );
+
+    } catch (error) {
+      console.error(
+        "Erro ao registar BMS Service Worker:",
+        error
+      );
+    }
+  });
+}
+</script>
+</body>
+</html>

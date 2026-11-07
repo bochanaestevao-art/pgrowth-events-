@@ -1,11 +1,38 @@
 import crypto from "node:crypto";
+import * as webpush from "web-push";
 
 const SUPABASE_URL =
   String(process.env.SUPABASE_URL || "").trim();
 
 const SUPABASE_SERVICE_ROLE_KEY =
   String(process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+const VAPID_PUBLIC_KEY =
+  String(process.env.VAPID_PUBLIC_KEY || "").trim();
 
+const VAPID_PRIVATE_KEY =
+  String(process.env.VAPID_PRIVATE_KEY || "").trim();
+
+const VAPID_SUBJECT =
+  String(process.env.VAPID_SUBJECT || "").trim();
+// ======================================
+// BMS WEB PUSH CONFIGURATION
+// ======================================
+
+let bmsPushConfigured = false;
+
+if (
+  VAPID_PUBLIC_KEY &&
+  VAPID_PRIVATE_KEY &&
+  VAPID_SUBJECT
+) {
+  webpush.setVapidDetails(
+    VAPID_SUBJECT,
+    VAPID_PUBLIC_KEY,
+    VAPID_PRIVATE_KEY
+  );
+
+  bmsPushConfigured = true;
+}
 function sendJson(res, status, data) {
   res.status(status).json(data);
 }
@@ -1373,7 +1400,282 @@ export default async function handler(req, res) {
 
   const operation =
     String(body.operation || "").trim().toUpperCase();
+  // ======================================
+  // BMS PUSH - PUBLIC VAPID KEY
+  // ======================================
 
+  if (operation === "BMS_PUSH_PUBLIC_KEY") {
+    if (!bmsPushConfigured) {
+      return sendJson(res, 503, {
+        success: false,
+        error: "PUSH_NOT_CONFIGURED"
+      });
+    }
+
+    return sendJson(res, 200, {
+      success: true,
+      publicKey: VAPID_PUBLIC_KEY
+    });
+  }
+
+  // ======================================
+  // BMS PUSH - FAN SUBSCRIPTION
+  // ======================================
+
+  if (operation === "BMS_PUSH_SUBSCRIBE") {
+    if (!bmsPushConfigured) {
+      return sendJson(res, 503, {
+        success: false,
+        error: "PUSH_NOT_CONFIGURED"
+      });
+    }
+
+    const subscription = body.subscription || {};
+
+    const endpoint =
+      String(subscription.endpoint || "").trim();
+
+    const p256dh =
+      String(subscription.keys?.p256dh || "").trim();
+
+    const auth =
+      String(subscription.keys?.auth || "").trim();
+
+    const deviceLabel =
+      String(body.deviceLabel || "").trim().slice(0, 100);
+
+    let validEndpoint = false;
+
+    try {
+      const parsedEndpoint = new URL(endpoint);
+
+      validEndpoint =
+        parsedEndpoint.protocol === "https:";
+    } catch {
+      validEndpoint = false;
+    }
+
+    if (
+      !validEndpoint ||
+      endpoint.length > 2048 ||
+      !p256dh ||
+      p256dh.length > 500 ||
+      !auth ||
+      auth.length > 500
+    ) {
+      return sendJson(res, 400, {
+        success: false,
+        error: "INVALID_PUSH_SUBSCRIPTION"
+      });
+    }
+
+      try {
+      const result = await supabaseRequest(
+        "bms_push_subscriptions",
+        {
+          method: "POST",
+          headers: {
+            Prefer: "return=minimal"
+          },
+          body: JSON.stringify({
+            endpoint: endpoint,
+            p256dh: p256dh,
+            auth: auth,
+            device_label: deviceLabel || null,
+            active: true,
+            last_seen_at: new Date().toISOString()
+          })
+        }
+      );
+
+      if (!result.ok) {
+
+        if (result.status === 409) {
+          return sendJson(res, 409, {
+            success: false,
+            error: "DEVICE_ALREADY_REGISTERED",
+            message: "Este dispositivo já está registado."
+          });
+        }
+
+        console.error(
+          "BMS PUSH: falha ao guardar subscrição. HTTP " +
+            result.status
+        );
+
+        return sendJson(res, 500, {
+          success: false,
+          error: "PUSH_SUBSCRIPTION_FAILED"
+        });
+      }
+
+      return sendJson(res, 200, {
+        success: true,
+        message: "Dispositivo registado para notificações."
+      });
+
+    } catch (error) {
+      console.error(
+        "BMS PUSH: erro ao registar subscrição."
+      );
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "PUSH_SUBSCRIPTION_FAILED"
+      });
+      }
+  }
+  if (operation === "BMS_TICKET_REMINDER") {
+    const fullName =
+      String(body.fullName || "").trim();
+
+    const phone =
+      String(body.phone || "").trim();
+
+    const purchaseDate =
+      String(body.purchaseDate || "").trim();
+
+    const contactMethod =
+      String(body.contactMethod || "").trim().toUpperCase();
+
+    const normalQuantity =
+      Number(body.normalQuantity ?? 0);
+
+    const vipQuantity =
+      Number(body.vipQuantity ?? 0);
+
+    if (fullName.length < 3 || fullName.length > 120) {
+      return sendJson(res, 400, {
+        success: false,
+        error: "INVALID_FULL_NAME"
+      });
+    }
+
+    if (phone.length < 7 || phone.length > 20) {
+      return sendJson(res, 400, {
+        success: false,
+        error: "INVALID_PHONE"
+      });
+    }
+
+    if (
+      contactMethod !== "CALL" &&
+      contactMethod !== "WHATSAPP"
+    ) {
+      return sendJson(res, 400, {
+        success: false,
+        error: "INVALID_CONTACT_METHOD"
+      });
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(purchaseDate)) {
+      return sendJson(res, 400, {
+        success: false,
+        error: "INVALID_PURCHASE_DATE"
+      });
+    }
+
+    const [year, month, day] =
+      purchaseDate.split("-").map(Number);
+
+    const dateCheck =
+      new Date(Date.UTC(year, month - 1, day));
+
+    if (
+      dateCheck.getUTCFullYear() !== year ||
+      dateCheck.getUTCMonth() !== month - 1 ||
+      dateCheck.getUTCDate() !== day
+    ) {
+      return sendJson(res, 400, {
+        success: false,
+        error: "INVALID_PURCHASE_DATE"
+      });
+    }
+
+    const maputoParts =
+      new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Africa/Maputo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).formatToParts(new Date());
+
+    const maputoToday = [
+      maputoParts.find(p => p.type === "year").value,
+      maputoParts.find(p => p.type === "month").value,
+      maputoParts.find(p => p.type === "day").value
+    ].join("-");
+
+    if (purchaseDate < maputoToday) {
+      return sendJson(res, 400, {
+        success: false,
+        error: "PURCHASE_DATE_IN_PAST"
+      });
+    }
+
+    if (
+      !Number.isInteger(normalQuantity) ||
+      !Number.isInteger(vipQuantity) ||
+      normalQuantity < 0 ||
+      vipQuantity < 0 ||
+      normalQuantity > 100 ||
+      vipQuantity > 100 ||
+      normalQuantity + vipQuantity < 1 ||
+      normalQuantity + vipQuantity > 100
+    ) {
+      return sendJson(res, 400, {
+        success: false,
+        error: "INVALID_TICKET_QUANTITY"
+      });
+    }
+
+    try {
+      const result = await supabaseRequest(
+        "bms_ticket_reminders",
+        {
+          method: "POST",
+          headers: {
+            Prefer: "return=minimal"
+          },
+          body: JSON.stringify({
+            full_name: fullName,
+            phone: phone,
+            purchase_date: purchaseDate,
+            contact_method: contactMethod,
+            normal_quantity: normalQuantity,
+            vip_quantity: vipQuantity
+          })
+        }
+      );
+
+      if (!result.ok) {
+        console.error(
+          "BMS TICKET REMINDER: Supabase recusou o registo. HTTP " +
+            result.status
+        );
+
+        return sendJson(res, 500, {
+          success: false,
+          error: "BMS_TICKET_REMINDER_FAILED"
+        });
+      }
+
+      return sendJson(res, 200, {
+        success: true,
+        message: "Registo de interesse recebido."
+      });
+
+    } catch (error) {
+      console.error(
+        "BMS TICKET REMINDER: erro inesperado."
+      );
+
+      return sendJson(res, 500, {
+        success: false,
+        error: "BMS_TICKET_REMINDER_FAILED"
+      });
+    }
+  }
 
   if (operation === "CLIENT_BALANCE") {
     try {
