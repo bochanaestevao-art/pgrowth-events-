@@ -1357,6 +1357,136 @@ async function handleClientTopup(body, res) {
   }
 }
 
+// ======================================
+// BMS ADMIN - SESSÃO SEGURA
+// ======================================
+
+const BMS_ADMIN_SESSION_MAX_AGE = 12 * 60 * 60;
+
+function bmsTimingSafeEqual(a, b) {
+  if (!a || !b) return false;
+
+  const aa = Buffer.from(String(a));
+  const bb = Buffer.from(String(b));
+
+  if (aa.length !== bb.length || aa.length === 0) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(aa, bb);
+}
+
+function bmsGetCookie(req, name) {
+  const header = req.headers.cookie || "";
+
+  for (const part of header.split(";")) {
+    const index = part.indexOf("=");
+
+    if (index === -1) continue;
+
+    const key = part.slice(0, index).trim();
+
+    if (key !== name) continue;
+
+    const value = part.slice(index + 1).trim();
+
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+function bmsCreateAdminSession() {
+  const secret = String(
+    process.env.BMS_ADMIN_SESSION_SECRET || ""
+  ).trim();
+
+  if (secret.length < 32) {
+    throw new Error("BMS_ADMIN_SESSION_SECRET inválido");
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+
+  const payload = Buffer.from(
+    JSON.stringify({
+      role: "ADMIN",
+      iat: now,
+      exp: now + BMS_ADMIN_SESSION_MAX_AGE,
+      jti: crypto.randomUUID()
+    })
+  ).toString("base64url");
+
+  const signature = crypto
+    .createHmac("sha256", secret)
+    .update(payload)
+    .digest("hex");
+
+  return `${payload}.${signature}`;
+}
+
+function bmsVerifyAdminSession(req) {
+  const token = bmsGetCookie(
+    req,
+    "bms_admin_session"
+  );
+
+  if (!token) return false;
+
+  const secret = String(
+    process.env.BMS_ADMIN_SESSION_SECRET || ""
+  ).trim();
+
+  if (secret.length < 32) return false;
+
+  const parts = token.split(".");
+
+  if (parts.length !== 2) return false;
+
+  const [payload, suppliedSignature] = parts;
+
+  const expectedSignature = crypto
+    .createHmac("sha256", secret)
+    .update(payload)
+    .digest("hex");
+
+  if (
+    !bmsTimingSafeEqual(
+      suppliedSignature,
+      expectedSignature
+    )
+  ) {
+    return false;
+  }
+
+  try {
+    const decoded = JSON.parse(
+      Buffer.from(payload, "base64url").toString("utf8")
+    );
+
+    const now = Math.floor(Date.now() / 1000);
+
+    if (
+      decoded.role !== "ADMIN" ||
+      !Number.isSafeInteger(decoded.iat) ||
+      !Number.isSafeInteger(decoded.exp) ||
+      decoded.iat > now + 60 ||
+      decoded.exp <= now ||
+      decoded.exp - decoded.iat > BMS_ADMIN_SESSION_MAX_AGE
+    ) {
+      return false;
+    }
+
+    return true;
+
+  } catch {
+    return false;
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -1417,6 +1547,267 @@ export default async function handler(req, res) {
       publicKey: VAPID_PUBLIC_KEY
     });
   }
+
+  // ======================================
+  // BMS ADMIN - LOGIN
+  // ======================================
+
+  if (operation === "BMS_ADMIN_LOGIN") {
+    const adminPassword = String(
+      process.env.BMS_ADMIN_PASSWORD || ""
+    );
+
+    const sessionSecret = String(
+      process.env.BMS_ADMIN_SESSION_SECRET || ""
+    );
+
+    if (!adminPassword || sessionSecret.length < 32) {
+      return sendJson(res, 503, {
+        success: false,
+        error: "ADMIN_NOT_CONFIGURED"
+      });
+    }
+
+    const suppliedPassword = String(body.password || "");
+
+    if (!bmsTimingSafeEqual(suppliedPassword, adminPassword)) {
+      return sendJson(res, 401, {
+        success: false,
+        error: "INVALID_CREDENTIALS"
+      });
+    }
+
+    try {
+      const token = bmsCreateAdminSession();
+
+      res.setHeader(
+        "Set-Cookie",
+        `bms_admin_session=${encodeURIComponent(token)}; Max-Age=${BMS_ADMIN_SESSION_MAX_AGE}; Path=/; HttpOnly; Secure; SameSite=Strict`
+      );
+
+      res.setHeader("Cache-Control", "no-store");
+
+      return sendJson(res, 200, {
+        success: true,
+        message: "Sessão administrativa iniciada."
+      });
+
+    } catch {
+      return sendJson(res, 500, {
+        success: false,
+        error: "ADMIN_SESSION_ERROR"
+      });
+    }
+  }
+
+  // ======================================
+  // BMS ADMIN - LOGOUT
+  // ======================================
+
+  if (operation === "BMS_ADMIN_LOGOUT") {
+    res.setHeader(
+      "Set-Cookie",
+      "bms_admin_session=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Strict"
+    );
+
+    res.setHeader("Cache-Control", "no-store");
+
+    return sendJson(res, 200, {
+      success: true
+    });
+  }
+
+  // ======================================
+  // BMS ADMIN - REGISTAR DISPOSITIVO
+  // ======================================
+
+  if (operation === "BMS_ADMIN_REGISTER_DEVICE") {
+    if (!bmsVerifyAdminSession(req)) {
+      return sendJson(res, 401, {
+        success: false,
+        error: "ADMIN_AUTH_REQUIRED"
+      });
+    }
+
+    const endpoint = String(
+      body.subscription?.endpoint || ""
+    ).trim();
+
+    let validEndpoint = false;
+
+    try {
+      validEndpoint =
+        new URL(endpoint).protocol === "https:";
+    } catch {
+      validEndpoint = false;
+    }
+
+    if (!validEndpoint || endpoint.length > 2048) {
+      return sendJson(res, 400, {
+        success: false,
+        error: "INVALID_SUBSCRIPTION"
+      });
+    }
+
+    try {
+      const result = await supabaseRequest(
+        "bms_push_subscriptions?endpoint=eq." +
+          encodeURIComponent(endpoint),
+        {
+          method: "PATCH",
+          headers: {
+            Prefer: "return=representation"
+          },
+          body: JSON.stringify({
+            role: "ADMIN",
+            active: true,
+            last_seen_at: new Date().toISOString()
+          })
+        }
+      );
+
+      if (!result.ok) {
+        return sendJson(res, 500, {
+          success: false,
+          error: "ADMIN_DEVICE_UPDATE_FAILED"
+        });
+      }
+
+      if (
+        !Array.isArray(result.data) ||
+        result.data.length === 0
+      ) {
+        return sendJson(res, 404, {
+          success: false,
+          error: "SUBSCRIPTION_NOT_FOUND"
+        });
+      }
+
+      return sendJson(res, 200, {
+        success: true,
+        message: "Dispositivo administrativo registado."
+      });
+
+    } catch {
+      return sendJson(res, 500, {
+        success: false,
+        error: "ADMIN_DEVICE_ERROR"
+      });
+    }
+  }
+
+  // ======================================
+  // BMS ADMIN - TESTE REAL DE PUSH
+  // ======================================
+
+  if (operation === "BMS_ADMIN_TEST_PUSH") {
+    if (!bmsVerifyAdminSession(req)) {
+      return sendJson(res, 401, {
+        success: false,
+        error: "ADMIN_AUTH_REQUIRED"
+      });
+    }
+
+    if (!bmsPushConfigured) {
+      return sendJson(res, 503, {
+        success: false,
+        error: "PUSH_NOT_CONFIGURED"
+      });
+    }
+
+    try {
+      const result = await supabaseRequest(
+        "bms_push_subscriptions?role=eq.ADMIN&active=eq.true&select=id,endpoint,p256dh,auth",
+        {
+          method: "GET"
+        }
+      );
+
+      if (!result.ok) {
+        return sendJson(res, 500, {
+          success: false,
+          error: "ADMIN_SUBSCRIPTIONS_ERROR"
+        });
+      }
+
+      const subscriptions = Array.isArray(result.data)
+        ? result.data
+        : [];
+
+      if (subscriptions.length === 0) {
+        return sendJson(res, 404, {
+          success: false,
+          error: "NO_ADMIN_DEVICE"
+        });
+      }
+
+      const payload = JSON.stringify({
+        title: "BEIRA MUSCLE SHOW",
+        body: "Teste de notificações BMS concluído!",
+        tag: "bms-admin-test",
+        url: "/BMS/BMS/BMS%20Ticket%20Reminder.html"
+      });
+
+      let sent = 0;
+      let failed = 0;
+
+      for (const row of subscriptions) {
+        try {
+          await webpush.sendNotification(
+            {
+              endpoint: row.endpoint,
+              keys: {
+                p256dh: row.p256dh,
+                auth: row.auth
+              }
+            },
+            payload,
+            {
+              TTL: 60,
+              urgency: "high"
+            }
+          );
+
+          sent++;
+
+        } catch (error) {
+          failed++;
+
+          if (
+            error.statusCode === 404 ||
+            error.statusCode === 410
+          ) {
+            await supabaseRequest(
+              "bms_push_subscriptions?id=eq." +
+                encodeURIComponent(row.id),
+              {
+                method: "PATCH",
+                body: JSON.stringify({
+                  active: false
+                })
+              }
+            );
+          }
+        }
+      }
+
+      return sendJson(res, 200, {
+        success: sent > 0,
+        sent,
+        failed
+      });
+
+    } catch {
+      return sendJson(res, 500, {
+        success: false,
+        error: "PUSH_TEST_FAILED"
+      });
+    }
+  }
+
+  // ======================================
+  // BMS PUSH - PUBLIC VAPID KEY
+  // ======================================
 
   // ======================================
   // BMS PUSH - FAN SUBSCRIPTION

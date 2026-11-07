@@ -472,7 +472,7 @@ input::placeholder {
 
       <!-- BMS PUSH NOTIFICATIONS -->
 
-      <section class="push-section">
+      < class="push-section">
 
         <h3>NOTIFICAÇÕES BMS</h3>
 
@@ -498,9 +498,54 @@ input::placeholder {
           Ative as notificações para acompanhar as novidades do evento.
         </div>
 
-      </section>
+      
+        </section>
 
-      <form id="reminderForm">
+        <!-- BMS ADMIN PANEL -->
+
+        <section id="bmsAdminPanel" class="push-section" style="margin-top:25px; border:1px solid #806b45; display:none;">
+
+          <h3>PAINEL ADMINISTRATIVO BMS</h3>
+
+          <div id="bmsAdminLoginArea">
+            <label for="bmsAdminPassword">Palavra-passe administrativa</label>
+
+            <input
+              id="bmsAdminPassword"
+              type="password"
+              placeholder="Introduza a palavra-passe"
+              autocomplete="current-password"
+            >
+
+            <button id="bmsAdminLoginButton" class="push-btn" type="button">
+              INICIAR SESSÃO
+            </button>
+          </div>
+
+          <div id="bmsAdminControls" style="display:none;">
+            <p>Sessão administrativa activa.</p>
+
+            <button id="bmsAdminRegisterButton" class="push-btn" type="button">
+              REGISTAR ESTE TELEMÓVEL COMO ADMIN
+            </button>
+
+            <button id="bmsAdminTestButton" class="push-btn" type="button">
+              ENVIAR NOTIFICAÇÃO DE TESTE
+            </button>
+
+            <button id="bmsAdminLogoutButton" class="push-btn" type="button">
+              TERMINAR SESSÃO
+            </button>
+          </div>
+
+          <div id="bmsAdminStatus" class="push-status" role="status" aria-live="polite">
+            Área reservada ao administrador.
+          </div>
+
+        </section>
+
+        <form id="reminderForm">
+
 
         <div class="field">
           <label for="fullName">Nome completo</label>
@@ -639,7 +684,7 @@ input::placeholder {
           REGISTAR INTENÇÃO DE COMPRA
         </button>
 
-      </form>
+      </>
     </section>
 
     <section id="successScreen" class="success-screen">
@@ -1028,6 +1073,230 @@ enablePushButton.addEventListener("click", async function() {
   }
 
 });
+
+  // ======================================
+  // BMS ADMIN - PAINEL E AUTENTICAÇÃO
+  // ======================================
+
+  const bmsAdminPanel =
+    document.getElementById("bmsAdminPanel");
+
+  const bmsAdminLoginArea =
+    document.getElementById("bmsAdminLoginArea");
+
+  const bmsAdminControls =
+    document.getElementById("bmsAdminControls");
+
+  const bmsAdminPassword =
+    document.getElementById("bmsAdminPassword");
+
+  const bmsAdminStatus =
+    document.getElementById("bmsAdminStatus");
+
+  const bmsAdminLoginButton =
+    document.getElementById("bmsAdminLoginButton");
+
+  const bmsAdminRegisterButton =
+    document.getElementById("bmsAdminRegisterButton");
+
+  const bmsAdminTestButton =
+    document.getElementById("bmsAdminTestButton");
+
+  const bmsAdminLogoutButton =
+    document.getElementById("bmsAdminLogoutButton");
+
+  function bmsAdminShowPanel() {
+    bmsAdminPanel.style.display =
+      window.location.hash === "#bms-admin"
+        ? "block"
+        : "none";
+  }
+
+  function bmsAdminMessage(message, isError = false) {
+    bmsAdminStatus.textContent = message;
+    bmsAdminStatus.style.color =
+      isError ? "#ffb8b8" : "#d0c8bc";
+  }
+
+  async function bmsAdminRequest(operation, extra = {}) {
+    const response = await fetch(
+      "/api/event-registration",
+      {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          operation,
+          ...extra
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.error || "Não foi possível concluir a operação."
+      );
+    }
+
+    return data;
+  }
+
+  bmsAdminShowPanel();
+
+  window.addEventListener(
+    "hashchange",
+    bmsAdminShowPanel
+  );
+
+  // LOGIN ADMINISTRATIVO
+
+  bmsAdminLoginButton.addEventListener(
+    "click",
+    async function() {
+
+      const password =
+        bmsAdminPassword.value;
+
+      if (!password) {
+        bmsAdminMessage(
+          "Introduza a palavra-passe administrativa.",
+          true
+        );
+        return;
+      }
+
+      bmsAdminLoginButton.disabled = true;
+      bmsAdminMessage("A validar acesso...");
+
+      try {
+        await bmsAdminRequest(
+          "BMS_ADMIN_LOGIN",
+          { password }
+        );
+
+        bmsAdminPassword.value = "";
+
+        bmsAdminLoginArea.style.display = "none";
+        bmsAdminControls.style.display = "block";
+
+        bmsAdminMessage(
+          "Sessão administrativa iniciada com sucesso."
+        );
+
+      } catch (error) {
+        bmsAdminMessage(error.message, true);
+
+      } finally {
+        bmsAdminLoginButton.disabled = false;
+      }
+    }
+  );
+
+  // REGISTAR ESTE DISPOSITIVO COMO ADMIN
+
+  bmsAdminRegisterButton.addEventListener(
+    "click",
+    async function() {
+
+      bmsAdminRegisterButton.disabled = true;
+      bmsAdminMessage("A verificar subscrição deste dispositivo...");
+
+      try {
+        const registration =
+          await navigator.serviceWorker.ready;
+
+        const subscription =
+          await registration.pushManager.getSubscription();
+
+        if (!subscription) {
+          throw new Error(
+            "Este dispositivo ainda não tem notificações activadas. Active primeiro as notificações públicas."
+          );
+        }
+
+        await bmsAdminRequest(
+          "BMS_ADMIN_REGISTER_DEVICE",
+          {
+            subscription: subscription.toJSON()
+          }
+        );
+
+        bmsAdminMessage(
+          "Dispositivo registado como ADMIN com sucesso."
+        );
+
+      } catch (error) {
+        bmsAdminMessage(error.message, true);
+
+      } finally {
+        bmsAdminRegisterButton.disabled = false;
+      }
+    }
+  );
+
+  // TESTE REAL DE NOTIFICAÇÃO
+
+  bmsAdminTestButton.addEventListener(
+    "click",
+    async function() {
+
+      bmsAdminTestButton.disabled = true;
+      bmsAdminMessage("A enviar notificação de teste...");
+
+      try {
+        const result =
+          await bmsAdminRequest(
+            "BMS_ADMIN_TEST_PUSH"
+          );
+
+        bmsAdminMessage(
+          "Teste concluído. Enviadas: " +
+          result.sent +
+          " | Falhadas: " +
+          result.failed
+        );
+
+      } catch (error) {
+        bmsAdminMessage(error.message, true);
+
+      } finally {
+        bmsAdminTestButton.disabled = false;
+      }
+    }
+  );
+
+  // TERMINAR SESSÃO
+
+  bmsAdminLogoutButton.addEventListener(
+    "click",
+    async function() {
+
+      bmsAdminLogoutButton.disabled = true;
+
+      try {
+        await bmsAdminRequest(
+          "BMS_ADMIN_LOGOUT"
+        );
+
+        bmsAdminControls.style.display = "none";
+        bmsAdminLoginArea.style.display = "block";
+
+        bmsAdminMessage(
+          "Sessão administrativa terminada."
+        );
+
+      } catch (error) {
+        bmsAdminMessage(error.message, true);
+
+      } finally {
+        bmsAdminLogoutButton.disabled = false;
+      }
+    }
+  );
 
 // ======================================
 // BMS PWA - SERVICE WORKER
