@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#090909">
+<title>Checkout — Beira Muscle Show 2026</title>
+<style>
+:root{--bg:#090909;--panel:#151515;--panel2:#1d1d1d;--gold:#d4af37;--red:#a51d24;--muted:#aaa;--line:#333}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#242018 0,#090909 48%);color:#fff;font-family:Arial,Helvetica,sans-serif}
+a{color:inherit}.wrap{width:min(1100px,92%);margin:auto}.top{padding:22px 0;border-bottom:1px solid var(--line)}.brand{font-weight:900;letter-spacing:2px;color:var(--gold);font-size:20px;text-decoration:none}.brand small{display:block;color:#aaa;font-size:10px;letter-spacing:3px;margin-top:4px}
+main{padding:34px 0 70px}.eyebrow{color:var(--gold);font-size:11px;letter-spacing:3px;font-weight:800}.heading{font-size:clamp(28px,5vw,48px);margin:8px 0}.heading span{color:var(--gold)}.intro{color:#bbb;line-height:1.6;max-width:700px}
+.layout{display:grid;grid-template-columns:1.25fr .75fr;gap:22px;margin-top:28px}.panel{background:linear-gradient(145deg,#1a1a1a,#101010);border:1px solid #38332a;border-radius:16px;padding:22px;box-shadow:0 16px 45px #0008}.panel h2{font-size:17px;margin:0 0 18px;color:var(--gold);letter-spacing:1px}
+.items{display:grid;gap:12px}
+.item.product-item{grid-template-columns:minmax(0,1fr) auto}
+.product-info{display:grid;grid-template-columns:104px minmax(0,1fr);gap:13px;align-items:center;min-width:0}
+.product-image{display:block;width:104px;height:116px;object-fit:cover;object-position:center;border-radius:10px;border:1px solid #554722;background:#222}
+.product-image-fallback{width:104px;height:116px;border:1px dashed #66552c;border-radius:10px;display:grid;place-items:center;color:#aaa;font-size:11px;text-align:center;padding:8px}
+.payment-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.payment-option{display:flex;align-items:center;gap:11px;min-height:72px;padding:12px;border:1px solid #444;border-radius:12px;background:#101010;color:#fff;text-align:left;cursor:pointer}
+.payment-option[aria-pressed="true"]{border:2px solid var(--gold);background:#211d12;box-shadow:0 0 0 1px #d4af3740}
+.payment-symbol{width:52px;height:44px;flex:0 0 52px;border-radius:10px;display:grid;place-items:center;background:#fff;padding:5px}
+.payment-symbol svg{width:100%;height:100%;display:block}
+.payment-symbol.mpesa{background:#fff}
+.payment-symbol.emola{background:#fff}
+.payment-name{font-weight:900;font-size:14px}
+.payment-caption{display:block;color:#aaa;font-size:10px;margin-top:4px}
+.payment-native{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.payment-details{margin-top:14px;padding:16px;border:1px solid #66552c;border-radius:12px;background:linear-gradient(145deg,#211d12,#111)}
+.payment-details[hidden]{display:none}
+.payment-details h3{margin:0 0 8px;color:var(--gold);font-size:14px}
+.payment-details p{margin:7px 0;color:#ccc;font-size:12px;line-height:1.6}
+.payment-contact{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:13px 0;padding:13px;background:#090909;border:1px solid #554722;border-radius:10px}
+.payment-contact strong{font-size:23px;letter-spacing:1px;color:#fff}
+.copy-contact{border:0;border-radius:8px;background:var(--gold);color:#111;padding:11px 13px;font-weight:900;cursor:pointer;white-space:nowrap}
+.copy-status{min-height:18px;color:#9fdaae;font-size:11px;margin-top:7px}
+@media(max-width:390px){.payment-contact{align-items:stretch;flex-direction:column}.copy-contact{width:100%}}
+
+@media(max-width:450px){.product-info{grid-template-columns:88px minmax(0,1fr);gap:10px}.product-image,.product-image-fallback{width:88px;height:104px}.payment-options{grid-template-columns:1fr 1fr}.payment-option{padding:9px;gap:7px}}.variant-options{display:grid;gap:9px;margin-top:12px}
+.variant-label{font-size:10px;color:#aaa;font-weight:800;letter-spacing:.7px;margin-bottom:6px}
+.color-options,.size-options{display:flex;flex-wrap:wrap;gap:7px}
+.color-choice,.size-choice{border:1px solid #484848;background:#181818;color:#eee;border-radius:8px;padding:7px 10px;font-size:11px;font-weight:800;cursor:pointer}
+.color-choice[aria-pressed="true"],.size-choice[aria-pressed="true"]{border:2px solid var(--gold);box-shadow:0 0 0 1px #80651d}
+.color-dot{display:inline-block;width:15px;height:15px;border-radius:50%;vertical-align:middle;margin-right:5px;border:1px solid #888}
+.color-dot.black{background:#080808}
+.color-dot.white{background:#f5f5f5}
+.lock-label{display:inline-block;margin-top:7px;padding:6px 9px;border:1px solid #80651d;border-radius:7px;color:#f0d47a;font-size:10px;font-weight:900}
+.qbtn:disabled{opacity:.3;cursor:not-allowed}
+.item{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;background:#111;border:1px solid #303030;border-radius:12px;padding:14px}.item-name{font-weight:800}.item-meta{color:#aaa;font-size:12px;margin-top:5px}.price{color:var(--gold);font-weight:900;white-space:nowrap}.controls{display:flex;align-items:center;gap:10px;margin-top:10px}.qty{min-width:20px;text-align:center;font-weight:800}.qbtn{border:1px solid #67572a;background:#211d12;color:var(--gold);width:32px;height:32px;border-radius:8px;font-size:20px;cursor:pointer}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:grid;gap:7px}.field.full{grid-column:1/-1}label{font-size:12px;color:#ddd;font-weight:700}input,select,textarea{width:100%;border:1px solid #444;background:#090909;color:#fff;border-radius:9px;padding:12px;font:inherit;min-width:0}textarea{min-height:115px;resize:vertical}input:focus,select:focus,textarea:focus{outline:1px solid var(--gold);border-color:var(--gold)}.hint{font-size:11px;color:#999;line-height:1.5}.cartline{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #333;color:#ddd;font-size:13px}.total{display:flex;justify-content:space-between;align-items:center;padding:18px 0;font-weight:900}.total strong{font-size:25px;color:var(--gold)}.btn{display:inline-flex;justify-content:center;align-items:center;width:100%;border:0;border-radius:10px;background:linear-gradient(120deg,#b88d25,#f1d77b);color:#111;font-weight:900;letter-spacing:1px;padding:15px 18px;cursor:pointer;text-decoration:none}.btn:disabled{opacity:.45;cursor:not-allowed}.message{display:none;margin-top:15px;padding:14px;border-radius:10px;line-height:1.5;font-size:13px;white-space:pre-wrap}.message.show{display:block}.message.error{background:#3a1517;border:1px solid #8c2b32}.message.success{background:#142d1e;border:1px solid #287346}.notice{margin-top:15px;color:#999;font-size:11px;line-height:1.6}.back{display:inline-block;margin-top:18px;color:var(--gold);font-size:13px;text-decoration:none}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.panel{padding:17px}}
+
+/* BMS-MARKETING-CARDS-2026 */
+
+/* Cartões premium dos três modelos */
+.item.product-item {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 17px;
+  overflow: hidden;
+  border: 1px solid #725b27;
+  border-radius: 19px;
+  background:
+    radial-gradient(ellipse at 50% 0%, #4a391b55, transparent 55%),
+    linear-gradient(145deg, #202020, #0c0c0c 75%);
+  box-shadow: 0 12px 32px #0009, inset 0 1px 0 #ffffff12;
+  transition: transform .35s ease, border-color .35s ease,
+              box-shadow .35s ease;
+}
+
+.item.product-item:hover {
+  transform: translateY(-4px);
+  border-color: #e1bd51;
+  box-shadow: 0 18px 42px #000b, 0 0 20px #d4af3718;
+}
+
+.product-info {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 15px;
+  align-items: start;
+  min-width: 0;
+}
+
+.product-info::before {
+  content: "✦  COLEÇÃO OFICIAL BMS 2026";
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  padding: 7px 12px;
+  border: 1px solid #a98a3a88;
+  border-radius: 30px;
+  background: #d4af3718;
+  color: #f0d47a;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.product-image,
+.product-image-fallback {
+  width: 100%;
+  height: clamp(245px, 34vw, 350px);
+  object-fit: contain;
+  object-position: center;
+  padding: 13px;
+  border: 1px solid #594720;
+  border-radius: 16px;
+  background:
+    radial-gradient(ellipse at center, #50401e55 0%, #1b1b1b 58%, #101010 100%);
+  box-shadow: inset 0 0 35px #0008;
+}
+
+.product-image {
+  animation: bms-shirt-float 5s ease-in-out infinite;
+  transition: filter .4s ease, transform .4s ease;
+}
+
+.product-item:nth-child(2) .product-image {
+  animation-delay: -1.6s;
+}
+
+.product-item:nth-child(3) .product-image {
+  animation-delay: -3.2s;
+}
+
+.product-item:hover .product-image {
+  filter: drop-shadow(0 10px 15px #d4af3730);
+  transform: scale(1.035);
+}
+
+@keyframes bms-shirt-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
+.product-image-fallback {
+  display: grid;
+  place-items: center;
+  color: #aaa;
+  font-size: 13px;
+}
+
+.item.product-item .item-name {
+  color: #fff;
+  font-size: clamp(18px, 3vw, 23px);
+  font-weight: 900;
+  letter-spacing: .3px;
+}
+
+.item.product-item .item-meta {
+  margin-top: 7px;
+  color: #c3bba8;
+  font-size: 12px;
+}
+
+.item.product-item .variant-options {
+  gap: 15px;
+  margin-top: 17px;
+}
+
+.item.product-item .variant-label {
+  margin-bottom: 9px;
+  color: #e6cf8d;
+  font-size: 11px;
+  letter-spacing: 1.1px;
+}
+
+.item.product-item .color-options,
+.item.product-item .size-options {
+  gap: 9px;
+}
+
+.item.product-item .color-choice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 43px;
+  padding: 9px 17px;
+  border: 1px solid #655b48;
+  border-radius: 30px;
+  background: #171717;
+  color: #fff;
+  font-size: 13px;
+  transition: all .2s ease;
+}
+
+.item.product-item .color-choice[aria-pressed="true"] {
+  border: 2px solid #e6c65d;
+  background: #382d16;
+  color: #ffe49a;
+  box-shadow: 0 0 15px #d4af3728;
+}
+
+.item.product-item .color-dot {
+  width: 19px;
+  height: 19px;
+  margin-right: 8px;
+}
+
+.item.product-item .size-choice {
+  min-width: 48px;
+  min-height: 43px;
+  padding: 9px 12px;
+  border: 1px solid #514b40;
+  border-radius: 10px;
+  background: #171717;
+  color: #eee;
+  font-size: 13px;
+  font-weight: 900;
+  transition: all .2s ease;
+}
+
+.item.product-item .size-choice[aria-pressed="true"] {
+  border: 2px solid #e6c65d;
+  background: linear-gradient(145deg, #66501c, #30230c);
+  color: #fff1b9;
+  box-shadow: 0 0 13px #d4af3730;
+}
+
+.item.product-item > div:last-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid #ffffff19;
+  text-align: left !important;
+}
+
+.item.product-item .price {
+  color: #f3d36c;
+  font-size: clamp(22px, 4vw, 28px);
+  font-weight: 1000;
+  letter-spacing: -.5px;
+}
+
+.item.product-item .price::before {
+  content: "PREÇO";
+  display: block;
+  margin-bottom: 3px;
+  color: #aaa;
+  font-size: 9px;
+  letter-spacing: 1.8px;
+}
+
+.item.product-item .controls {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 0;
+}
+
+.item.product-item .qbtn {
+  width: 45px;
+  height: 45px;
+  border: 1px solid #b18b31;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #352a12, #17130b);
+  color: #f5d879;
+  font-size: 25px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px #0007;
+  transition: transform .2s ease, background .2s ease;
+}
+
+.item.product-item .qbtn:not(:disabled):active {
+  transform: scale(.91);
+  background: #66501c;
+}
+
+.item.product-item .qty {
+  min-width: 27px;
+  color: #fff;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+@media (max-width: 450px) {
+  .item.product-item {
+    padding: 13px;
+    border-radius: 16px;
+  }
+
+  .product-image,
+  .product-image-fallback {
+    height: 255px;
+    padding: 9px;
+  }
+
+  .item.product-item > div:last-child {
+    gap: 7px;
+  }
+
+  .item.product-item .qbtn {
+    width: 41px;
+    height: 41px;
+  }
+
+  .item.product-item .controls {
+    gap: 7px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-image {
+    animation: none;
+  }
+
+  .item.product-item,
+  .item.product-item * {
+    transition: none !important;
+  }
+}
+
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><a class="brand" href="BMS website.html">BEIRA MUSCLE SHOW<small>2.ª EDIÇÃO · 2026</small></a></div></header>
+<main class="wrap">
+<div class="eyebrow">COMPRA OFICIAL</div>
+<h1 class="heading">O teu acesso ao <span>BMS 2026</span></h1>
+<p class="intro">Escolhe bilhetes e camisetas no mesmo pedido. Preenche os teus dados e indica o código da transferência ou cola o SMS completo de confirmação. Cada encomenda será verificada manualmente pela organização.</p>
+<div class="layout">
+<section class="panel">
+<h2>01 — ESCOLHE OS ARTIGOS</h2>
+<div class="items" id="items"></div>
+<div class="notice">Bilhete Normal: 300 MT · VIP: 750 MT · Bilhete No Dia: 1.000 MT (disponível a partir de 21/11/2026). Camisetas oficiais: 1.100 MT cada. Escolhe a cor e o tamanho de cada modelo.</div>
+</section>
+<section class="panel">
+<h2>02 — DADOS DO COMPRADOR</h2>
+<form id="checkoutForm">
+<div class="formgrid">
+<div class="field full"><label for="fullName">Nome completo *</label><input id="fullName" name="fullName" autocomplete="name" maxlength="120" required></div>
+<div class="field"><label for="province">Província *</label><input id="province" name="province" maxlength="80" required></div>
+<div class="field"><label for="bairro">Bairro *</label><input id="bairro" name="bairro" maxlength="100" required></div>
+<div class="field full"><label for="phone">Número de contacto *</label><input id="phone" name="phone" type="tel" autocomplete="tel" maxlength="25" placeholder="Ex.: 84 123 4567" required></div>
+<div class="field full"><label>Método de pagamento *</label>
+<div class="payment-options" role="group" aria-label="Escolhe o método de pagamento">
+<button class="payment-option" type="button" data-payment="MPESA" aria-pressed="false"><span class="payment-symbol mpesa" aria-hidden="true">
+<svg viewBox="0 0 64 64" role="img">
+ <path d="M12 13h40a7 7 0 0 1 7 7v22a7 7 0 0 1-7 7H30L16 59v-10h-4a7 7 0 0 1-7-7V20a7 7 0 0 1 7-7Z" fill="#e60000"/>
+ <path d="M18 27h28M18 35h21" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+ <path d="M42 43h7" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+</svg></span><span><span class="payment-name">M-Pesa</span><span class="payment-caption">Pagamento móvel</span></span></button>
+<button class="payment-option" type="button" data-payment="EMOLA" aria-pressed="false"><span class="payment-symbol emola" aria-hidden="true">
+<svg viewBox="0 0 64 64" role="img">
+ <path d="M8 19a7 7 0 0 1 7-7h34a7 7 0 0 1 7 7v5H15a7 7 0 0 0-7 7V19Z" fill="#f28c28"/>
+ <path d="M8 27h44a5 5 0 0 1 5 5v17a5 5 0 0 1-5 5H15a7 7 0 0 1-7-7V27Z" fill="#ed6b20"/>
+ <path d="M42 34h15v11H42a5.5 5.5 0 0 1 0-11Z" fill="#fff"/>
+ <circle cx="45" cy="39.5" r="2" fill="#ed6b20"/>
+</svg></span><span><span class="payment-name">e-Mola</span><span class="payment-caption">Pagamento móvel</span></span></button>
+</div>
+<select id="paymentMethod" name="paymentMethod" class="payment-native" tabindex="-1" aria-hidden="true"><option value="">Seleccionar</option><option value="MPESA">M-Pesa</option><option value="EMOLA">e-Mola</option></select></div>
+<div class="field full payment-details" id="paymentDetails" hidden aria-live="polite">
+<h3 id="paymentProviderTitle">TRANSFERÊNCIA MÓVEL</h3>
+<p>Transfere o valor total do pedido para este contacto através da carteira móvel seleccionada.</p>
+<div class="payment-contact">
+<strong id="paymentContactNumber"></strong>
+<button class="copy-contact" id="copyPaymentContact" type="button">COPIAR CONTACTO</button>
+</div>
+<div class="copy-status" id="copyPaymentStatus" role="status" aria-live="polite"></div>
+<p><strong>Depois da transferência:</strong> regressa a esta página e cola o SMS completo de confirmação no campo abaixo, ou introduz apenas o código da transferência. Depois, regista a encomenda.</p>
+</div>
+<div class="field full"><label for="transferCode">Código de transferência</label><input id="transferCode" name="transferCode" maxlength="120" placeholder="Introduz apenas o código, se preferires"></div>
+<div class="field full"><label for="paymentMessage">SMS completo de confirmação</label><textarea id="paymentMessage" name="paymentMessage" maxlength="5000" placeholder="Também podes colar aqui o SMS completo recebido após a transferência."></textarea><div class="hint">Preenche o código ou cola o SMS. O sistema tenta extrair referência, valor, data e telefone do remetente. O texto integral do SMS não é guardado na encomenda.</div></div>
+</div>
+<div class="total"><span>TOTAL DO PEDIDO</span><strong id="grandTotal">0 MT</strong></div>
+<button class="btn" id="submitBtn" type="submit">REGISTAR ENCOMENDA</button>
+<div class="message" id="message" role="status" aria-live="polite"></div>
+<div class="notice">O registo não significa aprovação do pagamento. A organização confirma a transferência no painel privado. Só depois da aprovação serão emitidos os QR Codes individuais dos bilhetes. As camisetas não recebem QR Code.</div>
+</form>
+<a class="back" href="BMS website.html">← Voltar ao website BMS</a>
+</section>
+</div>
+</main>
+<script>
+"use strict";
+const catalog = [
+ {code:"TICKET_NORMAL",name:"Bilhete Normal",price:300,kind:"ticket"},
+ {code:"TICKET_VIP",name:"Bilhete VIP",price:750,kind:"ticket"},
+ {code:"TICKET_DAY",name:"Bilhete No Dia",price:1000,kind:"ticket",availableFrom:"2026-11-21"},
+ {code:"TSHIRT_1",name:"Camiseta BMS — Exclusivo 1",price:1100,kind:"product",image:"Tshirt/bms-shirt1/bms%20shirt1.jpg"},
+ {code:"TSHIRT_2",name:"Camiseta BMS — Exclusivo 2",price:1100,kind:"product",image:"Tshirt/bms-shirt2/bms%20shirt2.jpg"},
+ {code:"TSHIRT_3",name:"Camiseta BMS — Exclusivo 3",price:1100,kind:"product",image:"Tshirt/bms-shirt3/bms%20shirt3.jpg"}
+];
+
+const quantities = Object.fromEntries(catalog.map(x=>[x.code,0]));
+
+const shirtOptions = Object.fromEntries(
+ catalog.filter(x=>x.kind==="product").map(x=>[
+  x.code,{color:"PRETO",size:"M"}
+ ])
+);
+
+function maputoToday(){
+ const parts=new Intl.DateTimeFormat("en",{
+  timeZone:"Africa/Maputo",
+  year:"numeric",month:"2-digit",day:"2-digit"
+ }).formatToParts(new Date());
+
+ const values=Object.fromEntries(
+  parts.filter(x=>x.type!=="literal").map(x=>[x.type,x.value])
+ );
+
+ return values.year+"-"+values.month+"-"+values.day;
+}
+
+function dayTicketAvailable(){
+ return maputoToday()>="2026-11-21";
+}
+const money = n => new Intl.NumberFormat("pt-MZ").format(n)+" MT";
+const itemsRoot=document.getElementById("items");
+const totalRoot=document.getElementById("grandTotal");
+const messageRoot=document.getElementById("message");
+const paymentSelect=document.getElementById("paymentMethod");
+const paymentDetails=document.getElementById("paymentDetails");
+const paymentContactNumber=document.getElementById("paymentContactNumber");
+const paymentProviderTitle=document.getElementById("paymentProviderTitle");
+const copyPaymentContact=document.getElementById("copyPaymentContact");
+const copyPaymentStatus=document.getElementById("copyPaymentStatus");
+
+const paymentContacts={
+ MPESA:{name:"M-PESA · VODACOM",number:"844259502"},
+ EMOLA:{name:"e-MOLA · MOVITEL",number:"862298940"}
+};
+
+function selectPayment(method){
+ paymentSelect.value=method;
+ document.querySelectorAll("[data-payment]").forEach(button=>{
+  button.setAttribute("aria-pressed",String(button.dataset.payment===method));
+ });
+ const selected=paymentContacts[method];
+ paymentDetails.hidden=!selected;
+ if(selected){
+  paymentProviderTitle.textContent=selected.name;
+  paymentContactNumber.textContent=selected.number.replace(/(\\d{3})(\\d{3})(\\d{3})/,"$1 $2 $3");
+  copyPaymentContact.textContent="COPIAR CONTACTO";
+  copyPaymentStatus.textContent="";
+ }
+}
+
+document.querySelectorAll("[data-payment]").forEach(button=>{
+ button.addEventListener("click",()=>selectPayment(button.dataset.payment));
+});
+
+copyPaymentContact.addEventListener("click",async()=>{
+ const selected=paymentContacts[paymentSelect.value];
+ if(!selected)return;
+ try{
+  if(navigator.clipboard && window.isSecureContext){
+   await navigator.clipboard.writeText(selected.number);
+  }else{
+   const temporary=document.createElement("textarea");
+   temporary.value=selected.number;
+   temporary.style.position="fixed";
+   temporary.style.opacity="0";
+   document.body.appendChild(temporary);
+   temporary.select();
+   const copied=document.execCommand("copy");
+   temporary.remove();
+   if(!copied)throw new Error("Cópia indisponível");
+  }
+  copyPaymentContact.textContent="CONTACTO COPIADO";
+  copyPaymentStatus.textContent="Número copiado. Abre a carteira móvel e efectua a transferência.";
+ }catch(error){
+  copyPaymentStatus.textContent="Não foi possível copiar automaticamente. Contacto: "+selected.number;
+ }
+});
+function render(){
+ itemsRoot.replaceChildren();
+
+ const dayOpen=dayTicketAvailable();
+
+ for(const item of catalog){
+  const row=document.createElement("article");
+  row.className="item";
+
+  const left=document.createElement("div");
+  const name=document.createElement("div");
+  name.className="item-name";
+  name.textContent=item.name;
+
+  const meta=document.createElement("div");
+  meta.className="item-meta";
+
+  if(item.code==="TICKET_DAY"){
+   meta.textContent=dayOpen
+    ?"Entrada no evento · QR individual após aprovação"
+    :"Venda bloqueada até 21/11/2026";
+  }else{
+   meta.textContent=item.kind==="ticket"
+    ?"Entrada no evento · QR individual após aprovação"
+    :"Produto oficial · sem QR Code";
+  }
+
+  if(item.image){
+   row.classList.add("product-item");
+
+   const info=document.createElement("div");
+   info.className="product-info";
+
+   const img=document.createElement("img");
+   img.className="product-image";
+   img.src=item.image;
+   img.alt=item.name;
+   img.loading="lazy";
+   img.decoding="async";
+
+   img.onerror=()=>{
+    const fallback=document.createElement("div");
+    fallback.className="product-image-fallback";
+    fallback.textContent="Imagem indisponível";
+    img.replaceWith(fallback);
+   };
+
+   const details=document.createElement("div");
+   details.append(name,meta);
+
+   const options=document.createElement("div");
+   options.className="variant-options";
+
+   const colorLabel=document.createElement("div");
+   colorLabel.className="variant-label";
+   colorLabel.textContent="ESCOLHE A COR";
+
+   const colorOptions=document.createElement("div");
+   colorOptions.className="color-options";
+
+   for(const color of ["PRETO","BRANCO"]){
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="color-choice";
+    button.setAttribute(
+     "aria-pressed",
+     String(shirtOptions[item.code].color===color)
+    );
+
+    const dot=document.createElement("span");
+    dot.className="color-dot "+(color==="PRETO"?"black":"white");
+
+    button.append(
+     dot,
+     document.createTextNode(color==="PRETO"?"Preto":"Branco")
+    );
+
+    button.addEventListener("click",()=>{
+     shirtOptions[item.code].color=color;
+     render();
+    });
+
+    colorOptions.append(button);
+   }
+
+   const sizeLabel=document.createElement("div");
+   sizeLabel.className="variant-label";
+   sizeLabel.textContent="ESCOLHE O TAMANHO";
+
+   const sizeOptions=document.createElement("div");
+   sizeOptions.className="size-options";
+
+   for(const size of ["M","L","XL","2XL"]){
+    const button=document.createElement("button");
+    button.type="button";
+    button.className="size-choice";
+    button.textContent=size;
+    button.setAttribute(
+     "aria-pressed",
+     String(shirtOptions[item.code].size===size)
+    );
+
+    button.addEventListener("click",()=>{
+     shirtOptions[item.code].size=size;
+     render();
+    });
+
+    sizeOptions.append(button);
+   }
+
+   options.append(
+    colorLabel,colorOptions,sizeLabel,sizeOptions
+   );
+
+   details.append(options);
+   info.append(img,details);
+   left.append(info);
+  }else{
+   left.append(name,meta);
+
+   if(item.code==="TICKET_DAY"&&!dayOpen){
+    const lock=document.createElement("div");
+    lock.className="lock-label";
+    lock.textContent="🔒 BLOQUEADO ATÉ 21/11/2026";
+    left.append(lock);
+   }
+  }
+
+  const right=document.createElement("div");
+  right.style.textAlign="right";
+
+  const price=document.createElement("div");
+  price.className="price";
+  price.textContent=money(item.price);
+
+  const controls=document.createElement("div");
+  controls.className="controls";
+
+  const minus=document.createElement("button");
+  minus.type="button";
+  minus.className="qbtn";
+  minus.textContent="−";
+  minus.setAttribute("aria-label","Diminuir "+item.name);
+  minus.disabled=quantities[item.code]<=0;
+
+  const qty=document.createElement("span");
+  qty.className="qty";
+  qty.textContent=quantities[item.code];
+
+  const plus=document.createElement("button");
+  plus.type="button";
+  plus.className="qbtn";
+  plus.textContent="+";
+  plus.setAttribute("aria-label","Aumentar "+item.name);
+  plus.disabled=item.code==="TICKET_DAY"&&!dayOpen;
+
+  minus.addEventListener("click",()=>change(item.code,-1));
+  plus.addEventListener("click",()=>change(item.code,1));
+
+  controls.append(minus,qty,plus);
+  right.append(price,controls);
+  row.append(left,right);
+  itemsRoot.append(row);
+ }
+
+ const total=catalog.reduce(
+  (sum,item)=>sum+item.price*quantities[item.code],0
+ );
+
+ totalRoot.textContent=money(total);
+}
+
+function change(code,delta){
+ const item=catalog.find(x=>x.code===code);
+
+ if(item?.availableFrom&&maputoToday()<item.availableFrom){
+  return;
+ }
+
+ quantities[code]=Math.max(
+  0,
+  Math.min(item?.kind==="ticket"?10:100,quantities[code]+delta)
+ );
+
+ render();
+}
+
+const params=new URLSearchParams(location.search);
+const preselect=params.get("item");
+if(Object.hasOwn(quantities,preselect)){
+ if(preselect!=="TICKET_DAY"||dayTicketAvailable()){
+  quantities[preselect]=1;
+ }
+}
+render();
+
+function showMessage(text,type){messageRoot.className="message show "+type;messageRoot.textContent=text;}
+document.getElementById("checkoutForm").addEventListener("submit",async event=>{
+ event.preventDefault();messageRoot.className="message";messageRoot.textContent="";
+ const items=catalog.filter(x=>quantities[x.code]>0).map(x=>{
+  const line={code:x.code,quantity:quantities[x.code]};
+  if(x.kind==="product"){
+   line.color=shirtOptions[x.code].color;
+   line.size=shirtOptions[x.code].size;
+  }
+  return line;
+ });
+ if(!items.length){showMessage("Selecciona pelo menos um bilhete ou produto.","error");return;}
+ if(!paymentSelect.value){showMessage("Selecciona M-Pesa ou e-Mola como método de pagamento.","error");return;}
+ const paymentMessage=document.getElementById("paymentMessage").value.trim();
+ const transferCode=document.getElementById("transferCode").value.trim();
+ if(!paymentMessage&&!transferCode){showMessage("Introduz o código de transferência ou cola o SMS de confirmação.","error");return;}
+ const btn=document.getElementById("submitBtn");btn.disabled=true;btn.textContent="A REGISTAR...";
+ const payload={
+  operation:"CREATE_ORDER",
+  fullName:document.getElementById("fullName").value.trim(),
+  province:document.getElementById("province").value.trim(),
+  bairro:document.getElementById("bairro").value.trim(),
+  phone:document.getElementById("phone").value.trim(),
+  paymentMethod:document.getElementById("paymentMethod").value,
+  paymentMessage,transferCode,items
+ };
+ try{
+  const response=await fetch("/api/bms-checkout",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok||!data.success)throw new Error(data.message||"Não foi possível registar a encomenda.");
+  showMessage("ENCOMENDA REGISTADA\nReferência: "+data.orderReference+"\nTotal: "+money(data.totalAmount)+"\nEstado: AGUARDA VALIDAÇÃO MANUAL\nGuarda a referência. Os QR Codes serão emitidos apenas depois da aprovação do pagamento.", "success");
+  document.getElementById("checkoutForm").reset();
+  selectPayment("");
+  for(const code of Object.keys(quantities))quantities[code]=0;
+  render();
+ }catch(error){showMessage(error.message||"Erro de comunicação. Tenta novamente.","error");}
+ finally{btn.disabled=false;btn.textContent="REGISTAR ENCOMENDA";}
+});
+</script>
+</body>
+</html>
