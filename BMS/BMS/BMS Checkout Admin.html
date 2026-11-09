@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090909">
+<title>Painel privado — BMS Checkout</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#090909;color:#fff;font-family:Arial,sans-serif}.wrap{width:min(1100px,94%);margin:auto;padding:28px 0 70px}h1{color:#d4af37;font-size:clamp(24px,5vw,38px)}h2{font-size:17px;color:#d4af37}.panel,.order{background:#171717;border:1px solid #38332a;border-radius:14px;padding:18px;margin:16px 0}input,textarea{width:100%;padding:12px;border:1px solid #444;border-radius:8px;background:#090909;color:#fff;margin:7px 0 12px}textarea{min-height:65px}.btn{padding:11px 15px;border:0;border-radius:8px;background:#d4af37;color:#111;font-weight:800;cursor:pointer;margin:4px}.btn.danger{background:#8e242b;color:#fff}.btn.secondary{background:#333;color:#fff}.muted{color:#aaa;font-size:12px;line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.status{font-weight:800;color:#e3c66a}.itemline{padding:8px 0;border-bottom:1px solid #333;font-size:13px}.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.message{padding:12px;background:#222;border-radius:8px;margin:12px 0;white-space:pre-wrap}.hidden{display:none!important}a{color:#e3c66a}@media(max-width:650px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main class="wrap">
+<h1>BMS — PAINEL DE ENCOMENDAS</h1>
+<p class="muted">Área privada da organização. Dados de compradores e pagamentos são carregados apenas após autenticação administrativa.</p>
+<section class="panel" id="loginPanel"><h2>ACESSO ADMINISTRATIVO</h2><label for="password">Palavra-passe administrativa</label><input id="password" type="password" autocomplete="current-password"><button class="btn" id="loginBtn">ENTRAR</button><div id="loginMessage" class="message hidden"></div></section>
+<section id="dashboard" class="hidden">
+<div class="actions"><button class="btn" id="refreshBtn">ACTUALIZAR ENCOMENDAS</button><button class="btn secondary" id="logoutBtn">TERMINAR SESSÃO</button></div>
+<div id="globalMessage" class="message hidden"></div><div id="orders"></div>
+</section>
+</main>
+<script>
+"use strict";
+const api="/api/bms-checkout";const loginPanel=document.getElementById("loginPanel"),dashboard=document.getElementById("dashboard"),ordersRoot=document.getElementById("orders");
+async function call(operation,extra={}){const r=await fetch(api,{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({operation,...extra})});const d=await r.json().catch(()=>({}));if(!r.ok||!d.success)throw new Error(d.message||"Falha na operação.");return d;}
+function message(el,text){el.textContent=text;el.classList.remove("hidden");}
+function addText(parent,tag,cls,value){const e=document.createElement(tag);if(cls)e.className=cls;e.textContent=value??"—";parent.append(e);return e;}
+function money(v){return new Intl.NumberFormat("pt-MZ").format(Number(v||0))+" MT";}
+function makeOrderCard(order){
+ const card=document.createElement("article");card.className="order";
+ const head=document.createElement("div");head.className="grid";
+ const left=document.createElement("div");addText(left,"h2","",order.order_reference);addText(left,"div","status","Pagamento: "+order.payment_status+" · Bilhetes: "+order.ticket_status);
+ const right=document.createElement("div");addText(right,"div","",order.full_name);addText(right,"div","muted",[order.province,order.bairro].filter(Boolean).join(" · "));addText(right,"div","",order.phone);
+ head.append(left,right);card.append(head);
+ const payment=document.createElement("div");payment.className="itemline";
+ payment.textContent="Método: "+order.payment_method+" | Referência: "+(order.payment_reference||"—")+" | Valor detectado: "+(order.payment_amount?money(order.payment_amount):"Não extraído")+" | Data: "+(order.payment_date||"—")+" | Remetente: "+(order.payment_sender_phone||"—");
+ card.append(payment);
+ const items=document.createElement("div");addText(items,"h3","","Artigos");for(const item of order.items||[])addText(items,"div","itemline",item.item_name+" × "+item.quantity+" — "+money(item.line_total));card.append(items);
+ addText(card,"div","status","TOTAL: "+money(order.total_amount));
+ if(order.admin_note)addText(card,"div","muted","Nota administrativa: "+order.admin_note);
+ const issuances=order.issuances||[];
+ if(issuances.length){const section=document.createElement("div");addText(section,"h3","","EMISSÃO DE BILHETES");for(const issuance of issuances){const row=document.createElement("div");row.className="itemline";row.textContent="Estado: "+issuance.status+" · Referência interna: "+issuance.bridge_order_reference;section.append(row);for(const code of issuance.ticket_codes||[])addText(section,"div","muted","QR: "+code);if(issuance.status==="ISSUED"&&issuance.bridge_order_reference){const a=document.createElement("a");a.href="/api/order-status?reference="+encodeURIComponent(issuance.bridge_order_reference)+"&download=1";a.target="_blank";a.rel="noopener";a.textContent="Abrir PDF dos bilhetes";section.append(a);}}card.append(section);}
+ const note=document.createElement("textarea");note.placeholder="Nota administrativa (opcional)";note.maxLength=500;note.value=order.admin_note||"";card.append(note);
+ const actions=document.createElement("div");actions.className="actions";
+ if(order.payment_status==="PENDING"){const approve=document.createElement("button");approve.className="btn";approve.textContent="APROVAR PAGAMENTO";approve.addEventListener("click",()=>act("ADMIN_APPROVE",order.order_reference,note.value));const reject=document.createElement("button");reject.className="btn danger";reject.textContent="REJEITAR";reject.addEventListener("click",()=>act("ADMIN_REJECT",order.order_reference,note.value));actions.append(approve,reject);}
+ if(order.payment_status==="APPROVED"&&order.ticket_status!=="ISSUED"&&(order.items||[]).some(x=>x.item_type==="TICKET")){const retry=document.createElement("button");retry.className="btn";retry.textContent="TENTAR EMISSÃO NOVAMENTE";retry.addEventListener("click",()=>act("ADMIN_APPROVE",order.order_reference,note.value));actions.append(retry);}
+ card.append(actions);return card;
+}
+async function loadOrders(){const data=await call("ADMIN_LIST");ordersRoot.replaceChildren();if(!data.orders?.length){addText(ordersRoot,"div","muted","Ainda não existem encomendas.");return;}for(const order of data.orders)ordersRoot.append(makeOrderCard(order));}
+async function act(operation,orderReference,adminNote){if(!confirm(operation==="ADMIN_APPROVE"?"Confirmas a aprovação do pagamento e a emissão dos QR Codes dos bilhetes?":"Confirmas a rejeição desta encomenda?"))return;try{const d=await call(operation,{orderReference,adminNote});const el=document.getElementById("globalMessage");message(el,d.message||"Operação concluída.");await loadOrders();}catch(e){message(document.getElementById("globalMessage"),e.message);}}
+document.getElementById("loginBtn").addEventListener("click",async()=>{const el=document.getElementById("loginMessage");el.classList.add("hidden");try{await call("ADMIN_LOGIN",{password:document.getElementById("password").value});loginPanel.classList.add("hidden");dashboard.classList.remove("hidden");await loadOrders();}catch(e){message(el,e.message);}});
+document.getElementById("refreshBtn").addEventListener("click",()=>loadOrders().catch(e=>message(document.getElementById("globalMessage"),e.message)));
+document.getElementById("logoutBtn").addEventListener("click",async()=>{try{await call("ADMIN_LOGOUT");}finally{dashboard.classList.add("hidden");loginPanel.classList.remove("hidden");document.getElementById("password").value="";ordersRoot.replaceChildren();}});
+(async()=>{try{const d=await call("ADMIN_STATUS");if(d.authenticated){loginPanel.classList.add("hidden");dashboard.classList.remove("hidden");await loadOrders();}}catch{} })();
+</script></body></html>
