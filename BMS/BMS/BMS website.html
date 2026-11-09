@@ -353,6 +353,69 @@ header {
   font-size:14px;
 }
 
+
+/* BMS PRODUCTS */
+
+.products-section {
+  background:
+    radial-gradient(circle at 10% 20%,rgba(213,173,88,.12),transparent 40%),
+    #0b0b0b;
+}
+
+.products-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:22px;
+  margin-top:40px;
+}
+
+.product-card {
+  background:#141414;
+  border:1px solid rgba(213,173,88,.3);
+  padding:18px;
+  text-align:center;
+  transition:.35s;
+}
+
+.product-card:hover {
+  transform:translateY(-7px);
+  border-color:var(--gold);
+  box-shadow:0 15px 40px rgba(213,173,88,.12);
+}
+
+.product-image {
+  width:100%;
+  height:300px;
+  object-fit:contain;
+  display:block;
+  background:#090909;
+}
+
+.product-name {
+  margin:20px 0 8px;
+  color:#fff;
+  font-size:17px;
+  font-weight:800;
+  letter-spacing:1px;
+}
+
+.product-price {
+  color:var(--gold);
+  font-size:27px;
+  font-weight:900;
+  margin:12px 0 18px;
+}
+
+.product-price small {
+  font-size:14px;
+}
+
+.product-card .btn:disabled {
+  opacity:.65;
+  cursor:not-allowed;
+  transform:none;
+}
+
 /* TICKETS */
 
 .tickets-section {
@@ -983,6 +1046,28 @@ footer strong {
 }
 
 </style>
+
+<!-- BMS-INTEGRATED-CHECKOUT-2026 -->
+<style>
+#bms-integrated-checkout {
+  position:fixed;
+  inset:0;
+  z-index:100000;
+  width:100%;
+  height:100%;
+  background:#090909;
+}
+#bms-integrated-checkout[hidden] { display:none !important; }
+#bms-integrated-checkout iframe {
+  display:block;
+  width:100%;
+  height:100%;
+  border:0;
+  background:#090909;
+}
+body.bms-checkout-active { overflow:hidden !important; }
+</style>
+
 </head>
 
 <body>
@@ -1001,6 +1086,7 @@ footer strong {
       <a href="#inicio">Início</a>
       <a href="#evento">Evento</a>
       <a href="#bilhetes">Bilhetes</a>
+      <a href="#produtos">Produtos</a>
       <a href="#atletas">Atletas</a>
       <a href="#atividades">Atividades</a>
       <a href="#localizacao">Localização</a>
@@ -1173,6 +1259,23 @@ footer strong {
 <!-- BILHETES -->
 
 <section class="tickets-section" id="bilhetes">
+<div id="checkout-bms-entry" style="text-align:center;margin:28px auto;padding:24px;background:#151515;border:1px solid #b58b35;border-radius:14px">
+  <p style="color:#d5ad55;font-weight:700">BILHETES E LOJA OFICIAL BMS</p>
+  <a class="btn" href="#comprar" data-bms-open-checkout style="display:inline-flex;justify-content:center">
+    COMPRAR BILHETES E CAMISETAS
+  </a>
+</div>
+
+<div id="bms-customer-consult" style="max-width:720px;margin:20px auto 32px;padding:22px;background:#101010;border:1px solid #b58b35;border-radius:14px">
+  <h3 style="color:#d5ad55;text-align:center;margin:0 0 8px">CONSULTAR A MINHA ENCOMENDA</h3>
+  <p style="color:#bbb;text-align:center;font-size:13px;line-height:1.6">Introduz a referência recebida depois da compra para acompanhares o pagamento e os teus bilhetes.</p>
+  <form id="bmsCustomerLookup" style="display:grid;gap:12px">
+    <label for="bmsCustomerReference" style="color:#ddd;font-size:12px;font-weight:700">REFERÊNCIA DA ENCOMENDA</label>
+    <input id="bmsCustomerReference" name="reference" required maxlength="60" autocomplete="off" placeholder="BMS-2026-..." style="width:100%;box-sizing:border-box;padding:14px;background:#080808;color:#fff;border:1px solid #555;border-radius:9px">
+    <button id="bmsCustomerLookupButton" class="btn" type="submit">CONSULTAR ENCOMENDA</button>
+  </form>
+  <div id="bmsCustomerResult" aria-live="polite" style="display:none;margin-top:18px;padding:15px;background:#191919;border:1px solid #444;border-radius:10px;color:#eee;font-size:13px;line-height:1.7"></div>
+</div>
 
   <div class="container">
 
@@ -1292,6 +1395,68 @@ footer strong {
         </a>
 
       </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- PRODUTOS BMS -->
+
+<section class="products-section" id="produtos">
+
+  <div class="container">
+
+    <div class="eyebrow">Veste a tua paixão</div>
+
+    <h2 class="section-title">
+      LOJA <span class="gold">BMS</span>
+    </h2>
+
+    <p class="section-description">
+      Representa o Beira Muscle Show com as camisetas oficiais.
+      Escolhe o teu modelo favorito.
+    </p>
+
+    <div class="products-grid">
+
+      <article class="product-card reveal">
+        <img
+          class="product-image"
+          src="Tshirt/bms-shirt1/bms%20shirt1.jpg"
+          alt="Camiseta BMS modelo 1"
+          loading="lazy"
+        >
+        <h3 class="product-name">CAMISETA BMS — EXCLUSIVO 1</h3>
+        <div class="product-price">1.100 <small>MT</small></div>
+        <a class="btn" href="#comprar" data-bms-open-checkout data-bms-item="TSHIRT_1">COMPRAR AGORA</a>
+      </article>
+
+      <article class="product-card reveal">
+        <img
+          class="product-image"
+          src="Tshirt/bms-shirt2/bms%20shirt2.jpg"
+          alt="Camiseta BMS modelo 2"
+          loading="lazy"
+        >
+        <h3 class="product-name">CAMISETA BMS — EXCLUSIVO 2</h3>
+        <div class="product-price">1.100 <small>MT</small></div>
+        <a class="btn" href="#comprar" data-bms-open-checkout data-bms-item="TSHIRT_2">COMPRAR AGORA</a>
+      </article>
+
+      <article class="product-card reveal">
+        <img
+          class="product-image"
+          src="Tshirt/bms-shirt3/bms%20shirt3.jpg"
+          alt="Camiseta BMS modelo 3"
+          loading="lazy"
+        >
+        <h3 class="product-name">CAMISETA BMS — EXCLUSIVO 3</h3>
+        <div class="product-price">1.100 <small>MT</small></div>
+        <a class="btn" href="#comprar" data-bms-open-checkout data-bms-item="TSHIRT_3">COMPRAR AGORA</a>
+      </article>
 
     </div>
 
@@ -1985,6 +2150,176 @@ prepararFiltrosAtletas();
 mostrarAtletas();
 
 
+
+/* CONSULTA PUBLICA DE ENCOMENDAS BMS */
+(() => {
+  const form = document.getElementById("bmsCustomerLookup");
+  if (!form) return;
+
+  const input = document.getElementById("bmsCustomerReference");
+  const button = document.getElementById("bmsCustomerLookupButton");
+  const result = document.getElementById("bmsCustomerResult");
+
+  function addLine(parent, label, value) {
+    const p = document.createElement("p");
+    p.style.margin = "7px 0";
+    const strong = document.createElement("strong");
+    strong.textContent = label + ": ";
+    p.append(strong, document.createTextNode(String(value)));
+    parent.appendChild(p);
+  }
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    const reference = input.value.trim().toUpperCase();
+    if (!reference) return;
+
+    button.disabled = true;
+    button.textContent = "A CONSULTAR...";
+    result.style.display = "block";
+    result.replaceChildren();
+    result.textContent = "A consultar a tua encomenda...";
+
+    try {
+      const response = await fetch(
+        "/api/bms-checkout",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            operation: "CUSTOMER_STATUS",
+            orderReference: reference
+          }),
+          cache: "no-store"
+        }
+      );
+      const data = await response.json();
+
+      result.replaceChildren();
+
+      if (!response.ok || !data.success) {
+        result.textContent = data.message || "Não foi possível encontrar a encomenda.";
+        return;
+      }
+
+      const heading = document.createElement("h3");
+      heading.textContent = "ESTADO DA ENCOMENDA";
+      heading.style.color = "#d5ad55";
+      heading.style.marginTop = "0";
+      result.appendChild(heading);
+
+      addLine(result, "Referência", data.orderReference);
+      addLine(result, "Pagamento", data.paymentStatus);
+      addLine(result, "Total", Number(data.totalAmount || 0).toLocaleString("pt-MZ") + " MT");
+
+      const message = document.createElement("p");
+      message.textContent = data.message;
+      message.style.padding = "10px";
+      message.style.background = "#252117";
+      message.style.borderRadius = "8px";
+      result.appendChild(message);
+
+      if (Array.isArray(data.items) && data.items.length) {
+        const title = document.createElement("h4");
+        title.textContent = "ARTIGOS DA ENCOMENDA";
+        title.style.color = "#d5ad55";
+        result.appendChild(title);
+
+        data.items.forEach(item => {
+          addLine(result, item.name, item.quantity + " × " +
+            Number(item.unitPrice || 0).toLocaleString("pt-MZ") + " MT");
+        });
+      }
+
+      if (Array.isArray(data.ticketCodes) && data.ticketCodes.length) {
+        const title = document.createElement("h4");
+        title.textContent = "BILHETES EMITIDOS";
+        title.style.color = "#d5ad55";
+        result.appendChild(title);
+
+        data.ticketCodes.forEach((code, index) => {
+          addLine(result, "Bilhete " + (index + 1), code);
+        });
+      }
+
+      if (data.pdfUrl) {
+        const link = document.createElement("a");
+        link.href = data.pdfUrl;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.textContent = "DESCARREGAR PDF COM OS QR CODES";
+        link.className = "btn";
+        link.style.marginTop = "12px";
+        result.appendChild(link);
+
+        const note = document.createElement("p");
+        note.textContent = "Por segurança, esta ligação temporária expira após 10 minutos. Podes voltar a consultar a referência para obter outra.";
+        note.style.color = "#aaa";
+        note.style.fontSize = "11px";
+        result.appendChild(note);
+      }
+    } catch (error) {
+      result.textContent = "Falha de ligação. Verifica a internet e tenta novamente.";
+    } finally {
+      button.disabled = false;
+      button.textContent = "CONSULTAR ENCOMENDA";
+    }
+  });
+})();
+
+</script>
+
+
+<!-- BMS-INTEGRATED-CHECKOUT-2026 -->
+<div id="bms-integrated-checkout" hidden>
+  <iframe
+    id="bms-integrated-checkout-frame"
+    title="Loja e compras oficiais Beira Muscle Show"
+    loading="eager"
+    allow="clipboard-write"
+  ></iframe>
+</div>
+
+
+<script>
+/* BMS-INTEGRATED-CHECKOUT-2026 */
+(function () {
+  "use strict";
+
+  const shell = document.getElementById("bms-integrated-checkout");
+  const frame = document.getElementById("bms-integrated-checkout-frame");
+  if (!shell || !frame) return;
+
+  function openCheckout(item) {
+    const params = new URLSearchParams();
+    params.set("embed", "1");
+    if (item) params.set("item", item);
+
+    shell.hidden = false;
+    document.body.classList.add("bms-checkout-active");
+    frame.src = "BMS Checkout.html?" + params.toString();
+    window.scrollTo(0, 0);
+  }
+
+  document.addEventListener("click", function (event) {
+    const button = event.target.closest("[data-bms-open-checkout]");
+    if (!button) return;
+
+    event.preventDefault();
+    openCheckout(button.dataset.bmsItem || "");
+  });
+
+  window.addEventListener("message", function (event) {
+    if (event.origin !== window.location.origin) return;
+    if (event.source !== frame.contentWindow) return;
+
+    if (event.data && event.data.type === "BMS_CLOSE_CHECKOUT") {
+      shell.hidden = true;
+      document.body.classList.remove("bms-checkout-active");
+      frame.src = "about:blank";
+    }
+  });
+})();
 </script>
 
 </body>
