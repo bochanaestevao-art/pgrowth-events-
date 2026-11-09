@@ -19,7 +19,7 @@
 <script>
 "use strict";
 const api="/api/bms-checkout";const loginPanel=document.getElementById("loginPanel"),dashboard=document.getElementById("dashboard"),ordersRoot=document.getElementById("orders");
-async function call(operation,extra={}){const r=await fetch(api,{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({operation,...extra})});const d=await r.json().catch(()=>({}));if(!r.ok||!d.success)throw new Error(d.message||"Falha na operação.");return d;}
+async function call(operation,extra={}){const r=await fetch(api,{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({operation,...extra})});const d=await r.json().catch(()=>({}));if(!r.ok||!d.success)throw new Error(d.message||("Falha HTTP "+r.status+" na operação "+operation+"."));return d;}
 function message(el,text){el.textContent=text;el.classList.remove("hidden");}
 function addText(parent,tag,cls,value){const e=document.createElement(tag);if(cls)e.className=cls;e.textContent=value??"—";parent.append(e);return e;}
 function money(v){return new Intl.NumberFormat("pt-MZ").format(Number(v||0))+" MT";}
@@ -45,7 +45,7 @@ function makeOrderCard(order){
 }
 async function loadOrders(){const data=await call("ADMIN_LIST");ordersRoot.replaceChildren();if(!data.orders?.length){addText(ordersRoot,"div","muted","Ainda não existem encomendas.");return;}for(const order of data.orders)ordersRoot.append(makeOrderCard(order));}
 async function act(operation,orderReference,adminNote){if(!confirm(operation==="ADMIN_APPROVE"?"Confirmas a aprovação do pagamento e a emissão dos QR Codes dos bilhetes?":"Confirmas a rejeição desta encomenda?"))return;try{const d=await call(operation,{orderReference,adminNote});const el=document.getElementById("globalMessage");message(el,d.message||"Operação concluída.");await loadOrders();}catch(e){message(document.getElementById("globalMessage"),e.message);}}
-document.getElementById("loginBtn").addEventListener("click",async()=>{const el=document.getElementById("loginMessage");el.classList.add("hidden");try{await call("ADMIN_LOGIN",{password:document.getElementById("password").value});loginPanel.classList.add("hidden");dashboard.classList.remove("hidden");await loadOrders();}catch(e){message(el,e.message);}});
+document.getElementById("loginBtn").addEventListener("click",async()=>{const el=document.getElementById("loginMessage");el.classList.add("hidden");try{await call("ADMIN_LOGIN",{password:document.getElementById("password").value});loginPanel.classList.add("hidden");dashboard.classList.remove("hidden");try{await loadOrders();}catch(e){message(document.getElementById("globalMessage"),"Sessão iniciada, mas não foi possível carregar as encomendas: "+e.message);}}catch(e){message(el,e.message);}});
 document.getElementById("refreshBtn").addEventListener("click",()=>loadOrders().catch(e=>message(document.getElementById("globalMessage"),e.message)));
 document.getElementById("logoutBtn").addEventListener("click",async()=>{try{await call("ADMIN_LOGOUT");}finally{dashboard.classList.add("hidden");loginPanel.classList.remove("hidden");document.getElementById("password").value="";ordersRoot.replaceChildren();}});
 (async()=>{try{const d=await call("ADMIN_STATUS");if(d.authenticated){loginPanel.classList.add("hidden");dashboard.classList.remove("hidden");await loadOrders();}}catch{} })();
