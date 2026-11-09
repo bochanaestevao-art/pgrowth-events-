@@ -325,15 +325,19 @@ export default async function handler(
     }
 
     if (
-      row.result ===
+      [
+      "PAYMENT_NOT_CONFIRMED",
       "PAYMENT_NOT_PAID"
+    ].includes(row.result)
     ) {
       httpStatus = 409;
     }
 
     if (
-      row.result ===
+      [
+      "TICKET_CANCELLED",
       "CANCELLED"
+    ].includes(row.result)
     ) {
       httpStatus = 409;
     }
