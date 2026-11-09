@@ -1477,7 +1477,7 @@ async function lookupTicket(
 
     const response =
       await fetch(
-        "/api/checkin-lookup?code=" +
+        "/api/checkin?mode=lookup&code=" +
           encodeURIComponent(
             code
           ),
@@ -2762,7 +2762,7 @@ async function searchBuyer() {
 
     const response =
       await fetch(
-        "/api/checkin-search?search=" +
+        "/api/checkin?mode=search&search=" +
           encodeURIComponent(
             search
           ),
