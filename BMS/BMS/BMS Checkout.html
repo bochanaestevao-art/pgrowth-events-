@@ -763,6 +763,46 @@ function showOrderSuccess(data){
   details.textContent="Total: "+money(data.totalAmount)+" | Estado: AGUARDA VALIDAÇÃO MANUAL. Guarde esta referência. Os QR Codes serão emitidos apenas depois da aprovação do pagamento.";
   messageRoot.appendChild(details);
 }
+function maskPaymentBalance(value) {
+  return String(value || "").replace(
+    /((?:o\s+)?(?:teu\s+novo\s+)?saldo(?:\s+da\s+tua\s+conta|\s+m-?pesa)?\s+(?:e|é)\s+(?:de\s+)?)[\d][\d.,]*(?:\s*MT)?/gi,
+    "$1****"
+  );
+}
+
+const paymentMessageField = document.getElementById("paymentMessage");
+
+paymentMessageField.addEventListener("paste", event => {
+  event.preventDefault();
+
+  const clipboard = event.clipboardData || window.clipboardData;
+  const pastedText = clipboard ? clipboard.getData("text") : "";
+  const safeText = maskPaymentBalance(pastedText);
+
+  paymentMessageField.setRangeText(
+    safeText,
+    paymentMessageField.selectionStart,
+    paymentMessageField.selectionEnd,
+    "end"
+  );
+
+  paymentMessageField.dispatchEvent(new Event("input", { bubbles: true }));
+});
+
+paymentMessageField.addEventListener("input", () => {
+  const current = paymentMessageField.value;
+  const safeText = maskPaymentBalance(current);
+
+  if (safeText !== current) {
+    const position = paymentMessageField.selectionStart;
+    paymentMessageField.value = safeText;
+    paymentMessageField.setSelectionRange(
+      Math.min(position, safeText.length),
+      Math.min(position, safeText.length)
+    );
+  }
+});
+
 document.getElementById("checkoutForm").addEventListener("submit",async event=>{
  event.preventDefault();messageRoot.className="message";messageRoot.textContent="";
  const items=catalog.filter(x=>quantities[x.code]>0).map(x=>{
@@ -775,7 +815,8 @@ document.getElementById("checkoutForm").addEventListener("submit",async event=>{
  });
  if(!items.length){showMessage("Selecciona pelo menos um bilhete ou produto.","error");return;}
  if(!paymentSelect.value){showMessage("Selecciona M-Pesa ou e-Mola como método de pagamento.","error");return;}
- const paymentMessage=document.getElementById("paymentMessage").value.trim();
+ const paymentMessage=maskPaymentBalance(paymentMessageField.value).trim();
+ paymentMessageField.value=paymentMessage;
  const transferCode=document.getElementById("transferCode").value.trim();
  if(!paymentMessage&&!transferCode){showMessage("Introduz o código de transferência ou cola o SMS de confirmação.","error");return;}
  const btn=document.getElementById("submitBtn");btn.disabled=true;btn.textContent="A REGISTAR...";

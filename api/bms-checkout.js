@@ -144,7 +144,10 @@ function parseAmount(value) {
 }
 
 function extractPaymentData(message, fallbackCode) {
-  const text = clean(message, 5000);
+  const text = clean(message, 5000).replace(
+    /((?:o\s+)?(?:teu\s+novo\s+)?saldo(?:\s+da\s+tua\s+conta|\s+m-?pesa)?\s+(?:e|é)\s+(?:de\s+)?)[\d][\d.,]*(?:\s*MT)?/gi,
+    "$1****"
+  );
 
   let reference = clean(fallbackCode, 120) || null;
   let amount = null;
@@ -153,49 +156,89 @@ function extractPaymentData(message, fallbackCode) {
 
   if (text) {
     const referencePatterns = [
-      /(?:refer[eê]ncia|reference|transa[cç][aã]o|transaction|c[oó]digo|code|id)\s*[:#\-]?\s*([A-Z0-9][A-Z0-9\-\/]{3,})/i,
-      /\b(?:MPESA|EMOLA)[\s:]+([A-Z0-9][A-Z0-9\-]{4,})/i,
+      /\bID\s+da\s+transa[cç][aã]o\s*[:#-]?\s*([A-Z0-9][A-Z0-9.-]{3,})/i,
+      /\bConfirmado\s+([A-Z0-9][A-Z0-9.-]{4,})/i,
+      /(?:refer[eê]ncia|reference|transa[cç][aã]o|transaction|c[oó]digo|code)\s*[:#-]?\s*([A-Z0-9][A-Z0-9./-]{3,})/i
     ];
 
     for (const pattern of referencePatterns) {
       const match = text.match(pattern);
       if (match) {
-        reference = match[1].trim();
+        reference = match[1].trim().replace(/[.,/]+$/, "");
         break;
       }
     }
 
+    // O montante só é aceite quando está associado à transferência.
     const amountMatch = text.match(
-      /(?:MT|MZN|MZM)\s*([\d.,]+)|([\d.,]+)\s*(?:MT|MZN|MZM)/i
+      /\b(?:transferiste|transferiu|enviaste|enviou|transfer[eê]ncia\s+de)\s+([\d.,]+)\s*(?:MT|MZN|MZM)\b/i
     );
 
     if (amountMatch) {
-      amount = parseAmount(amountMatch[1] || amountMatch[2]);
+      amount = parseAmount(amountMatch[1]);
     }
 
+    // Data DD/MM/AAAA ou DD/MM/AA.
     const dateMatch = text.match(
-      /\b(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})(?:\s+(\d{1,2}):(\d{2}))?/
+      /\b(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})\b/
     );
 
     if (dateMatch) {
-      const [, day, month, year, hour = "12", minute = "00"] =
-        dateMatch;
+      const day = Number(dateMatch[1]);
+      const month = Number(dateMatch[2]);
+      let year = Number(dateMatch[3]);
 
-      const date = new Date(
-        `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}T${hour.padStart(2, "0")}:${minute}:00+02:00`
+      if (year < 100) year += 2000;
+
+      // A hora pode estar antes da data (e-Mola) ou depois (M-Pesa).
+      const afterDate = text.slice(dateMatch.index + dateMatch[0].length);
+      const timeAfter = afterDate.match(
+        /\b(?:às?|as)\s+(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?/i
       );
 
-      if (!Number.isNaN(date.getTime())) {
-        paymentDate = date.toISOString();
+      const beforeDate = text.slice(0, dateMatch.index);
+      const timeBefore = beforeDate.match(
+        /\b(?:às?|as)\s+(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?\s+(?:de\s*)?$/
+      );
+
+      const timeMatch = timeAfter || timeBefore;
+      let hour = timeMatch ? Number(timeMatch[1]) : 12;
+      const minute = timeMatch ? Number(timeMatch[2]) : 0;
+      const period = timeMatch && timeMatch[3]
+        ? timeMatch[3].toUpperCase()
+        : null;
+
+      if (period === "PM" && hour < 12) hour += 12;
+      if (period === "AM" && hour === 12) hour = 0;
+
+      const validDate =
+        month >= 1 && month <= 12 &&
+        day >= 1 && day <= new Date(year, month, 0).getDate() &&
+        hour >= 0 && hour <= 23 &&
+        minute >= 0 && minute <= 59;
+
+      if (validDate) {
+        const isoLocal =
+          year + "-" + String(month).padStart(2, "0") +
+          "-" + String(day).padStart(2, "0") +
+          "T" + String(hour).padStart(2, "0") +
+          ":" + String(minute).padStart(2, "0") + ":00+02:00";
+
+        const parsed = new Date(isoLocal);
+
+        if (!Number.isNaN(parsed.getTime())) {
+          paymentDate = parsed.toISOString();
+        }
       }
     }
 
-    const phoneMatch = text.match(
-      /(?:\+?258[\s-]?)?8[234567]\d{7}/
+    // Só aceita números explicitamente identificados como remetente.
+    const senderMatch = text.match(
+      /(?:remetente|n[uú]mero\s+de\s+origem|enviado\s+por|originado\s+do\s+n[uú]mero)\s*[:#-]?\s*((?:\+?258[\s-]?)?8[234567]\d{7})/i
     );
 
-    if (phoneMatch) {
-      senderPhone = phoneMatch[0].replace(/[\s-]/g, "");
+    if (senderMatch) {
+      senderPhone = senderMatch[1].replace(/[\s-]/g, "");
     }
   }
 
@@ -206,7 +249,6 @@ function extractPaymentData(message, fallbackCode) {
     payment_sender_phone: senderPhone,
   };
 }
-
 function signSession(timestamp) {
   return crypto
     .createHmac("sha256", ADMIN_SECRET)
