@@ -703,6 +703,66 @@ if(Object.hasOwn(quantities,preselect)){
 render();
 
 function showMessage(text,type){messageRoot.className="message show "+type;messageRoot.textContent=text;}
+
+function showOrderSuccess(data){
+  messageRoot.className="message show success";
+  messageRoot.replaceChildren();
+
+  const heading=document.createElement("strong");
+  heading.textContent="ENCOMENDA REGISTADA";
+  heading.style.display="block";
+  heading.style.fontSize="17px";
+  heading.style.marginBottom="10px";
+  messageRoot.appendChild(heading);
+
+  const referenceLabel=document.createElement("span");
+  referenceLabel.textContent="A SUA REFERÊNCIA DE PAGAMENTO";
+  referenceLabel.style.display="block";
+  referenceLabel.style.fontSize="11px";
+  referenceLabel.style.fontWeight="700";
+  messageRoot.appendChild(referenceLabel);
+
+  const reference=document.createElement("strong");
+  reference.textContent=data.orderReference || "";
+  reference.style.display="block";
+  reference.style.fontSize="clamp(19px,5vw,26px)";
+  reference.style.letterSpacing="1px";
+  reference.style.overflowWrap="anywhere";
+  reference.style.margin="7px 0 10px";
+  messageRoot.appendChild(reference);
+
+  const copyButton=document.createElement("button");
+  copyButton.type="button";
+  copyButton.className="btn";
+  copyButton.textContent="COPIAR REFERÊNCIA";
+  copyButton.style.margin="0 0 12px";
+  copyButton.addEventListener("click",async()=>{
+    try{
+      await navigator.clipboard.writeText(data.orderReference || "");
+      copyButton.textContent="REFERÊNCIA COPIADA";
+    }catch(error){
+      const temporary=document.createElement("textarea");
+      temporary.value=data.orderReference || "";
+      temporary.style.position="fixed";
+      temporary.style.opacity="0";
+      document.body.appendChild(temporary);
+      temporary.select();
+      try{
+        document.execCommand("copy");
+        copyButton.textContent="REFERÊNCIA COPIADA";
+      }catch(copyError){
+        copyButton.textContent="COPIE A REFERÊNCIA MANUALMENTE";
+      }
+      temporary.remove();
+    }
+  });
+  messageRoot.appendChild(copyButton);
+
+  const details=document.createElement("p");
+  details.style.margin="0";
+  details.textContent="Total: "+money(data.totalAmount)+" | Estado: AGUARDA VALIDAÇÃO MANUAL. Guarde esta referência. Os QR Codes serão emitidos apenas depois da aprovação do pagamento.";
+  messageRoot.appendChild(details);
+}
 document.getElementById("checkoutForm").addEventListener("submit",async event=>{
  event.preventDefault();messageRoot.className="message";messageRoot.textContent="";
  const items=catalog.filter(x=>quantities[x.code]>0).map(x=>{
@@ -732,7 +792,7 @@ document.getElementById("checkoutForm").addEventListener("submit",async event=>{
   const response=await fetch("/api/bms-checkout",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
   const data=await response.json().catch(()=>({}));
   if(!response.ok||!data.success)throw new Error(data.message||"Não foi possível registar a encomenda.");
-  showMessage("ENCOMENDA REGISTADA\nReferência: "+data.orderReference+"\nTotal: "+money(data.totalAmount)+"\nEstado: AGUARDA VALIDAÇÃO MANUAL\nGuarda a referência. Os QR Codes serão emitidos apenas depois da aprovação do pagamento.", "success");
+  showOrderSuccess(data);
   document.getElementById("checkoutForm").reset();
   selectPayment("");
   for(const code of Object.keys(quantities))quantities[code]=0;

@@ -1,6 +1,59 @@
+import crypto from "node:crypto";
+
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+
+const ADMIN_SECRET = process.env.BMS_ADMIN_SESSION_SECRET;
+const ADMIN_PASSWORD = process.env.BMS_ADMIN_PASSWORD;
+const COOKIE_NAME = "bms_checkout_session";
+const SESSION_SECONDS = 8 * 60 * 60;
+
+function isBmsAdmin(req) {
+  if (!ADMIN_SECRET || !ADMIN_PASSWORD) return false;
+
+  const cookies = String(req.headers.cookie || "").split(";");
+
+  let value = "";
+  for (const item of cookies) {
+    const index = item.indexOf("=");
+    if (index < 0) continue;
+
+    if (item.slice(0, index).trim() === COOKIE_NAME) {
+      try {
+        value = decodeURIComponent(item.slice(index + 1).trim());
+      } catch {
+        return false;
+      }
+      break;
+    }
+  }
+
+  const parts = value.split(".");
+  if (parts.length !== 2) return false;
+
+  const timestamp = Number(parts[0]);
+
+  if (
+    !Number.isSafeInteger(timestamp) ||
+    timestamp > Date.now() ||
+    Date.now() - timestamp > SESSION_SECONDS * 1000
+  ) {
+    return false;
+  }
+
+  const expected = crypto
+    .createHmac("sha256", ADMIN_SECRET)
+    .update(String(timestamp))
+    .digest("hex");
+
+  const actualBuffer = Buffer.from(parts[1]);
+  const expectedBuffer = Buffer.from(expected);
+
+  return actualBuffer.length === expectedBuffer.length &&
+    crypto.timingSafeEqual(actualBuffer, expectedBuffer);
+}
 
 function sendJson(res, status, data) {
   return res.status(status).json(data);
@@ -221,6 +274,14 @@ export default async function handler(req, res) {
     }
 
     if (req.query?.download === "1") {
+      if (!isBmsAdmin(req)) {
+        res.setHeader("Cache-Control", "no-store");
+        return sendJson(res, 401, {
+          success: false,
+          message: "Acesso reservado ao administrador autenticado."
+        });
+      }
+
       let objectPath = String(order.pdf_path).replace(/^\/+/, "");
 
       if (objectPath.startsWith("tickets/")) {

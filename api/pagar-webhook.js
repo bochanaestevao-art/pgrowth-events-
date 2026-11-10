@@ -996,8 +996,9 @@ export default async function handler(
     );
   }
 
-  const eventType =
+    const eventType =
     String(
+      event?.event ||
       event?.type ||
       event?.event_type ||
       event?.eventType ||

@@ -2242,21 +2242,57 @@ mostrarAtletas();
         });
       }
 
-      if (data.pdfUrl) {
+      const pdfFiles = Array.isArray(data.pdfFiles) ? data.pdfFiles : [];
+
+      if (pdfFiles.length) {
+        const title = document.createElement("h4");
+        title.textContent = "OS TEUS BILHETES — PDF";
+        title.style.color = "#d5ad55";
+        result.appendChild(title);
+
+        pdfFiles.forEach((file, index) => {
+          const section = document.createElement("div");
+          section.style.margin = "12px 0";
+          section.style.padding = "12px";
+          section.style.background = "#171717";
+          section.style.borderRadius = "8px";
+
+          const name = document.createElement("p");
+          name.textContent = file.name + (file.quantity ? " · Quantidade: " + file.quantity : "");
+          name.style.marginBottom = "9px";
+          section.appendChild(name);
+
+          const view = document.createElement("a");
+          view.href = file.viewUrl;
+          view.target = "_blank";
+          view.rel = "noopener noreferrer";
+          view.textContent = "VISUALIZAR PDF";
+          view.className = "btn";
+          view.style.marginRight = "8px";
+          section.appendChild(view);
+
+          const download = document.createElement("a");
+          download.href = file.downloadUrl;
+          download.textContent = "DESCARREGAR PDF";
+          download.className = "btn";
+          section.appendChild(download);
+
+          result.appendChild(section);
+        });
+
+        const note = document.createElement("p");
+        note.textContent = "Por segurança, as ligações temporárias expiram após 10 minutos. Volta a consultar a referência para obter novas ligações.";
+        note.style.color = "#aaa";
+        note.style.fontSize = "11px";
+        result.appendChild(note);
+      } else if (data.pdfUrl) {
         const link = document.createElement("a");
         link.href = data.pdfUrl;
         link.target = "_blank";
         link.rel = "noopener noreferrer";
-        link.textContent = "DESCARREGAR PDF COM OS QR CODES";
+        link.textContent = "VISUALIZAR PDF DOS BILHETES";
         link.className = "btn";
-        link.style.marginTop = "12px";
         result.appendChild(link);
-
-        const note = document.createElement("p");
-        note.textContent = "Por segurança, esta ligação temporária expira após 10 minutos. Podes voltar a consultar a referência para obter outra.";
-        note.style.color = "#aaa";
-        note.style.fontSize = "11px";
-        result.appendChild(note);
       }
     } catch (error) {
       result.textContent = "Falha de ligação. Verifica a internet e tenta novamente.";

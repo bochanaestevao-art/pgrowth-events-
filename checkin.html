@@ -10,7 +10,7 @@
 
   <meta name="theme-color" content="#080808">
 
-  <title>BLACK OUT — Check-in</title>
+  <title>PGrowth Eventos — BMS Check-in</title>
 
   <style>
     *{
@@ -560,7 +560,7 @@
       <div class="title">
         Entrada do
         <span style="color:var(--gold)">
-          BLACK OUT
+          BEIRA MUSCLE SHOW
         </span>
       </div>
 
@@ -792,7 +792,7 @@
             id="manualCode"
             type="text"
             autocomplete="off"
-            placeholder="BLACKOUT-2026-..."
+            placeholder="Código do bilhete..."
           >
 
           <button
@@ -1389,9 +1389,9 @@ return decodeURIComponent(matchFromParameter[1])
 }
 }
 
-// 3. Procurar o código BLACKOUT.
+// 3. Procurar códigos BMS e BLACK OUT.
 const matchTicket = raw.match(
-/\bBLACKOUT-2026-[A-Z0-9]+\b/i
+/\b(?:BMS-2026-[A-F0-9]{20}|BLACKOUT-2026-[A-Z0-9]+)\b/i
 );
 
 if (matchTicket) {

@@ -328,11 +328,7 @@ async function main(req, res) {
     "EMOLA"
 ).toUpperCase();
 
-    const orderReference = clean(
-      body.orderReference ||
-        body.order_reference ||
-        body.reference
-    );
+    const orderReference = "";
 
     /*
      * O frontend ainda envia estes campos.
@@ -465,7 +461,7 @@ async function main(req, res) {
 
     const reference =
       orderReference ||
-      `PG-BLACKOUT-${Date.now()}-${crypto
+      `BMS-2026-${Date.now()}-${crypto
         .randomBytes(3)
         .toString("hex")
         .toUpperCase()}`;

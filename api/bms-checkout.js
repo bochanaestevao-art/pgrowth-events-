@@ -364,11 +364,11 @@ async function customerOrderStatus(referenceInput) {
   const [items, issuances] = await Promise.all([
     db(
       "bms_order_items?order_reference=eq." + encoded +
-      "&select=item_type,item_name,quantity,unit_price,line_total&order=created_at.asc"
+      "&select=id,item_type,item_name,quantity,unit_price,line_total&order=created_at.asc"
     ),
     db(
       "bms_order_issuances?order_reference=eq." + encoded +
-      "&select=status,pdf_path,ticket_codes"
+      "&select=status,item_id,pdf_path,ticket_codes"
     )
   ]);
 
@@ -395,16 +395,40 @@ async function customerOrderStatus(referenceInput) {
     : [];
 
   let message = "A encomenda aguarda validação manual do pagamento.";
-  let pdfUrl = null;
+  const pdfFiles = [];
 
   if (paymentStatus === "REJECTED") {
     message = "O pagamento desta encomenda não foi aprovado. Contacte a organização BMS se precisar de esclarecimentos.";
   } else if (paymentStatus === "APPROVED") {
     if (ticketStatus === "ISSUED" && issued.length) {
       message = "Pagamento aprovado. Os bilhetes já foram emitidos.";
-      const pdfIssuance = issued.find(item => item.pdf_path);
-      if (pdfIssuance) {
-        pdfUrl = await signedCustomerPdfUrl(pdfIssuance.pdf_path);
+
+      const itemById = new Map(
+        (Array.isArray(items) ? items : []).map(item => [
+          String(item.id),
+          item
+        ])
+      );
+
+      for (const issuance of issued) {
+        if (!issuance.pdf_path) continue;
+
+        const viewUrl = await signedCustomerPdfUrl(issuance.pdf_path);
+        const item = itemById.get(String(issuance.item_id || ""));
+        const safeName = String(item?.item_name || "Bilhete BMS")
+          .replace(/[^A-Za-z0-9_-]/g, "-")
+          .slice(0, 60);
+
+        const separator = viewUrl.includes("?") ? "&" : "?";
+        const downloadUrl = viewUrl + separator +
+          "download=" + encodeURIComponent(safeName + ".pdf");
+
+        pdfFiles.push({
+          name: String(item?.item_name || "Bilhete BMS"),
+          quantity: Number(item?.quantity || 0),
+          viewUrl,
+          downloadUrl
+        });
       }
     } else if (ticketStatus === "NOT_APPLICABLE") {
       message = "Pagamento aprovado. Esta encomenda não contém bilhetes de entrada.";
@@ -412,6 +436,8 @@ async function customerOrderStatus(referenceInput) {
       message = "Pagamento aprovado. A emissão dos bilhetes está em processamento.";
     }
   }
+
+  const pdfUrl = pdfFiles.length ? pdfFiles[0].viewUrl : null;
 
   return {
     success: true,
@@ -422,6 +448,7 @@ async function customerOrderStatus(referenceInput) {
     items: safeItems,
     ticketCodes,
     pdfUrl: paymentStatus === "APPROVED" ? pdfUrl : null,
+    pdfFiles: paymentStatus === "APPROVED" ? pdfFiles : [],
     message
   };
 }

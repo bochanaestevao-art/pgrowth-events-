@@ -83,13 +83,30 @@ function generateTicketCode() {
 function createPdf({
   tickets,
   qrBuffers,
+  eventCode,
 }) {
+  const isBms2026 = eventCode === "BMS_2026";
+
+  const eventSubtitle = isBms2026
+    ? "2.ª EDIÇÃO 2026"
+    : "TREINO HÍBRIDO • RUN + EXERCÍCIOS LIVRES";
+
+  const eventDate = isBms2026
+    ? "21 NOVEMBRO 2026 • 10H00–20H00"
+    : "13 NOVEMBRO 2026 • 17H";
+
+  const eventVenue = isBms2026
+    ? "SOLANGE BEACH CLUB • BEIRA"
+    : "VILA LUNA — CALÇADÃO DO MIRAMAR • BEIRA";
+
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({
       size: "A5",
       margin: 36,
       info: {
-        Title: "BEIRA MUSCLE SHOW — TREINO HÍBRIDO",
+        Title: isBms2026
+        ? "BEIRA MUSCLE SHOW — 2.ª EDIÇÃO 2026"
+        : "BEIRA MUSCLE SHOW — TREINO HÍBRIDO",
 Author: "Beira Muscle Show",
         Subject:
           "Bilhetes de entrada",
@@ -124,21 +141,21 @@ Author: "Beira Muscle Show",
         .moveDown(0.3)
         .fontSize(14)
         .font("Helvetica")
-        .text("TREINO HÍBRIDO • RUN + EXERCÍCIOS LIVRES", {
+        .text(eventSubtitle, {
           align: "center",
         });
       doc
         .moveDown(0.3)
         .fontSize(10)
         .font("Helvetica-Bold")
-        .text("13 NOVEMBRO 2026 • 17H", {
+        .text(eventDate, {
           align: "center",
         });
 
       doc
         .fontSize(9)
         .font("Helvetica")
-        .text("VILA LUNA — CALÇADÃO DO MIRAMAR • BEIRA", {
+        .text(eventVenue, {
           align: "center",
         });
       doc.moveDown();
@@ -484,6 +501,11 @@ export default async function handler(
     const body =
       req.body || {};
 
+    const eventCode =
+      body.eventCode === "BMS_2026"
+        ? "BMS_2026"
+        : null;
+
     const orderReference =
       typeof body.orderReference ===
       "string"
@@ -596,7 +618,7 @@ export default async function handler(
     }
 
     const pdfPath =
-      `tickets/${tickets[0].ticket_code}.pdf`;
+      `tickets/${tickets[0].ticket_code}${eventCode === "BMS_2026" ? "-BMS_2026" : ""}.pdf`;
 
     const pdfBuffer =
       await createPdf({
@@ -615,6 +637,7 @@ export default async function handler(
           ),
 
         qrBuffers,
+        eventCode,
       });
 
     await uploadPdf(
