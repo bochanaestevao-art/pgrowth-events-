@@ -618,6 +618,65 @@ async function createOrder(body) {
   };
 }
 
+async function adminOverview() {
+  const pageSize = 500;
+  let offset = 0;
+  let mpesaCents = 0;
+  let emolaCents = 0;
+  let approvedOrders = 0;
+
+  while (true) {
+    const rows = await db(
+      "bms_orders?select=order_reference,payment_method,payment_status,total_amount&order=created_at.asc,order_reference.asc",
+      {
+        headers: {
+          Range: `${offset}-${offset + pageSize - 1}`,
+          "Range-Unit": "items",
+        },
+      }
+    );
+
+    if (!Array.isArray(rows)) {
+      throw new Error("Resposta inválida ao consultar o resumo financeiro.");
+    }
+
+    for (const order of rows) {
+      if (String(order.payment_status || "").toUpperCase() !== "APPROVED") continue;
+
+      const method = String(order.payment_method || "").toUpperCase();
+      const amount = Number(order.total_amount || 0);
+
+      if (!Number.isFinite(amount) || amount <= 0) continue;
+
+      const cents = Math.round(amount * 100);
+
+      if (method === "MPESA") {
+        mpesaCents += cents;
+        approvedOrders++;
+      } else if (method === "EMOLA") {
+        emolaCents += cents;
+        approvedOrders++;
+      }
+    }
+
+    if (rows.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  const mpesa = mpesaCents / 100;
+  const emola = emolaCents / 100;
+
+  return {
+    success: true,
+    overview: {
+      mpesa,
+      emola,
+      total: mpesa + emola,
+      approvedOrders,
+    },
+  };
+}
+
 async function listOrders() {
   const orders = await db(
     "bms_orders?select=*&order=created_at.desc&limit=100"
@@ -959,6 +1018,10 @@ export default async function handler(req, res) {
 
     if (operation === "ADMIN_STATUS") {
       return json(res, 200, { success: true, authenticated: true });
+    }
+
+    if (operation === "ADMIN_OVERVIEW") {
+      return json(res, 200, await adminOverview());
     }
 
     if (operation === "ADMIN_LIST") {

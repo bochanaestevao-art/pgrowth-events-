@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#090909">
 <title>Painel privado — BMS Checkout</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#090909;color:#fff;font-family:Arial,sans-serif}.wrap{width:min(1100px,94%);margin:auto;padding:28px 0 70px}h1{color:#d4af37;font-size:clamp(24px,5vw,38px)}h2{font-size:17px;color:#d4af37}.panel,.order{background:#171717;border:1px solid #38332a;border-radius:14px;padding:18px;margin:16px 0}input,textarea{width:100%;padding:12px;border:1px solid #444;border-radius:8px;background:#090909;color:#fff;margin:7px 0 12px}textarea{min-height:65px}.btn{padding:11px 15px;border:0;border-radius:8px;background:#d4af37;color:#111;font-weight:800;cursor:pointer;margin:4px}.btn.danger{background:#8e242b;color:#fff}.btn.secondary{background:#333;color:#fff}.muted{color:#aaa;font-size:12px;line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.status{font-weight:800;color:#e3c66a}.itemline{padding:8px 0;border-bottom:1px solid #333;font-size:13px}.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.message{padding:12px;background:#222;border-radius:8px;margin:12px 0;white-space:pre-wrap}.hidden{display:none!important}a{color:#e3c66a}@media(max-width:650px){.grid{grid-template-columns:1fr}}
+*{box-sizing:border-box}body{margin:0;background:#090909;color:#fff;font-family:Arial,sans-serif}.wrap{width:min(1100px,94%);margin:auto;padding:28px 0 70px}h1{color:#d4af37;font-size:clamp(24px,5vw,38px)}h2{font-size:17px;color:#d4af37}.panel,.order{background:#171717;border:1px solid #38332a;border-radius:14px;padding:18px;margin:16px 0}input,textarea{width:100%;padding:12px;border:1px solid #444;border-radius:8px;background:#090909;color:#fff;margin:7px 0 12px}textarea{min-height:65px}.btn{padding:11px 15px;border:0;border-radius:8px;background:#d4af37;color:#111;font-weight:800;cursor:pointer;margin:4px}.btn.danger{background:#8e242b;color:#fff}.btn.secondary{background:#333;color:#fff}.muted{color:#aaa;font-size:12px;line-height:1.5}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.finance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}.metric{background:#171717;border:1px solid #66552a;border-radius:12px;padding:16px;min-width:0}.metric strong{display:block;color:#e3c66a;font-size:clamp(19px,3vw,27px);margin-top:9px;overflow-wrap:anywhere}@media(max-width:650px){.finance-grid{grid-template-columns:1fr}}.status{font-weight:800;color:#e3c66a}.itemline{padding:8px 0;border-bottom:1px solid #333;font-size:13px}.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.message{padding:12px;background:#222;border-radius:8px;margin:12px 0;white-space:pre-wrap}.hidden{display:none!important}a{color:#e3c66a}@media(max-width:650px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body><main class="wrap">
@@ -12,7 +12,13 @@
 <p class="muted">Área privada da organização. Dados de compradores e pagamentos são carregados apenas após autenticação administrativa.</p>
 <section class="panel" id="loginPanel"><h2>ACESSO ADMINISTRATIVO</h2><label for="password">Palavra-passe administrativa</label><input id="password" type="password" autocomplete="current-password"><button class="btn" id="loginBtn">ENTRAR</button><div id="loginMessage" class="message hidden"></div></section>
 <section id="dashboard" class="hidden">
-<div class="actions"><button class="btn" id="refreshBtn">ACTUALIZAR ENCOMENDAS</button><button class="btn secondary" id="logoutBtn">TERMINAR SESSÃO</button></div>
+<div class="actions"><button class="btn" id="refreshBtn">ACTUALIZAR PAINEL</button><button class="btn secondary" id="logoutBtn">TERMINAR SESSÃO</button></div>
+<div class="finance-grid" id="financialOverview">
+  <div class="metric"><div class="muted">M-Pesa recebido</div><strong id="overviewMpesa">—</strong></div>
+  <div class="metric"><div class="muted">e-Mola recebido</div><strong id="overviewEmola">—</strong></div>
+  <div class="metric"><div class="muted">TOTAL GERAL RECEBIDO</div><strong id="overviewTotal">—</strong></div>
+</div>
+<div id="overviewDetails" class="muted"></div>
 <div id="globalMessage" class="message hidden"></div><div id="orders"></div>
 </section>
 </main>
@@ -43,7 +49,26 @@ function makeOrderCard(order){
  if(order.payment_status==="APPROVED"&&order.ticket_status!=="ISSUED"&&(order.items||[]).some(x=>x.item_type==="TICKET")){const retry=document.createElement("button");retry.className="btn";retry.textContent="TENTAR EMISSÃO NOVAMENTE";retry.addEventListener("click",()=>act("ADMIN_APPROVE",order.order_reference,note.value));actions.append(retry);}
  card.append(actions);return card;
 }
-async function loadOrders(){const data=await call("ADMIN_LIST");ordersRoot.replaceChildren();if(!data.orders?.length){addText(ordersRoot,"div","muted","Ainda não existem encomendas.");return;}for(const order of data.orders)ordersRoot.append(makeOrderCard(order));}
+async function loadOrders(){
+ const overviewTask=call("ADMIN_OVERVIEW").then(data=>{
+  const v=data.overview||{};
+  document.getElementById("overviewMpesa").textContent=money(v.mpesa);
+  document.getElementById("overviewEmola").textContent=money(v.emola);
+  document.getElementById("overviewTotal").textContent=money(v.total);
+  document.getElementById("overviewDetails").textContent="Pagamentos aprovados contabilizados: "+Number(v.approvedOrders||0)+". Pendentes e rejeitados não entram nos totais.";
+ }).catch(e=>{
+  document.getElementById("overviewDetails").textContent="Não foi possível actualizar o resumo: "+e.message;
+ });
+
+ const data=await call("ADMIN_LIST");
+ ordersRoot.replaceChildren();
+ if(!data.orders?.length){
+  addText(ordersRoot,"div","muted","Ainda não existem encomendas.");
+ }else{
+  for(const order of data.orders)ordersRoot.append(makeOrderCard(order));
+ }
+ await overviewTask;
+}
 async function act(operation,orderReference,adminNote){if(!confirm(operation==="ADMIN_APPROVE"?"Confirmas a aprovação do pagamento e a emissão dos QR Codes dos bilhetes?":"Confirmas a rejeição desta encomenda?"))return;try{const d=await call(operation,{orderReference,adminNote});const el=document.getElementById("globalMessage");message(el,d.message||"Operação concluída.");await loadOrders();}catch(e){message(document.getElementById("globalMessage"),e.message);}}
 document.getElementById("loginBtn").addEventListener("click",async()=>{const el=document.getElementById("loginMessage");el.classList.add("hidden");try{await call("ADMIN_LOGIN",{password:document.getElementById("password").value});loginPanel.classList.add("hidden");dashboard.classList.remove("hidden");try{await loadOrders();}catch(e){message(document.getElementById("globalMessage"),"Sessão iniciada, mas não foi possível carregar as encomendas: "+e.message);}}catch(e){message(el,e.message);}});
 document.getElementById("refreshBtn").addEventListener("click",()=>loadOrders().catch(e=>message(document.getElementById("globalMessage"),e.message)));
