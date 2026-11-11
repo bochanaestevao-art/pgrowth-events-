@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050806">
+  <title>Run with Coach | PGrowth Fitness</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="preconnect" href="https://unpkg.com">
+</head>
+<body class="run-page">
+  <header class="run-topbar">
+    <a href="index.html" class="run-back">←</a>
+    <div>
+      <span class="run-brand">PGROWTH <strong>FITNESS</strong></span>
+      <small>RUN WITH COACH</small>
+    </div>
+    <span class="gps-indicator" id="gps-indicator">GPS OFF</span>
+  </header>
+
+  <main class="run-container">
+    <section class="run-heading">
+      <span class="run-eyebrow">A TUA PRÓXIMA CONQUISTA</span>
+      <h1>É hora de <span>correr.</span></h1>
+      <p>O teu percurso. O teu ritmo. A tua evolução.</p>
+    </section>
+
+    <section class="run-map-card">
+      <div id="run-map"></div>
+      <div class="map-status" id="gps-status">
+        <span class="status-dot"></span>
+        À espera de iniciar o GPS
+      </div>
+    </section>
+
+    <section class="run-stats">
+      <article class="run-stat run-stat-main">
+        <span>DISTÂNCIA</span>
+        <strong id="distance">0.00 <small>km</small></strong>
+      </article>
+      <article class="run-stat">
+        <span>TEMPO</span>
+        <strong id="duration">00:00:00</strong>
+      </article>
+      <article class="run-stat">
+        <span>RITMO MÉDIO</span>
+        <strong id="pace">--:-- <small>/km</small></strong>
+      </article>
+      <article class="run-stat">
+        <span>PRECISÃO GPS</span>
+        <strong id="accuracy">-- <small>m</small></strong>
+      </article>
+    </section>
+
+    <section class="run-controls">
+      <button id="start-run" class="run-button run-button-primary">
+        <span>▶</span> INICIAR CORRIDA
+      </button>
+      <div class="run-control-row">
+        <button id="pause-run" class="run-button run-button-secondary" disabled>Ⅱ PAUSAR</button>
+        <button id="finish-run" class="run-button run-button-finish" disabled>■ TERMINAR</button>
+      </div>
+      <p class="run-message" id="run-message">
+        Permite o acesso à localização para registar a tua corrida real.
+      </p>
+    </section>
+
+    <section class="run-safety">
+      <img class="medical-heart" src="assets/medical-heart.svg" alt="Ilustração médica do coração com electrocardiograma">
+      <p>Corre ao teu ritmo. Se sentires dor, tontura ou mal-estar, pára e procura ajuda.</p>
+    </section>
+  </main>
+
+  <div class="run-result-overlay" id="run-result" hidden>
+    <div class="run-result-card">
+      <span class="run-eyebrow">CORRIDA CONCLUÍDA</span>
+      <h2>Bom trabalho! <img class="medical-heart" src="assets/medical-heart.svg" alt="Ilustração médica do coração com electrocardiograma"></h2>
+      <p>Este foi o teu resultado:</p>
+      <strong id="final-distance">0.00 km</strong>
+      <div class="run-result-details">
+        <div><small>TEMPO</small><b id="final-duration">00:00:00</b></div>
+        <div><small>RITMO MÉDIO</small><b id="final-pace">--:-- /km</b></div>
+      </div>
+      <button id="close-result" class="run-button run-button-primary">CONCLUIR</button>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/corrida.js"></script>
+</body>
+</html>
