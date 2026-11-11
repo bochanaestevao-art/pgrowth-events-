@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080808">
+  <title>Meu Perfil | PGrowth Fitness</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/meu-perfil.css">
+</head>
+<body class="my-account-page">
+
+  <header class="account-header">
+    <a href="index.html" class="account-back">← VOLTAR</a>
+    <div class="account-brand">PGROWTH <span>FITNESS</span></div>
+  </header>
+
+  <main class="account-container">
+    <section class="account-intro">
+      <div class="account-avatar" id="account-avatar">AT</div>
+      <p class="account-eyebrow">ÁREA PESSOAL</p>
+      <h1 id="account-name">Meu Perfil</h1>
+      <p class="account-description">As tuas informações pessoais e o teu espaço no PGrowth Fitness.</p>
+    </section>
+
+    <section class="account-card">
+      <div class="account-card-heading">
+        <div>
+          <span class="account-label">INFORMAÇÕES PESSOAIS</span>
+          <h2>Os meus dados</h2>
+        </div>
+        <span class="account-icon">01</span>
+      </div>
+
+      <div class="account-data-grid">
+        <div class="account-data">
+          <span>Nome completo</span>
+          <strong id="account-full-name">Ainda não preenchido</strong>
+        </div>
+        <div class="account-data">
+          <span>Telefone</span>
+          <strong id="account-phone">Ainda não preenchido</strong>
+        </div>
+        <div class="account-data">
+          <span>Cidade</span>
+          <strong id="account-city">Ainda não preenchida</strong>
+        </div>
+        <div class="account-data">
+          <span>Província</span>
+          <strong id="account-province">Ainda não preenchida</strong>
+        </div>
+        <div class="account-data">
+          <span>Data de nascimento</span>
+          <strong id="account-birth">Não indicada</strong>
+        </div>
+      </div>
+
+      <a class="account-primary-button" href="perfil.html">
+        EDITAR DADOS PESSOAIS
+      </a>
+    </section>
+
+    <section class="account-card account-athlete-card">
+      <div class="account-card-heading">
+        <div>
+          <span class="account-label">ÁREA DESPORTIVA</span>
+          <h2>Perfil do Atleta</h2>
+        </div>
+        <span class="account-icon">02</span>
+      </div>
+      <p>Consulta e actualiza os teus dados físicos, objectivos, experiência, preferências e horários de corrida.</p>
+      <a class="account-secondary-button" href="perfil.html">
+        ABRIR PERFIL DO ATLETA →
+      </a>
+    </section>
+
+    <section class="account-card account-progress-card">
+      <div class="account-card-heading">
+        <div>
+          <span class="account-label">ACOMPANHAMENTO</span>
+          <h2>A minha actividade</h2>
+        </div>
+        <span class="account-icon">03</span>
+      </div>
+      <p>O histórico de corridas e a evolução do teu desempenho serão apresentados aqui quando o registo de actividades estiver ligado à conta.</p>
+      <span class="account-coming-soon">HISTÓRICO DE CORRIDAS — EM PREPARAÇÃO</span>
+    </section>
+
+
+    <!-- ACESSO AOS RELATORIOS -->
+    <section class="account-card">
+      <div class="account-card-heading">
+        <div>
+          <span class="account-label">DESEMPENHO</span>
+          <h2>Os meus relatórios</h2>
+        </div>
+        <span class="account-icon">04</span>
+      </div>
+      <p>Consulta o teu histórico de corridas, distância percorrida, tempo, ritmo médio e evolução semanal e mensal.</p>
+      <a class="account-primary-button" href="relatorios.html">
+        CONSULTAR RELATÓRIOS
+      </a>
+    </section>
+
+    <p class="account-feedback" id="account-feedback"></p>
+  </main>
+
+  <script src="js/meu-perfil.js"></script>
+</body>
+</html>

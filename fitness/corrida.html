@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="css/coach-avatar.css">
 </head>
 <body class="run-page">
   <header class="run-topbar">
@@ -25,8 +26,33 @@
       <h1>É hora de <span>correr.</span></h1>
       <p>O teu percurso. O teu ritmo. A tua evolução.</p>
     </section>
+  <!-- CT GULERA — treinador virtual flutuante -->
+  <aside class="coach-avatar-dock" id="coach-avatar-dock" aria-label="Treinador virtual CT GULERA">
+    <div class="coach-avatar-bubble" aria-live="polite">
+      <span class="coach-avatar-label">CT GULERA · TEU TREINADOR</span>
+      <strong id="coach-avatar-title">Vamos em frente!</strong>
+      <p id="coach-avatar-text">Estou aqui para te orientar durante a corrida.</p>
+      <div class="coach-avatar-audio">
+        <div class="coach-avatar-waves" aria-label="Indicador de áudio">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <button type="button" class="coach-avatar-mute" id="coach-avatar-mute" aria-pressed="false">
+          SILENCIAR VOZ
+        </button>
+      </div>
+    </div>
+    <div class="coach-avatar-figure">
+      <img
+        class="coach-avatar-image"
+        src="assets/ct-gulera-avatar/ct-gulera-avatar.png"
+        alt="CT GULERA, treinador virtual do PGrowth Fitness"
+        loading="eager"
+      >
+      <span class="coach-avatar-mouth" aria-hidden="true"></span>
+    </div>
+  </aside>
 
-    <section class="run-map-card">
+  <section class="run-map-card">
       <div id="run-map"></div>
       <div class="map-status" id="gps-status">
         <span class="status-dot"></span>
@@ -88,5 +114,6 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="js/corrida.js"></script>
+  <script src="js/coach-avatar.js"></script>
 </body>
 </html>

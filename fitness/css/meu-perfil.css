@@ -1,0 +1,188 @@
+.my-account-page {
+  min-height: 100vh;
+  margin: 0;
+  background: #080808;
+  color: #f5f5f5;
+  font-family: Arial, sans-serif;
+}
+
+.account-header {
+  min-height: 65px;
+  padding: 12px 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  border-bottom: 1px solid #333;
+  background: #101010;
+}
+
+.account-back {
+  color: #ffbd36;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.account-brand {
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.account-brand span {
+  color: #ffbd36;
+}
+
+.account-container {
+  width: min(760px, 92%);
+  margin: 35px auto 60px;
+}
+
+.account-intro {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.account-avatar {
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 17px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #ffbd36;
+  border-radius: 50%;
+  background: #211a0c;
+  color: #ffbd36;
+  font-size: 25px;
+  font-weight: 900;
+}
+
+.account-eyebrow,
+.account-label {
+  color: #ffbd36;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+}
+
+.account-intro h1 {
+  margin: 8px 0;
+  font-size: clamp(27px, 6vw, 38px);
+}
+
+.account-description,
+.account-card p {
+  color: #aaa;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.account-card {
+  margin-top: 17px;
+  padding: 22px;
+  border: 1px solid #383838;
+  border-radius: 15px;
+  background: #121212;
+}
+
+.account-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.account-card-heading h2 {
+  margin: 6px 0 0;
+  font-size: 20px;
+}
+
+.account-icon {
+  color: #ffbd36;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.account-data-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.account-data {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #303030;
+  border-radius: 10px;
+  background: #0b0b0b;
+}
+
+.account-data span {
+  display: block;
+  margin-bottom: 7px;
+  color: #999;
+  font-size: 11px;
+}
+
+.account-data strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: #fff;
+  font-size: 14px;
+}
+
+.account-primary-button,
+.account-secondary-button {
+  min-height: 47px;
+  margin-top: 20px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  text-align: center;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .5px;
+}
+
+.account-primary-button {
+  background: #ffbd36;
+  color: #111;
+}
+
+.account-secondary-button {
+  border: 1px solid #ff7900;
+  background: #1a1009;
+  color: #ff7900;
+}
+
+.account-coming-soon {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border: 1px solid #444;
+  border-radius: 7px;
+  color: #aaa;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.account-feedback {
+  color: #aaa;
+  text-align: center;
+  font-size: 12px;
+}
+
+@media (max-width: 520px) {
+  .account-data-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .account-card {
+    padding: 17px;
+  }
+}

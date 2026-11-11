@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#080808">
+  <title>Perfil do Atleta | PGrowth Fitness</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/perfil.css">
+</head>
+<body class="athlete-profile-page">
+  <header class="profile-header">
+    <a href="index.html" class="profile-back">← Painel principal</a>
+    <div class="profile-brand">PGROWTH <span>FITNESS</span></div>
+    <p>O teu perfil. A tua evolução.</p>
+  </header>
+
+  <main class="profile-container">
+    <section class="profile-intro">
+      <div class="profile-avatar"><span>ATLETA</span></div>
+      <div>
+        <span class="profile-eyebrow">ÁREA PESSOAL</span>
+        <h1>Perfil do Atleta</h1>
+        <p>Personaliza a tua experiência de corrida e organiza os teus treinos.</p>
+      </div>
+    </section>
+
+    <form id="athlete-profile-form">
+      <section class="profile-section">
+        <h2>01. Identificação e localização</h2>
+        <div class="profile-grid">
+          <label>Nome completo
+            <input name="name" required minlength="3" maxlength="120" placeholder="O teu nome completo">
+          </label>
+          <label>Telefone (opcional)
+            <input name="phone" type="tel" maxlength="30" placeholder="+258 ...">
+          </label>
+          <label>Cidade
+            <input name="city" maxlength="80" placeholder="Ex.: Beira">
+          </label>
+          <label>Província
+            <select name="province">
+              <option value="">Seleccionar província</option>
+              <option value="Cabo Delgado">Cabo Delgado</option>
+              <option value="Gaza">Gaza</option>
+              <option value="Inhambane">Inhambane</option>
+              <option value="Manica">Manica</option>
+              <option value="Maputo Cidade">Maputo Cidade</option>
+              <option value="Maputo Província">Maputo Província</option>
+              <option value="Nampula">Nampula</option>
+              <option value="Niassa">Niassa</option>
+              <option value="Sofala">Sofala</option>
+              <option value="Tete">Tete</option>
+              <option value="Zambézia">Zambézia</option>
+            </select>
+          </label>
+          <label>Data de nascimento (opcional)
+            <input name="birthDate" type="date">
+          </label>
+        </div>
+      </section>
+
+      <section class="profile-section">
+        <h2>02. Dados físicos</h2>
+        <p class="section-note">Estes dados são opcionais e podem ser actualizados a qualquer momento.</p>
+        <div class="profile-grid">
+          <label>Peso (kg)
+            <input name="weight" type="number" min="20" max="300" step="0.1" placeholder="Ex.: 72">
+          </label>
+          <label>Altura (cm)
+            <input name="height" type="number" min="100" max="250" step="0.1" placeholder="Ex.: 175">
+          </label>
+        </div>
+      </section>
+
+      <section class="profile-section">
+        <h2>03. Objectivos pessoais</h2>
+        <p class="section-note">Selecciona um ou vários objectivos.</p>
+        <div class="profile-options">
+          <label><input type="checkbox" name="objectives" value="Melhorar a condição física"> Melhorar a condição física</label>
+          <label><input type="checkbox" name="objectives" value="Perder peso"> Perder peso</label>
+          <label><input type="checkbox" name="objectives" value="Aumentar a resistência"> Aumentar a resistência</label>
+          <label><input type="checkbox" name="objectives" value="Melhorar velocidade e ritmo"> Melhorar velocidade e ritmo</label>
+          <label><input type="checkbox" name="objectives" value="Preparar competições"> Preparar competições</label>
+          <label><input type="checkbox" name="objectives" value="Correr 5 km"> Correr 5 km</label>
+          <label><input type="checkbox" name="objectives" value="Correr 10 km"> Correr 10 km</label>
+          <label><input type="checkbox" name="objectives" value="Correr 21 km"> Correr 21 km</label>
+          <label><input type="checkbox" name="objectives" value="Correr 42 km"> Correr 42 km</label>
+        </div>
+        <label>Outro objectivo
+          <input name="customObjective" maxlength="180" placeholder="Escreve o teu objectivo pessoal">
+        </label>
+      </section>
+
+      <section class="profile-section">
+        <h2>04. Nível e experiência</h2>
+        <div class="profile-grid">
+          <label>Nível actual
+            <select name="level">
+              <option value="">Seleccionar nível</option>
+              <option value="Iniciante">Iniciante</option>
+              <option value="Intermédio">Intermédio</option>
+              <option value="Avançado">Avançado</option>
+            </select>
+          </label>
+          <label>Frequência actual
+            <select name="frequency">
+              <option value="">Seleccionar frequência</option>
+              <option value="Ainda não corro regularmente">Ainda não corro regularmente</option>
+              <option value="1 a 2 vezes por semana">1 a 2 vezes por semana</option>
+              <option value="3 a 4 vezes por semana">3 a 4 vezes por semana</option>
+              <option value="5 ou mais vezes por semana">5 ou mais vezes por semana</option>
+            </select>
+          </label>
+          <label>Distância habitual
+            <select name="usualDistance">
+              <option value="">Seleccionar distância</option>
+              <option value="Até 2 km">Até 2 km</option>
+              <option value="3 a 5 km">3 a 5 km</option>
+              <option value="6 a 10 km">6 a 10 km</option>
+              <option value="Mais de 10 km">Mais de 10 km</option>
+            </select>
+          </label>
+        </div>
+        <label>Experiência e observações
+          <textarea name="experience" rows="3" maxlength="1000" placeholder="Conta-nos sobre a tua experiência com a corrida..."></textarea>
+        </label>
+      </section>
+
+      <section class="profile-section">
+        <h2>05. Calendário de corrida</h2>
+        <p class="section-note">Escolhe os dias e a hora em que estás disponível para treinar. Podes definir uma hora diferente para cada dia.</p>
+        <div id="training-days" class="training-days">
+          <div class="training-day" data-day="1"><label><input type="checkbox"> Segunda-feira</label><input type="time" disabled aria-label="Hora de segunda-feira"></div>
+          <div class="training-day" data-day="2"><label><input type="checkbox"> Terça-feira</label><input type="time" disabled aria-label="Hora de terça-feira"></div>
+          <div class="training-day" data-day="3"><label><input type="checkbox"> Quarta-feira</label><input type="time" disabled aria-label="Hora de quarta-feira"></div>
+          <div class="training-day" data-day="4"><label><input type="checkbox"> Quinta-feira</label><input type="time" disabled aria-label="Hora de quinta-feira"></div>
+          <div class="training-day" data-day="5"><label><input type="checkbox"> Sexta-feira</label><input type="time" disabled aria-label="Hora de sexta-feira"></div>
+          <div class="training-day" data-day="6"><label><input type="checkbox"> Sábado</label><input type="time" disabled aria-label="Hora de sábado"></div>
+          <div class="training-day" data-day="0"><label><input type="checkbox"> Domingo</label><input type="time" disabled aria-label="Hora de domingo"></div>
+        </div>
+        <label class="toggle-option">
+          <input type="checkbox" name="remindersEnabled" checked>
+          Activar lembretes de corrida no painel
+        </label>
+        <p class="section-note">Horário de referência: Moçambique (Africa/Maputo).</p>
+      </section>
+
+      <section class="profile-section">
+        <h2>06. Preferências pessoais</h2>
+        <div class="profile-grid">
+          <label>Horário preferido
+            <select name="preferredPeriod">
+              <option value="">Sem preferência fixa</option>
+              <option value="Manhã">Manhã</option>
+              <option value="Tarde">Tarde</option>
+              <option value="Noite">Noite</option>
+            </select>
+          </label>
+          <label>Acompanhamento do Coach
+            <select name="coachPreference">
+              <option value="Motivação e orientação">Motivação e orientação</option>
+              <option value="Orientação técnica">Orientação técnica</option>
+              <option value="Apenas motivação">Apenas motivação</option>
+            </select>
+          </label>
+        </div>
+        <label class="toggle-option">
+          <input type="checkbox" name="soundEnabled" checked>
+          Permitir avisos sonoros no painel
+        </label>
+      </section>
+
+      <div class="profile-actions">
+        <button type="submit" class="profile-save">GUARDAR PERFIL</button>
+        <a href="index.html" class="profile-cancel">VOLTAR AO PAINEL</a>
+      </div>
+      <p id="profile-feedback" role="status" aria-live="polite"></p>
+    </form>
+  </main>
+
+  <script src="js/perfil.js"></script>
+</body>
+</html>

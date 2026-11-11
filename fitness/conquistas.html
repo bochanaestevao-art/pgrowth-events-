@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080808">
+  <title>Conquistas | PGrowth Fitness</title>
+  <link rel="stylesheet" href="css/conquistas.css">
+</head>
+<body>
+  <main class="achievements-page">
+
+    <header class="achievements-header">
+      <a href="index.html" class="back-link">← PAINEL PRINCIPAL</a>
+      <span class="gold-label">PGROWTH FITNESS</span>
+      <h1>AS TUAS <span>CONQUISTAS</span></h1>
+      <p>Cada corrida é uma vitória. Cada quilómetro é uma conquista.</p>
+    </header>
+
+    <section class="trophy-banner">
+      <div class="trophy-symbol">🏆</div>
+      <div>
+        <span>O TEU DESEMPENHO</span>
+        <h2 id="achievement-count">0 / 9</h2>
+        <p>Conquistas desbloqueadas</p>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stat-card">
+        <span>🏃</span>
+        <strong id="total-runs">0</strong>
+        <small>Corridas</small>
+      </article>
+
+      <article class="stat-card">
+        <span>📍</span>
+        <strong id="total-distance">0 km</strong>
+        <small>Distância total</small>
+      </article>
+
+      <article class="stat-card">
+        <span>🥇</span>
+        <strong id="best-run">0 km</strong>
+        <small>Melhor corrida</small>
+      </article>
+    </section>
+
+    <section class="progress-section">
+      <div class="section-title">
+        <h2>PROGRESSO GERAL</h2>
+        <span id="progress-percent">0%</span>
+      </div>
+      <div class="progress-track">
+        <div id="overall-progress" class="progress-fill"></div>
+      </div>
+      <p id="progress-message">A tua próxima conquista começa com o primeiro passo.</p>
+    </section>
+
+    <section class="achievements-section">
+      <div class="section-title">
+        <h2>QUADRO DE CONQUISTAS</h2>
+        <span class="live-indicator">● ACTUALIZAÇÃO AUTOMÁTICA</span>
+      </div>
+
+      <div id="achievements-list" class="achievements-grid">
+        <p class="loading-message">A carregar as tuas conquistas...</p>
+      </div>
+    </section>
+
+    <footer>
+      PGrowth Fitness · A tua evolução merece reconhecimento.
+    </footer>
+  </main>
+
+  <script src="js/conquistas.js"></script>
+</body>
+</html>

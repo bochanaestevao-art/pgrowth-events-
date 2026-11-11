@@ -313,6 +313,41 @@
     updateMessage("A retomar a corrida e a localização GPS.");
   }
 
+  // PGROWTH_RUN_HISTORY_V1
+  function saveRunRecord(elapsed, km) {
+    if (elapsed <= 0 || km <= 0) return false;
+
+    const historyKey = "pgrowth_fitness_run_history_v1";
+    const profileKey = "pgrowth_fitness_athlete_profile_v1";
+
+    try {
+      const history = JSON.parse(localStorage.getItem(historyKey) || "[]");
+      const profile = JSON.parse(localStorage.getItem(profileKey) || "{}");
+      const fields = profile.fields || {};
+
+      const record = {
+        id: window.crypto && crypto.randomUUID
+          ? crypto.randomUUID()
+          : "run-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8),
+        date: new Date().toISOString(),
+        timezone: "Africa/Maputo",
+        athleteName: fields.name || "",
+        distanceKm: Number(km.toFixed(3)),
+        durationMs: Math.round(elapsed),
+        durationSeconds: Math.round(elapsed / 1000),
+        pace: formatPace(km, elapsed),
+        route: acceptedPoints.map(point => [point[0], point[1]])
+      };
+
+      history.push(record);
+      localStorage.setItem(historyKey, JSON.stringify(history));
+      return true;
+    } catch (error) {
+      console.error("Erro ao guardar corrida:", error);
+      return false;
+    }
+  }
+
   function finishRun() {
     if (!started) return;
 
@@ -323,6 +358,7 @@
 
     const elapsed = elapsedBeforeSegment;
     const km = totalDistance / 1000;
+    const saved = saveRunRecord(elapsed, km);
 
     $("final-distance").textContent = `${km.toFixed(2)} km`;
     $("final-duration").textContent = formatTime(elapsed);
@@ -335,7 +371,12 @@
     $("pause-run").textContent = "Ⅱ PAUSAR";
 
     setGpsStatus("Corrida terminada", false);
-    updateMessage("Corrida concluída. Os resultados estão apresentados no resumo.");
+
+    if (saved) {
+      updateMessage("Corrida concluída e guardada no teu histórico.");
+    } else {
+      updateMessage("Corrida concluída. Não foi possível guardar um registo com distância GPS válida. Verifica o sinal GPS.");
+    }
   }
 
   $("start-run").addEventListener("click", startRun);

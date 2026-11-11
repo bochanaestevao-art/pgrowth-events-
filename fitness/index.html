@@ -13,7 +13,10 @@
       <span class="brand-icon">P</span>
       <span>PGrowth <strong>Fitness</strong></span>
     </div>
-    <button class="profile-button" aria-label="Perfil">U</button>
+    <a class="scroll-hint" href="#centro-treino" aria-label="Deslize para baixo até aos quatro botões do painel">
+      <span>DESLIZE PARA BAIXO</span>
+      <span class="scroll-hint-arrow" aria-hidden="true">↓</span>
+    </a>
   </header>
 
   <main class="container">
@@ -35,7 +38,76 @@
       <img class="coach-athletes" src="assets/run-with-coach-athletes/run-with-coach-athletes.png" alt="Mulher e homem atletas a correr juntos">
     </section>
 
-    <section class="section-heading">
+    <section class="ct-gulera-profile" id="ct-gulera-profile" aria-label="Apresentação do treinador CT GULERA">
+      <div class="ct-gulera-photo">
+        <img
+          src="assets/ct-gulera-avatar/ct-gulera-avatar.png"
+          alt="CT GULERA, treinador virtual do PGrowth Fitness"
+          loading="lazy"
+        >
+        <span class="ct-gulera-photo-tag">TEU TREINADOR VIRTUAL</span>
+      </div>
+
+      <div class="ct-gulera-info">
+        <span class="ct-gulera-kicker">PGROWTH FITNESS · RUN WITH COACH</span>
+        <h2>CONHECE O <span>CT GULERA</span></h2>
+        <h3>Mais do que motivação. Orientação para evoluir.</h3>
+
+        <p class="ct-gulera-description">
+          Um treinador virtual dedicado a acompanhar a tua jornada na corrida.
+          Está contigo desde os primeiros passos até às tuas maiores conquistas,
+          ajudando-te a desenvolver disciplina, resistência e confiança.
+        </p>
+
+        <div class="ct-gulera-specialties">
+          <article>
+            <span>01</span>
+            <div>
+              <strong>TÉCNICA DE CORRIDA</strong>
+              <p>Postura, passada, respiração e controlo do ritmo.</p>
+            </div>
+          </article>
+
+          <article>
+            <span>02</span>
+            <div>
+              <strong>MOTIVAÇÃO ACTIVA</strong>
+              <p>Incentivo, consistência e confiança em cada etapa.</p>
+            </div>
+          </article>
+
+          <article>
+            <span>03</span>
+            <div>
+              <strong>ACOMPANHAMENTO</strong>
+              <p>Orientações adaptadas à distância, ao tempo e à evolução.</p>
+            </div>
+          </article>
+
+          <article>
+            <span>04</span>
+            <div>
+              <strong>RECUPERAÇÃO E SEGURANÇA</strong>
+              <p>Conselhos para respeitar os limites do corpo e recuperar.</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="ct-gulera-motto">
+          <span>DISCIPLINA</span>
+          <i>•</i>
+          <span>TÉCNICA</span>
+          <i>•</i>
+          <span>SUPERAÇÃO</span>
+        </div>
+
+        <p class="ct-gulera-signature">
+          “Não precisas de ser o mais rápido. Precisas de continuar a evoluir.”
+        </p>
+      </div>
+    </section>
+
+    <section class="section-heading" id="centro-treino">
       <div>
         <span class="eyebrow">O TEU ESPAÇO</span>
         <h2>Centro de treino</h2>
@@ -57,9 +129,9 @@
         <span class="arrow">↗</span>
       </a>
 
-      <a href="perfil.html" class="feature">
+      <a href="meu-perfil.html" class="feature">
         <span class="feature-icon">👤</span>
-        <strong>O meu perfil</strong>
+        <strong>Meu Perfil</strong>
         <small>Os teus dados e objectivos</small>
         <span class="arrow">↗</span>
       </a>
@@ -74,5 +146,6 @@
 
     <footer>PGrowth Fitness · Evolui todos os dias.</footer>
   </main>
+  <script src="js/perfil-dashboard.js"></script>
 </body>
 </html>

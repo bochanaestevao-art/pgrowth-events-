@@ -1,0 +1,172 @@
+/* CT GULERA — treinador virtual flutuante */
+.coach-avatar-dock {
+  position: fixed;
+  z-index: 40;
+  right: 10px;
+  bottom: calc(105px + env(safe-area-inset-bottom, 0px));
+  width: min(220px, 48vw);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  pointer-events: none;
+}
+
+.coach-avatar-bubble {
+  width: min(220px, calc(100vw - 24px));
+  padding: 10px 11px;
+  color: #fff;
+  background: rgba(9, 12, 10, .96);
+  border: 1px solid rgba(255, 212, 0, .75);
+  border-radius: 13px 13px 3px 13px;
+  box-shadow: 0 5px 22px rgba(0, 0, 0, .5);
+  pointer-events: auto;
+}
+
+.coach-avatar-label {
+  display: block;
+  margin-bottom: 5px;
+  color: #ffd400;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1px;
+}
+
+.coach-avatar-bubble strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.coach-avatar-bubble p {
+  margin: 4px 0 8px;
+  color: #d3d3d3;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.coach-avatar-audio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.coach-avatar-waves {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 17px;
+}
+
+.coach-avatar-waves span {
+  display: block;
+  width: 3px;
+  height: 5px;
+  border-radius: 5px;
+  background: #ffd400;
+  opacity: .5;
+}
+
+.coach-avatar-dock.is-speaking .coach-avatar-waves span {
+  opacity: 1;
+  animation: coachWaves .55s ease-in-out infinite alternate;
+}
+
+.coach-avatar-waves span:nth-child(2) { animation-delay: .12s; }
+.coach-avatar-waves span:nth-child(3) { animation-delay: .24s; }
+.coach-avatar-waves span:nth-child(4) { animation-delay: .36s; }
+
+.coach-avatar-mute {
+  padding: 5px 8px;
+  color: #ffd400;
+  background: #171717;
+  border: 1px solid rgba(255, 212, 0, .5);
+  border-radius: 7px;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.coach-avatar-figure {
+  position: relative;
+  width: 116px;
+  max-height: 180px;
+  align-self: flex-end;
+  pointer-events: none;
+  animation: coachFloat 4s ease-in-out infinite;
+}
+
+.coach-avatar-image {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 7px 12px rgba(0, 0, 0, .65));
+}
+
+/* Pequeno movimento visual da boca durante a fala.
+   A posição poderá ser afinada conforme o enquadramento da imagem. */
+.coach-avatar-mouth {
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  width: 8px;
+  height: 3px;
+  border-radius: 50%;
+  background: #321b16;
+  transform: translateX(-50%);
+  opacity: .85;
+}
+
+.coach-avatar-dock.is-speaking .coach-avatar-mouth {
+  animation: coachMouth .18s ease-in-out infinite alternate;
+}
+
+@keyframes coachMouth {
+  from { height: 2px; transform: translateX(-50%) scaleY(.7); }
+  to { height: 7px; transform: translateX(-50%) scaleY(1.2); }
+}
+
+@keyframes coachWaves {
+  from { height: 4px; }
+  to { height: 16px; }
+}
+
+@keyframes coachFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@media (max-width: 480px) {
+  .coach-avatar-dock {
+    right: 7px;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    width: 145px;
+  }
+
+  .coach-avatar-bubble {
+    width: 175px;
+    padding: 8px;
+  }
+
+  .coach-avatar-bubble strong { font-size: 12px; }
+  .coach-avatar-bubble p { font-size: 10px; }
+
+  .coach-avatar-figure {
+    width: 92px;
+    max-height: 140px;
+  }
+
+  .coach-avatar-image { max-height: 140px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coach-avatar-figure { animation: none; }
+  .coach-avatar-dock.is-speaking .coach-avatar-mouth,
+  .coach-avatar-dock.is-speaking .coach-avatar-waves span {
+    animation: none;
+  }
+}

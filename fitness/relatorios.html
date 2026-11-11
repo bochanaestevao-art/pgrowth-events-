@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080808">
+  <title>Relatórios | PGrowth Fitness</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/relatorios.css">
+</head>
+<body class="reports-page">
+  <header class="reports-header">
+    <a href="index.html">← PAINEL</a>
+    <strong>PGROWTH <span>FITNESS</span></strong>
+    <a href="meu-perfil.html">MEU PERFIL</a>
+  </header>
+
+  <main class="reports-container">
+    <section class="reports-intro">
+      <span>DESEMPENHO DO ATLETA</span>
+      <h1>OS MEUS RELATÓRIOS</h1>
+      <p>Acompanha a tua evolução através das corridas que realizaste.</p>
+    </section>
+
+    <section class="reports-filters" aria-label="Período do relatório">
+      <button type="button" class="report-filter active" data-period="week">SEMANAL</button>
+      <button type="button" class="report-filter" data-period="month">MENSAL</button>
+      <button type="button" class="report-filter" data-period="all">HISTÓRICO</button>
+    </section>
+
+    <p class="reports-period" id="reports-period">A carregar período...</p>
+
+    <section class="reports-stats">
+      <article class="report-stat">
+        <span>DISTÂNCIA TOTAL</span>
+        <strong id="report-distance">0,00 <small>km</small></strong>
+      </article>
+      <article class="report-stat">
+        <span>CORRIDAS</span>
+        <strong id="report-count">0</strong>
+      </article>
+      <article class="report-stat">
+        <span>TEMPO TOTAL</span>
+        <strong id="report-duration">00:00:00</strong>
+      </article>
+      <article class="report-stat">
+        <span>RITMO MÉDIO</span>
+        <strong id="report-pace">--:-- <small>/km</small></strong>
+      </article>
+    </section>
+
+    <section class="report-panel">
+      <div class="report-panel-heading">
+        <div>
+          <span>ACTIVIDADE</span>
+          <h2>Distância por corrida</h2>
+        </div>
+      </div>
+      <div id="report-chart" class="report-chart">
+        <p class="report-empty">Ainda não existem corridas registadas neste período.</p>
+      </div>
+    </section>
+
+    <section class="report-panel">
+      <div class="report-panel-heading">
+        <div>
+          <span>REGISTOS GUARDADOS</span>
+          <h2>Histórico de corridas</h2>
+        </div>
+        <span id="history-total" class="history-total">0 registos</span>
+      </div>
+      <div id="report-history" class="report-history">
+        <p class="report-empty">As tuas corridas concluídas aparecerão aqui.</p>
+      </div>
+    </section>
+
+    <p class="reports-note">Os relatórios são calculados a partir das corridas guardadas neste dispositivo. Não são apresentados resultados estimados ou inventados.</p>
+  </main>
+
+  <script src="js/relatorios.js"></script>
+</body>
+</html>

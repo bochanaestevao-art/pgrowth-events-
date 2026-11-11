@@ -1,0 +1,258 @@
+.reports-page {
+  min-height: 100vh;
+  margin: 0;
+  background: #080808;
+  color: #fff;
+  font-family: Arial, sans-serif;
+}
+
+.reports-header {
+  min-height: 62px;
+  padding: 12px 4%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #101010;
+  border-bottom: 1px solid #343434;
+}
+
+.reports-header a {
+  color: #ffbd36;
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.reports-header strong {
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.reports-header strong span {
+  color: #ffbd36;
+}
+
+.reports-container {
+  width: min(900px, 92%);
+  margin: 35px auto 60px;
+}
+
+.reports-intro {
+  margin-bottom: 25px;
+}
+
+.reports-intro > span,
+.report-panel-heading > div > span {
+  color: #ffbd36;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.6px;
+}
+
+.reports-intro h1 {
+  margin: 9px 0;
+  font-size: clamp(25px, 6vw, 38px);
+}
+
+.reports-intro p,
+.reports-note {
+  color: #aaa;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.reports-filters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 22px 0 12px;
+}
+
+.report-filter {
+  min-height: 43px;
+  border: 1px solid #444;
+  border-radius: 8px;
+  background: #151515;
+  color: #ccc;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.report-filter.active {
+  border-color: #ffbd36;
+  background: #ffbd36;
+  color: #111;
+}
+
+.reports-period {
+  margin: 12px 0;
+  color: #aaa;
+  font-size: 12px;
+}
+
+.reports-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.report-stat {
+  min-width: 0;
+  padding: 17px;
+  border: 1px solid #363636;
+  border-radius: 12px;
+  background: #141414;
+}
+
+.report-stat span {
+  display: block;
+  margin-bottom: 9px;
+  color: #aaa;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.report-stat strong {
+  color: #ffbd36;
+  font-size: clamp(22px, 5vw, 29px);
+  overflow-wrap: anywhere;
+}
+
+.report-stat small {
+  font-size: 13px;
+}
+
+.report-panel {
+  margin-top: 18px;
+  padding: 19px;
+  border: 1px solid #363636;
+  border-radius: 13px;
+  background: #121212;
+}
+
+.report-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 17px;
+}
+
+.report-panel-heading h2 {
+  margin: 6px 0 0;
+  font-size: 18px;
+}
+
+.history-total {
+  color: #aaa;
+  font-size: 11px;
+}
+
+.report-chart {
+  min-height: 115px;
+  display: flex;
+  align-items: end;
+  justify-content: flex-start;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 12px 2px 3px;
+}
+
+.chart-column {
+  min-width: 42px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: end;
+  gap: 7px;
+  height: 120px;
+}
+
+.chart-bar-area {
+  width: 100%;
+  height: 88px;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+}
+
+.chart-bar {
+  width: min(34px, 75%);
+  min-height: 3px;
+  border-radius: 5px 5px 2px 2px;
+  background: #ffbd36;
+}
+
+.chart-column small {
+  color: #aaa;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.chart-column b {
+  color: #fff;
+  font-size: 9px;
+}
+
+.report-history {
+  display: grid;
+  gap: 9px;
+}
+
+.history-item {
+  padding: 13px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  border: 1px solid #333;
+  border-radius: 9px;
+  background: #0b0b0b;
+}
+
+.history-item strong {
+  color: #ffbd36;
+  font-size: 14px;
+}
+
+.history-item small {
+  display: block;
+  margin-top: 6px;
+  color: #aaa;
+  font-size: 11px;
+}
+
+.history-item .history-pace {
+  align-self: center;
+  color: #fff;
+  text-align: right;
+  font-size: 12px;
+}
+
+.report-empty {
+  width: 100%;
+  color: #999;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.reports-note {
+  margin-top: 18px;
+  font-size: 11px;
+}
+
+@media (max-width: 480px) {
+  .reports-header a {
+    font-size: 9px;
+  }
+
+  .reports-header strong {
+    font-size: 11px;
+  }
+
+  .report-panel {
+    padding: 14px;
+  }
+}
