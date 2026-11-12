@@ -1045,6 +1045,144 @@ footer strong {
   }
 }
 
+
+/* BMS_SPONSOR_12_LOGOS_3D_2026 */
+.bms-sponsor-3d{
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  padding:85px 0 65px;
+  text-align:center;
+  background:
+    radial-gradient(ellipse at 50% 48%,#39290f 0%,#17120b 46%,#080808 82%);
+  border-block:1px solid rgba(213,173,88,.32);
+}
+.bms-sponsor-3d:before{
+  content:"";
+  position:absolute;
+  width:560px;height:560px;
+  left:50%;top:48%;
+  transform:translate(-50%,-50%);
+  border:1px solid rgba(213,173,88,.10);
+  border-radius:50%;
+  box-shadow:0 0 75px rgba(213,173,88,.07),inset 0 0 75px rgba(213,173,88,.05);
+  pointer-events:none;
+}
+.sponsor-heading{
+  margin:12px 0 8px;
+  color:#fff;
+  font-size:clamp(27px,5vw,46px);
+  font-weight:1000;
+  letter-spacing:-1.5px;
+}
+.sponsor-heading span{color:var(--gold,#d5ad58)}
+.sponsor-intro,.sponsor-note{
+  color:#c0b39b;
+  font-size:13px;
+  line-height:1.7;
+}
+.bms-logo-stage{
+  position:relative;
+  height:390px;
+  width:100%;
+  max-width:900px;
+  margin:12px auto 0;
+  perspective:1100px;
+  perspective-origin:50% 45%;
+  transform-style:preserve-3d;
+}
+.bms-logo-track{
+  position:absolute;
+  inset:0;
+  transform-style:preserve-3d;
+  animation:bmsLogoOrbit 34s linear infinite;
+}
+.bms-logo-card{
+  position:absolute;
+  left:50%;top:50%;
+  width:clamp(112px,17vw,160px);
+  height:clamp(105px,15vw,135px);
+  transform:
+    translate(-50%,-50%)
+    rotateY(calc(var(--logo-index)*30deg))
+    translateZ(clamp(180px,34vw,330px));
+  transform-style:preserve-3d;
+  backface-visibility:hidden;
+}
+.bms-logo-frame{
+  width:100%;height:100%;
+  padding:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  border:1px solid rgba(224,190,119,.68);
+  border-radius:15px;
+  background:linear-gradient(145deg,#fff,#e9e6df);
+  box-shadow:0 12px 30px rgba(0,0,0,.48),0 0 22px rgba(213,173,88,.17);
+  overflow:hidden;
+  transition:box-shadow .3s,transform .3s;
+}
+.bms-logo-frame img{
+  display:block;
+  width:100%;height:100%;
+  object-fit:contain;
+  object-position:center;
+}
+.bms-logo-fallback{
+  display:none;
+  color:#40341e;
+  font-size:10px;
+  font-weight:900;
+  text-align:center;
+}
+.bms-logo-frame:hover{
+  box-shadow:0 15px 38px rgba(0,0,0,.55),0 0 30px rgba(213,173,88,.35);
+}
+.bms-logo-controls{position:relative;z-index:3;margin-top:4px}
+#bms-logo-pause{
+  padding:11px 20px;
+  border:1px solid rgba(213,173,88,.7);
+  border-radius:30px;
+  color:#e8ca87;
+  background:transparent;
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:1px;
+  cursor:pointer;
+}
+#bms-logo-pause:focus-visible{
+  outline:2px solid white;
+  outline-offset:4px;
+}
+.bms-sponsor-3d.is-paused .bms-logo-track{
+  animation-play-state:paused;
+}
+@keyframes bmsLogoOrbit{
+  from{transform:rotateY(0deg)}
+  to{transform:rotateY(360deg)}
+}
+@media(hover:hover){
+  .bms-logo-stage:hover .bms-logo-track{
+    animation-play-state:paused;
+  }
+}
+@media(max-width:600px){
+  .bms-sponsor-3d{padding:65px 0 48px}
+  .bms-logo-stage{height:320px;perspective:850px}
+  .bms-logo-card{
+    width:105px;height:100px;
+    transform:
+      translate(-50%,-50%)
+      rotateY(calc(var(--logo-index)*30deg))
+      translateZ(180px);
+  }
+  .bms-logo-frame{padding:9px;border-radius:12px}
+}
+@media(prefers-reduced-motion:reduce){
+  .bms-logo-track{animation:none}
+}
+
 </style>
 
 <!-- BMS-INTEGRATED-CHECKOUT-2026 -->
@@ -1068,6 +1206,959 @@ footer strong {
 body.bms-checkout-active { overflow:hidden !important; }
 </style>
 
+
+<style id="bms-sponsor-premium-style">
+.bms-sponsor-premium {
+  --bms-gold:#c99a35;
+  --bms-ring-depth:230px;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  padding:75px 20px 55px;
+  color:#27231b;
+  text-align:center;
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(255,255,255,.98),transparent 55%),
+    radial-gradient(ellipse at 85% 75%,rgba(210,166,69,.22),transparent 40%),
+    linear-gradient(135deg,#f9f8f3 0%,#c9c9c4 25%,#fffdf5 48%,#b9b9b5 72%,#f4e5bd 100%);
+  border-block:3px solid #c99a35;
+}
+.bms-sponsor-glow {
+  position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,.55) 48%,transparent 68%);
+  background-size:220% 100%;
+  animation:bms-metal-shine 9s linear infinite;
+}
+@keyframes bms-metal-shine {to{background-position:-220% 0}}
+.bms-sponsor-heading {position:relative;z-index:2;margin-bottom:38px}
+.bms-sponsor-kicker,.bms-orbit-caption,.bms-walker-caption {
+  display:block;font-size:11px;font-weight:900;letter-spacing:3px;color:#87621d
+}
+.bms-sponsor-heading h2 {
+  margin:12px 0 8px;font-size:clamp(29px,5vw,53px);
+  font-weight:1000;letter-spacing:1px;color:#28231a
+}
+.bms-sponsor-heading h2 span {
+  color:#a87818;text-shadow:0 2px 0 #fff2c8
+}
+.bms-sponsor-heading p {margin:0;color:#625b4e;font-size:14px}
+.bms-gold-line {
+  width:95px;height:4px;margin:18px auto 0;border-radius:5px;
+  background:linear-gradient(90deg,#8c6015,#f8dc8b,#a97920)
+}
+.bms-sponsor-layout {
+  position:relative;z-index:1;display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:35px;max-width:1150px;margin:auto;align-items:center
+}
+.bms-orbit-panel,.bms-walker-panel {
+  min-width:0;padding:25px 12px;border:1px solid rgba(157,115,34,.35);
+  border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.68),rgba(224,213,184,.38));
+  box-shadow:0 15px 38px rgba(76,58,22,.12),inset 0 1px 0 #fff
+}
+.bms-orbit-stage {
+  position:relative;width:100%;height:360px;display:grid;place-items:center;
+  perspective:1000px;perspective-origin:50% 48%;overflow:hidden
+}
+.bms-orbit-ring {
+  position:absolute;width:0;height:0;transform-style:preserve-3d;
+  animation:bms-logo-orbit 34s linear infinite
+}
+@keyframes bms-logo-orbit {from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
+.bms-logo-card {
+  position:absolute;left:-58px;top:-47px;width:116px;height:94px;
+  display:grid;place-items:center;padding:10px;border-radius:13px;
+  border:1px solid rgba(191,146,51,.7);
+  background:linear-gradient(145deg,#fff,#e5e2d8);
+  box-shadow:0 9px 24px rgba(46,36,18,.22),inset 0 0 15px rgba(255,255,255,.9);
+  transform:rotateY(calc(var(--logo-index)*30deg)) translateZ(var(--bms-ring-depth));
+  backface-visibility:hidden
+}
+.bms-logo-card img {width:100%;height:100%;object-fit:contain}
+.bms-logo-fallback {display:none;place-items:center;font-size:12px;font-weight:900;color:#86601a}
+.bms-orbit-core {
+  position:absolute;width:105px;height:105px;border-radius:50%;display:flex;
+  flex-direction:column;align-items:center;justify-content:center;
+  color:#fff2c4;font-weight:1000;letter-spacing:3px;
+  background:radial-gradient(circle at 30% 25%,#e9c76f,#8c5d13 65%,#38270e);
+  border:3px solid #f3d68c;box-shadow:0 0 35px rgba(183,132,32,.38)
+}
+.bms-orbit-core span {font-size:28px}.bms-orbit-core small {font-size:11px}
+.bms-orbit-hint {font-size:10px;font-weight:900;letter-spacing:2px;color:#80601f;margin:4px 0 0}
+.bms-walker-scene {
+  position:relative;height:310px;overflow:hidden;display:flex;align-items:flex-end
+}
+.bms-walker {
+  position:absolute;bottom:0;left:0;width:min(500px,95%);
+  animation:bms-strongman-walk 16s linear infinite;
+}
+@keyframes bms-strongman-walk {
+  0%{transform:translateX(-115%)}
+  100%{transform:translateX(115%)}
+}
+.bms-carried-load {
+  position:relative;z-index:2;width:88%;margin:0 auto -2px;padding:8px 9px 7px;
+  border:3px solid #9d701e;border-bottom-width:6px;border-radius:8px 8px 3px 3px;
+  background:linear-gradient(110deg,#815615,#f5d887 35%,#b27c1b 70%,#f6dfa1);
+  box-shadow:0 8px 16px rgba(68,47,12,.3)
+}
+.bms-carried-title {font-size:9px;font-weight:1000;letter-spacing:2px;color:#3e2a0c;margin-bottom:5px}
+.bms-carried-logos {display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px}
+.bms-carried-logo {
+  height:25px;min-width:0;padding:2px;background:#fff;border-radius:3px;
+  display:grid;place-items:center;box-shadow:0 1px 3px #5d451b
+}
+.bms-carried-logo img {width:100%;height:100%;object-fit:contain}
+.bms-strongman {display:block;width:100%;height:220px;overflow:visible;filter:drop-shadow(0 8px 5px rgba(76,52,13,.18))}
+.bms-walk-leg {transform-box:fill-box;transform-origin:50% 5%;animation:bms-leg-step .48s ease-in-out infinite alternate}
+.bms-walk-leg-back {animation-delay:-.48s}
+@keyframes bms-leg-step {from{transform:rotate(-17deg)}to{transform:rotate(17deg)}}
+.bms-walker-floor {
+  height:5px;width:85%;margin:0 auto;border-radius:50%;
+  background:linear-gradient(90deg,transparent,#997022,transparent)
+}
+.bms-walker-message {font-size:10px;font-weight:1000;letter-spacing:2px;color:#87621d;margin:14px 0 0}
+.bms-motion-toggle {
+  position:relative;z-index:2;margin-top:30px;padding:11px 22px;
+  border:1px solid #9b701f;border-radius:30px;background:linear-gradient(110deg,#3b2a0e,#b78627,#f3d98e);
+  color:#fff;font-size:11px;font-weight:900;letter-spacing:1px;cursor:pointer;
+  box-shadow:0 5px 15px rgba(78,55,15,.2)
+}
+.bms-sponsor-premium.bms-motion-paused .bms-orbit-ring,
+.bms-sponsor-premium.bms-motion-paused .bms-walker,
+.bms-sponsor-premium.bms-motion-paused .bms-walk-leg,
+.bms-sponsor-premium.bms-motion-paused .bms-sponsor-glow {animation-play-state:paused!important}
+@media(max-width:760px) {
+  .bms-sponsor-premium {padding:55px 12px 40px}
+  .bms-sponsor-layout {grid-template-columns:1fr;gap:18px}
+  .bms-orbit-stage {height:300px;--bms-ring-depth:170px}
+  .bms-logo-card {width:91px;height:76px;left:-45px;top:-38px;padding:7px}
+  .bms-orbit-core {width:82px;height:82px}
+  .bms-orbit-core span {font-size:23px}
+  .bms-walker-scene {height:265px}
+  .bms-strongman {height:190px}
+  .bms-carried-load {width:92%;padding:6px 5px}
+  .bms-carried-logo {height:19px}
+  .bms-walker {width:95%}
+}
+@media(prefers-reduced-motion:reduce) {
+  .bms-sponsor-premium *, .bms-sponsor-premium *:before, .bms-sponsor-premium *:after {
+    animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important
+  }
+}
+
+
+/* ===== BMS PREMIUM FIXES ===== */
+
+/* Círculo central elevado sem remover o carrossel orbital */
+.bms-orbit-core {
+  transform: translateY(-27px);
+  z-index: 20;
+}
+
+/* Animação contínua dos 12 patrocinadores */
+.bms-logo-rain {
+  position: relative;
+  width: 100%;
+  height: 285px;
+  min-height: 285px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.bms-rain-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.bms-rain-logo {
+  position: absolute;
+  top: -105px;
+  left: var(--rain-x);
+  width: 76px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  border-radius: 9px;
+  background: linear-gradient(145deg, #ffffff, #d7d7d7, #ffffff);
+  border: 1px solid rgba(212, 175, 55, .8);
+  box-shadow: 0 5px 18px rgba(0,0,0,.35);
+  animation: bms-logo-fall 11s linear var(--rain-delay) infinite;
+  will-change: transform, opacity;
+}
+
+.bms-rain-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+@keyframes bms-logo-fall {
+  0% {
+    transform: translate3d(0, -110px, 0) rotate(-10deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(var(--rain-drift), 145px, 0) rotate(9deg);
+    opacity: 1;
+  }
+  90% {
+    opacity: .9;
+  }
+  100% {
+    transform: translate3d(calc(var(--rain-drift) * -1), 390px, 0) rotate(-12deg);
+    opacity: 0;
+  }
+}
+
+/* Vídeo de fundo da secção de bilhetes */
+.tickets-section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.tickets-section > .bms-ticket-video {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+}
+
+.tickets-section > .bms-ticket-video-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0,0,0,.78),
+      rgba(0,0,0,.60) 48%,
+      rgba(0,0,0,.86)
+    );
+  pointer-events: none;
+}
+
+.tickets-section > :not(.bms-ticket-video):not(.bms-ticket-video-overlay) {
+  position: relative;
+  z-index: 2;
+}
+
+/* Adaptação a ecrãs pequenos */
+@media (max-width: 600px) {
+  .bms-logo-rain {
+    height: 245px;
+    min-height: 245px;
+  }
+
+  .bms-rain-logo {
+    width: 62px;
+    height: 48px;
+  }
+}
+
+/* Respeitar dispositivos que solicitam movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  .bms-rain-logo {
+    animation: none;
+    top: auto;
+    position: relative;
+    left: auto;
+    opacity: 1;
+  }
+
+  .bms-rain-field {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-content: center;
+    gap: 8px;
+    padding: 10px;
+  }
+}
+
+/* ===== END BMS PREMIUM FIXES ===== */
+
+
+
+/* ===== BMS ORBIT CLEARANCE FIX ===== */
+
+/* Mais espaço para o carrossel */
+.bms-orbit-stage {
+  height: 390px;
+  perspective: 1200px;
+  overflow: hidden;
+}
+
+/* Distribuição angular deslocada: nenhum logo fica no eixo central */
+.bms-logo-card {
+  left: 50%;
+  top: 50%;
+  width: clamp(90px, 13vw, 120px);
+  height: clamp(82px, 12vw, 112px);
+  transform:
+    translate(-50%, -50%)
+    rotateY(calc(var(--logo-index) * 30deg + 15deg))
+    translateZ(clamp(260px, 42vw, 390px));
+  backface-visibility: hidden;
+}
+
+/* Círculo central mais pequeno e elevado */
+.bms-orbit-core {
+  width: 60px;
+  height: 60px;
+  transform: translateY(-52px);
+  z-index: 3;
+}
+
+.bms-orbit-core span {
+  font-size: 15px;
+  letter-spacing: 1px;
+}
+
+.bms-orbit-core small {
+  font-size: 8px;
+}
+
+/* Evitar colisão dos elementos em telemóveis */
+@media (max-width: 600px) {
+  .bms-orbit-stage {
+    height: 340px;
+    perspective: 1000px;
+  }
+
+  .bms-logo-card {
+    width: 72px;
+    height: 70px;
+    transform:
+      translate(-50%, -50%)
+      rotateY(calc(var(--logo-index) * 30deg + 15deg))
+      translateZ(260px);
+  }
+
+  .bms-orbit-core {
+    width: 75px;
+    height: 50px;
+    transform: translateY(-80px);
+  }
+
+  .bms-orbit-core span {
+    font-size: 13px;
+  }
+
+  .bms-orbit-core small {
+    font-size: 7px;
+  }
+}
+
+/* ===== END BMS ORBIT CLEARANCE FIX ===== */
+
+
+
+/* ===== BMS GOLD PLATINUM FINAL THEME ===== */
+
+#evento,
+#produtos,
+#atletas,
+#atividades,
+#patrocinadores,
+#localizacao,
+.contact-section {
+  background:
+    linear-gradient(
+      135deg,
+      #191919 0%,
+      #987638 23%,
+      #dededb 50%,
+      #b99755 76%,
+      #202020 100%
+    ) !important;
+  background-attachment: fixed;
+  border-bottom: 1px solid rgba(224,190,119,.48);
+}
+
+.bms-purchase-access {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  margin: 0 auto 30px;
+  padding: 18px;
+}
+
+.bms-purchase-access #checkout-bms-entry,
+.bms-purchase-access #bms-customer-consult {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 600px) {
+  .bms-purchase-access {
+    padding: 10px;
+  }
+}
+
+/* ===== END BMS GOLD PLATINUM FINAL THEME ===== */
+
+
+
+/* ===== BMS PREMIUM PLATINUM RESTORATION 2026 ===== */
+
+/* PALETA PREMIUM */
+:root {
+  --black:#101114;
+  --dark:#202126;
+  --gold:#b58a35;
+  --gold-light:#e8ca83;
+  --white:#ffffff;
+  --gray:#5d626b;
+  --platinum:#f2f3f5;
+}
+
+/* CAPA: VÍDEO ORIGINAL + PANFLETO DE RESERVA */
+#inicio.hero {
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  background:#090909 !important;
+  min-height:0;
+  padding:125px 0 65px;
+}
+
+#inicio .hero-bg {
+  z-index:-3;
+  opacity:.20;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+#inicio .hero-video {
+  position:absolute;
+  inset:0;
+  z-index:-2;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  opacity:.68;
+  pointer-events:none;
+}
+
+#inicio.hero:after {
+  z-index:-1;
+  background:
+    linear-gradient(90deg,rgba(0,0,0,.88),rgba(0,0,0,.48) 65%,rgba(0,0,0,.25)),
+    linear-gradient(0deg,rgba(0,0,0,.88),transparent 55%);
+}
+
+#inicio .hero-content {
+  position:relative;
+  z-index:2;
+}
+
+#inicio .hero-text {
+  color:#fff;
+  text-shadow:0 2px 8px rgba(0,0,0,.65);
+}
+
+#inicio .event-meta strong {
+  color:#fff;
+}
+
+#inicio .event-meta small {
+  color:#e6dfd1;
+}
+
+#inicio .countdown-area {
+  margin-bottom:0;
+  padding-bottom:0;
+}
+
+#inicio .time-box {
+  background:rgba(10,10,10,.72);
+  border:1px solid rgba(232,202,131,.65);
+  padding:16px 8px;
+  text-align:center;
+  backdrop-filter:blur(8px);
+}
+
+#inicio .time-box strong {
+  color:#f0ce80;
+}
+
+#inicio .time-box span {
+  color:#fff;
+}
+
+/* TRANSIÇÃO DA CAPA PARA O EVENTO */
+#evento.event-section {
+  min-height:0;
+  margin-top:0;
+  padding:65px 0;
+  background:linear-gradient(145deg,#fff 0%,#f0f1f3 52%,#e5e6e8 100%) !important;
+  color:#202126 !important;
+  border-top:3px solid #c49a49;
+  border-bottom:1px solid #d6c18f;
+}
+
+#evento .section-title,
+#evento h2,
+#evento h3,
+#evento .event-details strong {
+  color:#202126 !important;
+}
+
+#evento .section-description,
+#evento p {
+  color:#50545c !important;
+}
+
+#evento .gold,
+#evento .eyebrow {
+  color:#9a701e !important;
+}
+
+#evento .detail {
+  background:linear-gradient(145deg,#fff,#e9eaed) !important;
+  border:1px solid #c6a65e;
+  border-left:4px solid #b58a35;
+  border-radius:10px;
+  box-shadow:0 7px 20px rgba(25,28,34,.07);
+}
+
+#evento .detail small {
+  color:#737780 !important;
+}
+
+#evento .detail strong {
+  color:#22252b !important;
+}
+
+/* FUNDOS PLATINADOS */
+#produtos,
+#atletas,
+#atividades,
+#patrocinadores,
+#localizacao,
+.contact-section {
+  background:linear-gradient(145deg,#fff 0%,#f0f1f3 55%,#e5e6e9 100%) !important;
+  color:#22252b !important;
+  border-bottom:1px solid rgba(181,138,53,.45);
+  background-attachment:scroll !important;
+}
+
+/* TÍTULOS E DESCRIÇÕES */
+#produtos .section-title,
+#atletas .section-title,
+#atividades .section-title,
+#localizacao .section-title,
+.contact-section h2,
+#patrocinadores .section-title {
+  color:#202126 !important;
+  text-shadow:none !important;
+}
+
+#produtos .section-description,
+#atletas .section-description,
+#atividades .section-description,
+#localizacao p,
+.contact-section p {
+  color:#535862 !important;
+}
+
+#produtos .eyebrow,
+#atletas .eyebrow,
+#atividades .eyebrow,
+#localizacao .eyebrow,
+.contact-section .eyebrow {
+  color:#99701f !important;
+}
+
+#produtos .gold,
+#atletas .gold,
+#atividades .gold {
+  color:#a47721 !important;
+}
+
+/* LOJA BMS */
+#produtos .product-card {
+  background:linear-gradient(150deg,#fff,#f0f1f3) !important;
+  border:1px solid #c5a45c !important;
+  border-bottom:4px solid #b58a35 !important;
+  border-radius:15px;
+  padding:18px;
+  box-shadow:0 12px 28px rgba(27,30,35,.10);
+}
+
+#produtos .product-card:hover {
+  box-shadow:0 18px 38px rgba(143,105,35,.18);
+  border-color:#a77c2c !important;
+}
+
+#produtos .product-image {
+  background:linear-gradient(145deg,#e9eaed,#fff) !important;
+  border:1px solid #d5d7da;
+  border-radius:9px;
+}
+
+#produtos .product-name {
+  color:#202126 !important;
+}
+
+#produtos .product-price {
+  color:#98701f !important;
+}
+
+#produtos .product-price small {
+  color:#555963 !important;
+}
+
+/* BOTÃO DE COMPRA E CONSULTA */
+#produtos #checkout-bms-entry {
+  background:linear-gradient(140deg,#fff,#eceef1) !important;
+  border:2px solid #b58a35 !important;
+  border-radius:16px !important;
+  box-shadow:0 10px 28px rgba(30,30,30,.10);
+}
+
+#produtos #checkout-bms-entry p {
+  color:#8c651c !important;
+}
+
+#produtos #bms-customer-consult {
+  background:linear-gradient(145deg,#fff,#eff0f2) !important;
+  border:1px solid #b58a35 !important;
+  border-radius:16px !important;
+  box-shadow:0 10px 25px rgba(30,30,30,.08);
+}
+
+#produtos #bms-customer-consult h3 {
+  color:#8d671f !important;
+}
+
+#produtos #bms-customer-consult p,
+#produtos #bms-customer-consult label {
+  color:#30343b !important;
+}
+
+#produtos #bms-customer-consult input {
+  background:#fff !important;
+  color:#202126 !important;
+  border:1px solid #b8bbc1 !important;
+}
+
+/* CARTÕES PREMIUM DOS ATLETAS */
+#atletas .athlete-controls input,
+#atletas .athlete-controls select {
+  background:#fff !important;
+  color:#24272e !important;
+  border:1px solid #b58a35 !important;
+  border-radius:9px;
+}
+
+#atletas .athlete-card {
+  position:relative;
+  background:linear-gradient(145deg,#fff,#eceef1) !important;
+  border:2px solid #b58a35 !important;
+  border-radius:14px !important;
+  overflow:hidden;
+  box-shadow:
+    0 10px 25px rgba(20,22,27,.12),
+    inset 0 0 0 3px rgba(255,255,255,.9);
+}
+
+#atletas .athlete-card:before {
+  content:"";
+  position:absolute;
+  inset:5px;
+  z-index:2;
+  border:1px solid rgba(224,193,119,.65);
+  border-radius:9px;
+  pointer-events:none;
+}
+
+#atletas .athlete-card img {
+  display:block;
+  width:100%;
+  aspect-ratio:3/4;
+  object-fit:cover;
+  border-bottom:3px solid #b58a35;
+}
+
+#atletas .athlete-info {
+  position:relative;
+  background:linear-gradient(145deg,#fff,#eff0f2) !important;
+  padding:16px 12px !important;
+}
+
+#atletas .athlete-info h3 {
+  color:#24262b !important;
+  font-weight:900;
+}
+
+#atletas .athlete-info p {
+  color:#626670 !important;
+}
+
+#atletas .athlete-placeholder,
+#atletas .athlete-empty {
+  background:#fff !important;
+  color:#555963 !important;
+  border:1px dashed #b58a35 !important;
+  border-radius:12px;
+}
+
+#atletas .athlete-placeholder strong {
+  color:#98701f !important;
+}
+
+/* ACTIVIDADES */
+#atividades .activity-card {
+  background:linear-gradient(145deg,#fff,#eceef1) !important;
+  border:1px solid #c6a45b !important;
+  border-bottom:3px solid #b58a35 !important;
+  border-radius:14px;
+  box-shadow:0 9px 24px rgba(25,28,34,.08);
+}
+
+#atividades .activity-card h3 {
+  color:#24262b !important;
+}
+
+#atividades .activity-card p {
+  color:#565b64 !important;
+}
+
+/* PATROCINADORES */
+#patrocinadores .bms-sponsor-heading h2,
+#patrocinadores .sponsor-heading {
+  color:#22252b !important;
+}
+
+#patrocinadores .bms-sponsor-heading p,
+#patrocinadores .sponsor-intro,
+#patrocinadores .sponsor-note {
+  color:#555963 !important;
+}
+
+/* LOCALIZAÇÃO E CONTACTOS */
+#localizacao h2,
+#localizacao h3,
+#localizacao strong,
+.contact-section h2,
+.contact-section h3 {
+  color:#252830 !important;
+}
+
+#localizacao p,
+#localizacao .location-info,
+.contact-section p {
+  color:#515660 !important;
+}
+
+#localizacao .map-link,
+.contact-section a {
+  color:#8c651c !important;
+}
+
+/* RODAPÉ */
+footer {
+  background:#17191e;
+  color:#fff;
+  border-top:3px solid #b58a35;
+}
+
+footer p,
+footer a {
+  color:#e5e5e5;
+}
+
+/* DETALHE DO ATLETA: MANTER CONTRASTE */
+.athlete-detail-screen {
+  background:radial-gradient(circle at 50% 30%,#55401c,#17191e 58%,#08090b 100%) !important;
+  color:#fff !important;
+}
+
+.athlete-detail-screen h2,
+.athlete-detail-screen .athlete-category {
+  color:#f0ce80 !important;
+}
+
+/* BOTÕES */
+.btn {
+  background:linear-gradient(135deg,#e5c77e,#b58a35) !important;
+  border:1px solid #a77b2b !important;
+  color:#171717 !important;
+  border-radius:7px;
+  box-shadow:0 5px 14px rgba(100,72,24,.13);
+}
+
+.btn-outline {
+  background:rgba(10,10,10,.38) !important;
+  color:#fff !important;
+  border:1px solid #e4c47b !important;
+}
+
+/* RESPONSIVIDADE */
+@media(max-width:700px) {
+  #inicio.hero {
+    padding-top:105px;
+    padding-bottom:48px;
+  }
+
+  #evento.event-section {
+    padding:45px 0;
+  }
+
+  #produtos .product-card,
+  #atletas .athlete-card,
+  #atividades .activity-card {
+    border-radius:11px;
+  }
+
+  #atletas .athlete-info {
+    padding:12px 9px !important;
+  }
+
+  #atletas .athlete-info h3 {
+    font-size:13px;
+  }
+
+  #inicio .time-box {
+    padding:13px 4px;
+  }
+}
+
+/* ===== END BMS PREMIUM PLATINUM RESTORATION 2026 ===== */
+
+
+/* BMS FITNESS2 - FUNDO DE VIDEO */
+#bms-fitness2-wrap {
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  background:#080808;
+}
+
+#bms-fitness2-wrap .bms-fitness2-video {
+  position:absolute;
+  top:400px;
+  right:0;
+  bottom:0;
+  left:0;
+  z-index:-2;
+  width:100%;
+  height:calc(100% - 120px);
+  object-fit:contain;
+  object-position:center top;
+  opacity:.85;
+  pointer-events:none;
+}
+
+#bms-fitness2-wrap::before {
+  content:"";
+  position:absolute;
+  top:400px;
+  right:0;
+  bottom:0;
+  left:0;
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(
+    135deg,
+    rgba(8,8,8,.76),
+    rgba(125,88,25,.34),
+    rgba(0,0,0,.70)
+  );
+}
+
+#bms-fitness2-wrap > #evento,
+#bms-fitness2-wrap > #produtos,
+#bms-fitness2-wrap > #atletas,
+#bms-fitness2-wrap > #atividades {
+  position:relative;
+  z-index:0;
+  background:transparent !important;
+  background-image:none !important;
+  color:#fff !important;
+  border-bottom:1px solid rgba(232,202,131,.38);
+}
+
+#bms-fitness2-wrap .section-title,
+#bms-fitness2-wrap h2,
+#bms-fitness2-wrap h3 {
+  color:#fff !important;
+}
+
+#bms-fitness2-wrap .gold,
+#bms-fitness2-wrap .eyebrow {
+  color:#e8ca83 !important;
+}
+
+#bms-fitness2-wrap p,
+#bms-fitness2-wrap .section-description {
+  color:#fff !important;
+}
+
+#bms-fitness2-wrap #evento .detail {
+  background:rgba(10,10,10,.68) !important;
+  border:1px solid rgba(232,202,131,.75) !important;
+}
+
+#bms-fitness2-wrap #evento .detail small {
+  color:#e8ca83 !important;
+}
+
+#bms-fitness2-wrap #evento .detail strong {
+  color:#fff !important;
+}
+
+/* LOCALIZACAO - PRETO, BRANCO E DOURADO */
+#localizacao {
+  background:#080808 !important;
+  background-image:linear-gradient(
+    145deg,#080808,#17130c,#080808
+  ) !important;
+  color:#fff !important;
+  border-top:1px solid rgba(232,202,131,.45);
+  border-bottom:2px solid #b58a35;
+}
+
+#localizacao .section-title,
+#localizacao h2,
+#localizacao h3 {
+  color:#fff !important;
+}
+
+#localizacao .gold,
+#localizacao .eyebrow,
+#localizacao strong {
+  color:#e8ca83 !important;
+}
+
+#localizacao p,
+#localizacao .section-description,
+#localizacao .location-info {
+  color:#fff !important;
+}
+
+#localizacao .map-link {
+  color:#e8ca83 !important;
+}
+
+</style>
 </head>
 
 <body>
@@ -1085,7 +2176,7 @@ body.bms-checkout-active { overflow:hidden !important; }
     <nav class="nav-links" id="navLinks">
       <a href="#inicio">Início</a>
       <a href="#evento">Evento</a>
-      <a href="#bilhetes">Bilhetes</a>
+      <a href="#produtos">Bilhetes</a>
       <a href="#produtos">Produtos</a>
       <a href="#atletas">Atletas</a>
       <a href="#atividades">Atividades</a>
@@ -1106,6 +2197,9 @@ body.bms-checkout-active { overflow:hidden !important; }
     class="hero-bg"
     alt="Poster oficial Beira Muscle Show"
   >
+<video class="hero-video" autoplay muted loop playsinline preload="metadata" poster="BMD.jpg" aria-hidden="true">
+  <source src="Video/Fitness/Fitness.mp4" type="video/mp4">
+</video>
 
   <div class="container">
 
@@ -1199,6 +2293,13 @@ body.bms-checkout-active { overflow:hidden !important; }
   </div>
 </section>
 
+<!-- BMS FITNESS2: FUNDO CONTINUO -->
+<div id="bms-fitness2-wrap">
+
+<video class="bms-fitness2-video" autoplay muted loop playsinline preload="metadata" poster="BMD.jpg" aria-hidden="true">
+  <source src="Video/Fitness/Fitness2/Fitness2.mp4" type="video/mp4">
+</video>
+
 <!-- EVENTO -->
 
 <section class="event-section" id="evento">
@@ -1258,14 +2359,22 @@ body.bms-checkout-active { overflow:hidden !important; }
 
 <!-- BILHETES -->
 
-<section class="tickets-section" id="bilhetes">
+
+
+
+<!-- PRODUTOS BMS -->
+
+<section class="products-section" id="produtos">
+
+  
+<!-- BMS CHECKOUT PRESERVADO -->
+<div class="bms-purchase-access">
 <div id="checkout-bms-entry" style="text-align:center;margin:28px auto;padding:24px;background:#151515;border:1px solid #b58b35;border-radius:14px">
   <p style="color:#d5ad55;font-weight:700">BILHETES E LOJA OFICIAL BMS</p>
   <a class="btn" href="#comprar" data-bms-open-checkout style="display:inline-flex;justify-content:center">
     COMPRAR BILHETES E CAMISETAS
   </a>
 </div>
-
 <div id="bms-customer-consult" style="max-width:720px;margin:20px auto 32px;padding:22px;background:#101010;border:1px solid #b58b35;border-radius:14px">
   <h3 style="color:#d5ad55;text-align:center;margin:0 0 8px">CONSULTAR A MINHA ENCOMENDA</h3>
   <p style="color:#bbb;text-align:center;font-size:13px;line-height:1.6">Introduz a referência recebida depois da compra para acompanhares o pagamento e os teus bilhetes.</p>
@@ -1276,138 +2385,9 @@ body.bms-checkout-active { overflow:hidden !important; }
   </form>
   <div id="bmsCustomerResult" aria-live="polite" style="display:none;margin-top:18px;padding:15px;background:#191919;border:1px solid #444;border-radius:10px;color:#eee;font-size:13px;line-height:1.7"></div>
 </div>
-
-  <div class="container">
-
-    <div class="eyebrow">Garante a tua presença</div>
-
-    <h2 class="section-title">
-      BILHETES &
-      <span class="gold">ACESSO</span>
-    </h2>
-
-    <p class="section-description">
-      Escolhe a modalidade de acesso ao Beira Muscle Show
-      e adquire o teu bilhete nos pontos de venda oficiais.
-    </p>
-
-    <div class="ticket-grid">
-
-      <div class="ticket-card reveal">
-
-        <div class="ticket-type">NORMAL</div>
-
-        <div class="ticket-price">
-          300 <small>MT</small>
-        </div>
-
-        <p>
-          Acesso ao evento com bilhete normal.
-        </p>
-
-      </div>
-
-      <div class="ticket-card featured reveal">
-
-        <div class="ticket-type">VIP</div>
-
-        <div class="ticket-price">
-          750 <small>MT</small>
-        </div>
-
-        <p>
-          Bilhete de acesso à modalidade VIP.
-        </p>
-
-      </div>
-
-      <div class="ticket-card reveal">
-
-        <div class="ticket-type">NO DIA</div>
-
-        <div class="ticket-price">
-          1.000 <small>MT</small>
-        </div>
-
-        <p>
-          Preço de referência para aquisição
-          no próprio dia do evento.
-        </p>
-
-      </div>
-
-    </div>
-
-    <div class="ticket-note">
-      <strong class="gold">IMPORTANTE:</strong>
-      Os bilhetes podem ser adquiridos antecipadamente
-      nos pontos de venda indicados. O valor de 1.000 MT
-      corresponde à compra no dia do evento.
-    </div>
-
-    <div class="sales-grid">
-
-      <div class="sales-box reveal">
-
-        <h3>Onde comprar</h3>
-
-        <p>
-          <strong>01.</strong>
-          Ginásio Cardio Bom — Matacuane
-        </p>
-
-        <p>
-          <strong>02.</strong>
-          Baixa — Beira
-        </p>
-
-        <p style="margin-top:15px;color:#aaa;font-size:12px">
-          Contacta a organização para informações
-          sobre disponibilidade e aquisição.
-        </p>
-
-      </div>
-
-      <div class="sales-box reveal">
-
-        <h3>Reservas e contactos</h3>
-
-        <p>
-          <a class="phone" href="tel:+258875513380">
-            875 513 380
-          </a>
-        </p>
-
-        <p>
-          <a class="phone" href="tel:+258868577916">
-            868 577 916
-          </a>
-        </p>
-
-        <a
-          href="https://wa.me/258875513380"
-          class="btn"
-          target="_blank"
-          rel="noopener"
-          style="margin-top:18px"
-        >
-          WhatsApp
-        </a>
-
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-
-
-<!-- PRODUTOS BMS -->
-
-<section class="products-section" id="produtos">
-
-  <div class="container">
+</div>
+<!-- FIM BMS CHECKOUT PRESERVADO -->
+<div class="container">
 
     <div class="eyebrow">Veste a tua paixão</div>
 
@@ -1586,44 +2566,11 @@ body.bms-checkout-active { overflow:hidden !important; }
 
       </article>
 
-      <article class="activity-card reveal">
 
-        <div class="activity-number">04</div>
 
-        <h3>Comunidade fitness</h3>
 
-        <p>
-          Projetos de aproximação entre ginásios,
-          atletas, treinadores e amantes do fitness.
-        </p>
 
-      </article>
 
-      <article class="activity-card reveal">
-
-        <div class="activity-number">05</div>
-
-        <h3>Novas campanhas</h3>
-
-        <p>
-          Acompanhe as campanhas e iniciativas especiais
-          promovidas pela organização.
-        </p>
-
-      </article>
-
-      <article class="activity-card reveal">
-
-        <div class="activity-number">06</div>
-
-        <h3>Notícias e anúncios</h3>
-
-        <p>
-          Comunicados oficiais, novidades, parcerias
-          e informações sobre as próximas edições.
-        </p>
-
-      </article>
 
     </div>
 
@@ -1632,21 +2579,169 @@ body.bms-checkout-active { overflow:hidden !important; }
 </section>
 
 <!-- PATROCINADOR -->
+</div>
+<!-- FIM DO FUNDO FITNESS2 -->
 
-<section class="sponsor-section">
+<!-- PATROCINADORES · BMS_SPONSOR_12_LOGOS_3D_2026 -->
 
-  <div class="container reveal">
+<!-- BMS PREMIUM SPONSORS 2026 -->
+<section class="bms-sponsor-premium" id="patrocinadores">
+  <div class="bms-sponsor-glow"></div>
 
-    <div class="eyebrow">
-      PATROCINADOR OFICIAL
-    </div>
-
-    <div class="sponsor-name">
-      XR GROUP
-    </div>
-
+  <div class="bms-sponsor-heading">
+    <span class="bms-sponsor-kicker">BEIRA MUSCLE SHOW · 2.ª EDIÇÃO 2026</span>
+    <h2>OS NOSSOS <span>PARCEIROS</span></h2>
+    <p>Força, excelência e marcas que fazem acontecer.</p>
+    <div class="bms-gold-line"></div>
   </div>
 
+  <div class="bms-sponsor-layout">
+    <div class="bms-orbit-panel">
+      <div class="bms-orbit-caption">PATROCINADORES OFICIAIS</div>
+      <div class="bms-orbit-stage">
+        <div class="bms-orbit-ring">
+
+  <div class="bms-logo-card" style="--logo-index:0">
+    <img src="patrocinadores/logo1/logo1.jpg" alt="Patrocinador 1" loading="lazy"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+    <span class="bms-logo-fallback">BMS 1</span>
+  </div>
+  <div class="bms-logo-card" style="--logo-index:1">
+    <img src="patrocinadores/logo2/logo2.jpg" alt="Patrocinador 2" loading="lazy"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+    <span class="bms-logo-fallback">BMS 2</span>
+  </div>
+  <div class="bms-logo-card" style="--logo-index:2">
+    <img src="patrocinadores/logo3/logo3.jpg" alt="Patrocinador 3" loading="lazy"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+    <span class="bms-logo-fallback">BMS 3</span>
+  </div>
+  <div class="bms-logo-card" style="--logo-index:3">
+    <img src="patrocinadores/logo4/logo4.jpg" alt="Patrocinador 4" loading="lazy"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+    <span class="bms-logo-fallback">BMS 4</span>
+  </div>
+  <div class="bms-logo-card" style="--logo-index:4">
+    <img src="patrocinadores/logo5/logo5.jpg" alt="Patrocinador 5" loading="lazy"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+    <span class="bms-logo-fallback">BMS 5</span>
+  </div>
+  <div class="bms-logo-card" style="--logo-index:5">
+    <img src="patrocinadores/logo6/logo6.png" alt="Patrocinador 6" loading="lazy"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+    <span class="bms-logo-fallback">BMS 6</span>
+  </div>
+  <div class="bms-logo-card" style="--logo-index:6">
+    <img src="patrocinadores/logo7/logo7.jpg" alt="Patrocinador 7" loading="lazy"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+    <span class="bms-logo-fallback">BMS 7</span>
+  </div>
+  <div class="bms-logo-card" style="--logo-index:7">
+    <img src="patrocinadores/logo8/logo8.jpg" alt="Patrocinador 8" loading="lazy"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+    <span class="bms-logo-fallback">BMS 8</span>
+  </div>
+  <div class="bms-logo-card" style="--logo-index:8">
+    <img src="patrocinadores/logo9/logo9.jpg" alt="Patrocinador 9" loading="lazy"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+    <span class="bms-logo-fallback">BMS 9</span>
+  </div>
+  <div class="bms-logo-card" style="--logo-index:9">
+    <img src="patrocinadores/logo10/logo10.jpg" alt="Patrocinador 10" loading="lazy"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+    <span class="bms-logo-fallback">BMS 10</span>
+  </div>
+  <div class="bms-logo-card" style="--logo-index:10">
+    <img src="patrocinadores/logo11/logo11.jpg" alt="Patrocinador 11" loading="lazy"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+    <span class="bms-logo-fallback">BMS 11</span>
+  </div>
+  <div class="bms-logo-card" style="--logo-index:11">
+    <img src="patrocinadores/logo12/logo12.jpg" alt="Patrocinador 12" loading="lazy"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='grid'">
+    <span class="bms-logo-fallback">BMS 12</span>
+  </div>
+        </div>
+        <div class="bms-orbit-core">
+          <span>BMS</span>
+          <small>2026</small>
+        </div>
+      </div>
+      <p class="bms-orbit-hint">12 MARCAS · UMA GRANDE EXPERIÊNCIA</p>
+    </div>
+
+    <div class="bms-walker-panel">
+      <div class="bms-walker-caption">A FORÇA DOS NOSSOS PARCEIROS</div>
+
+<div class="bms-walker-scene bms-logo-rain"
+     aria-label="Animação contínua dos logótipos dos patrocinadores">
+  <div class="bms-rain-field">
+
+    <div class="bms-rain-logo"
+         style="--rain-x:4%;--rain-delay:-0.00s;--rain-drift:25px">
+      <img src="patrocinadores/logo1/logo1.jpg" alt="" loading="lazy">
+    </div>
+
+    <div class="bms-rain-logo"
+         style="--rain-x:41%;--rain-delay:-1.17s;--rain-drift:-37px">
+      <img src="patrocinadores/logo2/logo2.jpg" alt="" loading="lazy">
+    </div>
+
+    <div class="bms-rain-logo"
+         style="--rain-x:78%;--rain-delay:-2.34s;--rain-drift:49px">
+      <img src="patrocinadores/logo3/logo3.jpg" alt="" loading="lazy">
+    </div>
+
+    <div class="bms-rain-logo"
+         style="--rain-x:24%;--rain-delay:-3.51s;--rain-drift:-61px">
+      <img src="patrocinadores/logo4/logo4.jpg" alt="" loading="lazy">
+    </div>
+
+    <div class="bms-rain-logo"
+         style="--rain-x:61%;--rain-delay:-4.68s;--rain-drift:25px">
+      <img src="patrocinadores/logo5/logo5.jpg" alt="" loading="lazy">
+    </div>
+
+    <div class="bms-rain-logo"
+         style="--rain-x:7%;--rain-delay:-5.85s;--rain-drift:-37px">
+      <img src="patrocinadores/logo6/logo6.png" alt="" loading="lazy">
+    </div>
+
+    <div class="bms-rain-logo"
+         style="--rain-x:44%;--rain-delay:-7.02s;--rain-drift:49px">
+      <img src="patrocinadores/logo7/logo7.jpg" alt="" loading="lazy">
+    </div>
+
+    <div class="bms-rain-logo"
+         style="--rain-x:81%;--rain-delay:-8.19s;--rain-drift:-61px">
+      <img src="patrocinadores/logo8/logo8.jpg" alt="" loading="lazy">
+    </div>
+
+    <div class="bms-rain-logo"
+         style="--rain-x:27%;--rain-delay:-9.36s;--rain-drift:25px">
+      <img src="patrocinadores/logo9/logo9.jpg" alt="" loading="lazy">
+    </div>
+
+    <div class="bms-rain-logo"
+         style="--rain-x:64%;--rain-delay:-10.53s;--rain-drift:-37px">
+      <img src="patrocinadores/logo10/logo10.jpg" alt="" loading="lazy">
+    </div>
+
+    <div class="bms-rain-logo"
+         style="--rain-x:10%;--rain-delay:-11.70s;--rain-drift:49px">
+      <img src="patrocinadores/logo11/logo11.jpg" alt="" loading="lazy">
+    </div>
+
+    <div class="bms-rain-logo"
+         style="--rain-x:47%;--rain-delay:-12.87s;--rain-drift:-61px">
+      <img src="patrocinadores/logo12/logo12.jpg" alt="" loading="lazy">
+    </div>
+  </div>
+</div>
+<div class="bms-walker-floor"></div>
+      <p class="bms-walker-message">JUNTOS, LEVANTAMOS ESTE EVENTO.</p>
+    </div>
+  </div>
 </section>
 
 <!-- LOCALIZAÇÃO -->
@@ -2018,6 +3113,21 @@ const atletas = [
     cidade: "Beira",
     categorias: ["Men's Physique"],
     foto: "atletas/leveck/leveck.jpg"
+  },
+  {
+    nome: "Euclides Coelho",
+    provincia: "Sofala",
+    cidade: "Beira",
+    categorias: ["Men's Physique"],
+    foto: "atletas/euclides-coelho/euclides-coelho.jpg"
+  },
+  {
+    nome: "Mário Machado (The Rock)",
+    provincia: "Zambézia",
+    distrito: "Mopeia",
+    cidade: "Beira (Macurungo)",
+    categorias: ["Classic Physique"],
+    foto: "atletas/mario-machado-the-rock/mario-machado-the-rock.jpg"
   }
 ];
 
@@ -2420,6 +3530,34 @@ mostrarAtletas();
   });
 })();
 </script>
+
+
+<script>
+/* BMS_LOGO_MOTION_SCRIPT_2026 */
+(function(){
+  "use strict";
+  const section=document.getElementById("patrocinadores");
+  if(!section)return;
+
+  section.querySelectorAll(".bms-logo-frame img").forEach(function(img){
+    img.addEventListener("error",function(){
+      img.style.display="none";
+      const fallback=img.parentElement.querySelector(".bms-logo-fallback");
+      if(fallback)fallback.style.display="block";
+    });
+  });
+
+  const button=document.getElementById("bms-logo-pause");
+  if(!button)return;
+
+  button.addEventListener("click",function(){
+    const paused=section.classList.toggle("is-paused");
+    button.setAttribute("aria-pressed",String(paused));
+    button.textContent=paused?"RETOMAR ANIMAÇÃO":"PAUSAR ANIMAÇÃO";
+  });
+})();
+</script>
+
 
 </body>
 </html>
