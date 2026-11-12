@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#071d16">
+<title>Carteira e Pagamentos | PGrowth Fitness</title>
+<style>
+:root{
+ --bg:#071d16;--panel:#102b21;--panel2:#15372a;
+ --green:#24c78a;--gold:#d9bd75;--white:#f4f8f5;
+ --muted:#a0b5a9;--line:#294638;--red:#ff7777;
+}
+*{box-sizing:border-box}
+body{
+ margin:0;background:radial-gradient(ellipse at 50% -15%,#1c5139 0%,#0b281d 42%,var(--bg) 78%);
+ color:var(--white);font-family:Inter,Arial,sans-serif;min-height:100vh;
+}
+button,input,select,textarea{font:inherit}
+header{
+ padding:23px 18px 27px;border-bottom:1px solid #ffffff12;
+ background:linear-gradient(120deg,#0b3021,#071d16 70%);
+}
+.wrap{max-width:920px;margin:auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{
+ width:43px;height:43px;border-radius:14px;display:grid;place-items:center;
+ background:linear-gradient(145deg,#d9bd75,#a98942);color:#10251b;
+ font-size:19px;font-weight:900;box-shadow:0 5px 24px #d9bd7533;
+}
+h1{font-size:19px;letter-spacing:1.2px;margin:0}
+header p{font-size:12px;color:#b3c9bb;margin:6px 0 0}
+main{max-width:920px;margin:24px auto;padding:0 14px 55px}
+.panel{
+ background:linear-gradient(145deg,#122e23,#0d261d);
+ border:1px solid var(--line);border-radius:20px;padding:20px;
+ margin-bottom:17px;box-shadow:0 14px 35px #0003;
+ animation:rise .55s both;
+}
+.panel:nth-child(2){animation-delay:.08s}
+.panel:nth-child(3){animation-delay:.16s}
+.panel:nth-child(4){animation-delay:.24s}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 #24c78a00}50%{box-shadow:0 0 24px #24c78a22}}
+@keyframes shine{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+h2{font-size:16px;margin:0 0 15px;color:var(--gold);letter-spacing:.4px}
+.eyebrow{font-size:10px;color:var(--green);font-weight:800;letter-spacing:2px;margin-bottom:8px}
+.hero{
+ padding:23px;border-radius:18px;margin-bottom:18px;
+ background:linear-gradient(110deg,#164b34,#102b21,#164b34);
+ background-size:200% 100%;animation:shine 9s linear infinite;
+ border:1px solid #4c8867;
+}
+.hero h2{font-size:23px;color:white;margin:0 0 8px}
+.hero p{font-size:13px;line-height:1.6;color:#d0e3d7;margin:0}
+.status{
+ border:1px solid #315c45;background:#0c241b;padding:14px;
+ border-radius:13px;font-size:13px;line-height:1.6;color:#d8e8dd;
+}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px}
+.plan{
+ position:relative;text-align:left;color:var(--white);
+ border:1px solid var(--line);background:#0b241a;border-radius:15px;
+ padding:16px;cursor:pointer;transition:.25s;min-height:112px;
+}
+.plan:hover{transform:translateY(-4px);border-color:var(--green)}
+.plan.selected{
+ border-color:var(--gold);background:linear-gradient(145deg,#254832,#102b21);
+ box-shadow:0 0 0 1px #d9bd7555,0 9px 25px #0003;
+}
+.plan strong{display:block;font-size:13px;color:#dcebe1;margin-bottom:9px}
+.plan b{font-size:23px;color:var(--gold)}
+.plan small{display:block;color:var(--muted);margin-top:7px;font-size:11px}
+.field{margin-top:14px}
+label{display:block;font-size:12px;color:#d8e7dd;font-weight:700;margin-bottom:7px}
+input,select,textarea{
+ width:100%;padding:13px 14px;color:white;background:#091e16;
+ border:1px solid #355343;border-radius:11px;outline:none;
+ transition:border .2s,box-shadow .2s;
+}
+input:focus,select:focus,textarea:focus{
+ border-color:var(--green);box-shadow:0 0 0 3px #24c78a18;
+}
+select option{background:#102b21}
+textarea{min-height:105px;resize:vertical;line-height:1.5}
+input::placeholder,textarea::placeholder{color:#718b7b}
+.payment-card{
+ border:1px solid #3d7454;border-radius:17px;padding:17px;
+ background:linear-gradient(135deg,#163d2b,#0b241a);
+ margin-top:15px;animation:glow 4s infinite;
+}
+.payment-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.payment-head strong{font-size:14px}
+.method-tag{
+ font-size:10px;font-weight:800;color:#10251b;background:var(--gold);
+ border-radius:20px;padding:6px 10px;
+}
+.contact{font-size:27px;font-weight:900;letter-spacing:1px;color:white;margin:14px 0 4px}
+.contact-note{font-size:11px;color:#b4cbbb}
+.copy{
+ background:#e1c77e;color:#14271d;border:0;border-radius:10px;
+ padding:11px 14px;font-weight:900;cursor:pointer;white-space:nowrap;
+}
+.copy:active,.primary:active{transform:scale(.97)}
+.amount{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;
+ border-top:1px solid #ffffff18;margin-top:15px;padding-top:13px;
+ font-size:12px;color:#c2d5c9;
+}
+.amount strong{font-size:21px;color:var(--gold)}
+.notice{
+ margin-top:13px;padding:12px;border-radius:11px;
+ background:#d9bd7514;border:1px solid #d9bd7540;
+ font-size:12px;line-height:1.6;color:#e7d9b5;
+}
+.steps{display:grid;gap:10px}
+.step{display:flex;gap:11px;align-items:flex-start;font-size:12px;color:#c3d6ca;line-height:1.5}
+.step span{
+ flex:0 0 25px;height:25px;border-radius:50%;display:grid;place-items:center;
+ background:#1b5036;color:#8ff0bd;font-weight:900;
+}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:17px}
+button{cursor:pointer}
+.primary{
+ width:100%;border:0;border-radius:12px;padding:15px;
+ background:linear-gradient(110deg,#1fc68a,#0b9c69);
+ color:#062318;font-size:12px;font-weight:900;letter-spacing:.6px;
+ box-shadow:0 8px 22px #24c78a25;transition:.2s;
+}
+.primary:disabled{opacity:.5;cursor:not-allowed}
+.light{
+ background:#1a3a2b;border:1px solid #42664e;color:#d9e8de;
+ border-radius:10px;padding:10px 13px;font-size:11px;font-weight:800;
+}
+#message{font-size:12px;line-height:1.6;margin-top:13px;white-space:pre-wrap}
+.order{padding:14px 0;border-bottom:1px solid #ffffff12;font-size:12px}
+.order:last-child{border:0}
+.order strong{display:block;color:#f2dfad;margin-bottom:6px}
+.muted{color:var(--muted);font-size:11px;line-height:1.6}
+.badge{display:inline-block;border-radius:20px;padding:5px 9px;font-size:10px;font-weight:900;background:#42391f;color:#f0d68c}
+.empty{font-size:12px;color:var(--muted)}
+footer{text-align:center;color:#708c7b;font-size:10px;padding:5px 15px 25px}
+@media(max-width:520px){
+ main{margin-top:15px}.panel{padding:16px}.hero{padding:19px}
+ .contact{font-size:23px}.top{align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<header>
+ <div class="wrap top">
+  <div class="brand">
+   <div class="logo">P</div>
+   <div>
+    <h1>PGROWTH FITNESS</h1>
+    <p>CARTEIRA E PAGAMENTOS · PASSE COMPLETO</p>
+   </div>
+  </div>
+  <button class="light" id="logout" type="button">SAIR</button>
+ </div>
+</header>
+
+<main>
+ <section class="hero">
+  <div class="eyebrow">O TEU ACESSO COMEÇA AQUI</div>
+  <h2>Investe na tua evolução.</h2>
+  <p>Escolhe o teu Passe Completo, efectua o pagamento e envia o comprovativo. A nossa administração confirma a transferência antes de activar o teu acesso.</p>
+ </section>
+
+ <section class="panel">
+  <h2>01 · O meu Passe</h2>
+  <div id="passStatus" class="status">A consultar o estado da tua conta...</div>
+ </section>
+
+ <section class="panel">
+  <h2>02 · Escolhe o teu Passe Completo</h2>
+  <div class="grid" id="plans"><p class="muted">A carregar pacotes...</p></div>
+  <p class="muted" style="margin-top:13px">Pagamento único. Sem renovação automática.</p>
+ </section>
+
+ <section class="panel">
+  <h2>03 · Efectuar pagamento</h2>
+  <form id="orderForm">
+   <div class="field">
+    <label for="plan">Pacote escolhido</label>
+    <select id="plan" required><option value="">Seleccionar pacote</option></select>
+   </div>
+   <div class="field">
+    <label for="buyerName">Nome completo do titular</label>
+    <input id="buyerName" minlength="3" maxlength="120" autocomplete="name" placeholder="O teu nome completo" required>
+   </div>
+   <div class="field">
+    <label for="phone">Telefone utilizado na transferência</label>
+    <input id="phone" type="tel" autocomplete="tel" placeholder="+258 84 123 4567" required>
+   </div>
+   <div class="field">
+    <label for="method">Escolhe o método de pagamento</label>
+    <select id="method" required>
+     <option value="MPESA">M-Pesa</option>
+     <option value="EMOLA">e-Mola</option>
+    </select>
+   </div>
+
+   <div class="payment-card" id="paymentCard">
+    <div class="payment-head">
+     <strong id="contactTitle">Pagar através de M-Pesa</strong>
+     <span class="method-tag" id="methodTag">M-PESA</span>
+    </div>
+    <div class="contact" id="paymentContact">844 259 502</div>
+    <div class="contact-note">Contacto de recebimento PGrowth Fitness</div>
+    <div class="actions">
+     <button type="button" class="copy" id="copyContact">COPIAR NÚMERO</button>
+    </div>
+    <div class="amount">
+     <span>Valor do pacote seleccionado</span>
+     <strong id="selectedAmount">— MT</strong>
+    </div>
+   </div>
+
+   <div class="notice">
+    Confirma o nome e o número do destinatário na aplicação M-Pesa ou e-Mola antes de transferir. Não envies dinheiro para outro contacto.
+   </div>
+
+   <div class="field">
+    <label for="transferCode">Código da transferência</label>
+    <input id="transferCode" maxlength="150" placeholder="Cola o código da transacção, se disponível">
+   </div>
+   <div class="field">
+    <label for="paymentMessage">SMS completo de confirmação</label>
+    <textarea id="paymentMessage" maxlength="10000" placeholder="Cola aqui o SMS recebido após a transferência. Também podes preencher apenas o código acima."></textarea>
+    <p class="muted">É obrigatório preencher o código da transferência ou colar o SMS de confirmação.</p>
+   </div>
+
+   <div class="notice">
+    <strong>Como funciona a aprovação?</strong>
+    <div class="steps" style="margin-top:11px">
+     <div class="step"><span>1</span> Efectua a transferência para o contacto indicado.</div>
+     <div class="step"><span>2</span> Cola o código ou SMS de confirmação neste formulário.</div>
+     <div class="step"><span>3</span> Envia o pedido para análise administrativa.</div>
+     <div class="step"><span>4</span> Após a confirmação real do pagamento, o administrador aprova e o teu Passe é activado.</div>
+    </div>
+   </div>
+
+   <div class="actions">
+    <button class="primary" id="submitOrder" type="submit">ENVIAR COMPROVATIVO PARA APROVAÇÃO</button>
+   </div>
+  </form>
+  <div id="message" role="status" aria-live="polite"></div>
+ </section>
+
+ <section class="panel">
+  <h2>04 · Histórico dos meus pedidos</h2>
+  <div id="orders"><p class="muted">A carregar histórico...</p></div>
+ </section>
+
+ <section class="panel">
+  <div class="top">
+   <div><h2 style="margin-bottom:5px">Administração</h2><p class="muted">Área privada para análise e aprovação dos pagamentos.</p></div>
+   <button class="light" id="adminEntry" type="button">PAINEL ADMIN</button>
+  </div>
+ </section>
+</main>
+
+<footer>PGrowth Fitness · A tua evolução, o teu compromisso.</footer>
+
+<script src="js/session.js"></script>
+<script src="js/pagamentos.js"></script>
+</body>
+</html>

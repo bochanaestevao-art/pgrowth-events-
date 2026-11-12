@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#087f55">
+  <title>Acesso | PGrowth Fitness</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:linear-gradient(145deg,#071c17,#0b3d2d);font-family:Arial,sans-serif;color:#fff;display:flex;align-items:center;justify-content:center;padding:20px}
+    .panel{width:100%;max-width:420px;background:#fff;color:#17251f;border-radius:22px;padding:28px;box-shadow:0 20px 60px #0006}
+    h1{margin:0 0 8px;color:#087f55;font-size:27px}
+    .sub{color:#68756e;margin:0 0 24px;font-size:14px}
+    label{display:block;font-size:13px;font-weight:bold;margin:16px 0 7px}
+    input{width:100%;padding:14px;border:1px solid #d7e1db;border-radius:10px;font-size:16px;outline:none}
+    input:focus{border-color:#087f55}
+    button{width:100%;padding:15px;border:0;border-radius:10px;background:#087f55;color:white;font-weight:bold;font-size:15px;margin-top:20px}
+    button.secondary{background:#eaf4ef;color:#087f55;margin-top:10px}
+    button:disabled{opacity:.6}
+    #message{font-size:13px;line-height:1.5;margin-top:16px;white-space:pre-wrap}
+    .hint{font-size:12px;color:#738078;line-height:1.5;margin-top:16px}
+  </style>
+</head>
+<body>
+  <main class="panel">
+    <h1>PGrowth Fitness</h1>
+    <p class="sub">A tua conta de atleta começa aqui.</p>
+
+    <form id="accessForm">
+      <div id="nameField">
+        <label for="fullName">Nome completo</label>
+        <input id="fullName" autocomplete="name" minlength="3" maxlength="120">
+      </div>
+
+      <label for="phone">Número de telefone</label>
+      <input id="phone" type="text" autocomplete="username" placeholder="+258 84 123 4567" required>
+
+      <label for="password">Palavra-passe</label>
+      <input id="password" type="password" autocomplete="current-password" minlength="8" required>
+
+      <button id="submitButton" type="submit">CRIAR CONTA</button>
+    </form>
+
+    <button class="secondary" id="modeButton" type="button">JÁ TENHO CONTA — ENTRAR</button>
+    <p id="message" role="status"></p>
+    <p class="hint">Utiliza o teu número de telefone e guarda a tua palavra-passe. Não precisas de ter email.</p>
+  </main>
+
+  <script type="module" src="js/auth.js"></script>
+</body>
+</html>

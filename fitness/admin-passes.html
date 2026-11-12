@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#075c40">
+<title>Administração de Passes | PGrowth Fitness</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f1f5f2;color:#17251f;font-family:Arial,sans-serif}
+header{background:#102b21;color:white;padding:22px 18px}
+header h1{margin:0;font-size:22px}header p{font-size:13px;opacity:.8}
+main{max-width:900px;margin:22px auto;padding:0 14px 40px}
+.panel,.order{background:white;border:1px solid #e0e8e2;border-radius:14px;padding:17px;margin-bottom:14px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+button{border:0;border-radius:8px;padding:11px 14px;font-weight:bold;background:#087f55;color:white;cursor:pointer}
+button.reject{background:#a52c2c}button.light{background:#e8f2ec;color:#075c40}
+button:disabled{opacity:.5}
+.muted{color:#718078;font-size:12px;overflow-wrap:anywhere}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f5f7f5;padding:12px;border-radius:8px;font-size:12px}
+.order h3{font-size:16px;color:#075c40}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+input{width:100%;padding:10px;border:1px solid #d5e1d9;border-radius:8px}
+#message{font-size:13px;white-space:pre-wrap;margin:12px 0}
+</style>
+</head>
+<body>
+<header>
+ <div class="top"><div><h1>PGROWTH FITNESS · ADMIN</h1><p>Gestão privada de pedidos e aprovação de Passes</p></div><button class="light" id="logout">TERMINAR SESSÃO</button></div>
+</header>
+<main>
+ <section class="panel">
+  <div class="top"><div><strong>Pedidos pendentes</strong><p class="muted">Apenas administradores autorizados podem consultar estes dados.</p></div><button id="refresh">ACTUALIZAR</button></div>
+  <div id="message" role="status"></div>
+ </section>
+ <div id="orders"></div>
+</main>
+<script src="js/session.js"></script>
+<script src="js/admin-passes.js"></script>
+</body>
+</html>
