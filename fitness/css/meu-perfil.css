@@ -186,3 +186,113 @@
     padding: 17px;
   }
 }
+
+/* PGROWTH FITNESS — ACTIVIDADE REAL DO ATLETA */
+.account-activity-grid,
+.account-athlete-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 22px 0;
+}
+
+.account-activity-grid > div,
+.account-athlete-summary > div {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgba(130, 255, 70, .18);
+  border-radius: 14px;
+  background: rgba(130, 255, 70, .045);
+}
+
+.account-activity-grid span,
+.account-athlete-summary span {
+  display: block;
+  color: #9ca99e;
+  font-size: 10px;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.account-activity-grid strong,
+.account-athlete-summary strong {
+  display: block;
+  color: #a8ff60;
+  font-size: clamp(16px, 4vw, 23px);
+  overflow-wrap: anywhere;
+}
+
+.account-recent-heading {
+  margin: 24px 0 12px;
+  color: #a8ff60;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+}
+
+.account-recent-runs {
+  display: grid;
+  gap: 10px;
+}
+
+.account-recent-run {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.07);
+}
+
+.account-recent-run strong,
+.account-recent-run small {
+  display: block;
+}
+
+.account-recent-run strong {
+  color: #fff;
+  font-size: 16px;
+}
+
+.account-recent-run small,
+.account-recent-run > span {
+  color: #a9b1aa;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.account-objectives {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  color: #a9b1aa;
+  font-size: 13px;
+}
+
+.account-objective-tag {
+  padding: 7px 10px;
+  border-radius: 20px;
+  color: #b7ff7a;
+  background: rgba(130,255,70,.09);
+  border: 1px solid rgba(130,255,70,.2);
+}
+
+.account-activity-empty {
+  color: #a9b1aa;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 380px) {
+  .account-activity-grid,
+  .account-athlete-summary {
+    gap: 8px;
+  }
+
+  .account-activity-grid > div,
+  .account-athlete-summary > div {
+    padding: 12px;
+  }
+}

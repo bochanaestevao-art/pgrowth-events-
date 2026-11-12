@@ -1461,3 +1461,308 @@ footer {
     font-size: 26px;
   }
 }
+
+/* ==========================================
+   PGROWTH FITNESS — DASHBOARD PREMIUM
+   Estilos exclusivos da página inicial
+   ========================================== */
+
+body.fitness-dashboard {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(0,255,105,.13), transparent 38%),
+    radial-gradient(ellipse at 100% 55%, rgba(0,170,75,.07), transparent 32%),
+    #050806;
+  color: #f5fff8;
+}
+
+.fitness-dashboard .topbar {
+  padding-top: 25px;
+  padding-bottom: 25px;
+}
+
+.fitness-dashboard .scroll-hint {
+  color: #58ff91;
+}
+
+.fitness-dashboard .container {
+  padding-top: 38px;
+  padding-bottom: 55px;
+}
+
+.fitness-dashboard .welcome {
+  margin-bottom: 42px;
+}
+
+.fitness-dashboard .welcome h1 {
+  font-size: clamp(38px, 6.5vw, 68px);
+  letter-spacing: -2.8px;
+}
+
+.fitness-dashboard .welcome p {
+  color: #a7b9ad;
+}
+
+.fitness-dashboard .coach-card {
+  min-height: 340px;
+  border: 1px solid rgba(75,255,135,.32);
+  border-radius: 28px;
+  box-shadow:
+    0 25px 65px rgba(0,0,0,.48),
+    0 0 35px rgba(0,255,100,.08),
+    inset 0 1px rgba(255,255,255,.08);
+}
+
+.fitness-dashboard .section-heading {
+  margin-top: 55px;
+  margin-bottom: 24px;
+}
+
+.fitness-dashboard .section-heading h2 {
+  font-size: clamp(24px, 4vw, 30px);
+  letter-spacing: -1px;
+}
+
+.fitness-dashboard .features {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.fitness-dashboard .feature {
+  min-height: 195px;
+  padding: 23px;
+  border: 1px solid rgba(70,255,130,.20);
+  border-radius: 23px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(0,255,100,.09), transparent 45%),
+    linear-gradient(145deg, #131d16, #080d0a 75%);
+  box-shadow:
+    0 16px 38px rgba(0,0,0,.34),
+    inset 0 1px rgba(255,255,255,.055);
+}
+
+.fitness-dashboard .feature-icon {
+  width: 53px;
+  height: 53px;
+  border-radius: 17px;
+  font-size: 24px;
+}
+
+.fitness-dashboard .feature strong {
+  margin-top: 20px;
+  font-size: 15px;
+  letter-spacing: -.2px;
+}
+
+.fitness-dashboard .feature small {
+  margin-top: 7px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.fitness-dashboard .arrow {
+  top: 22px;
+  right: 21px;
+  font-size: 21px;
+}
+
+.fitness-dashboard .feature:active {
+  transform: scale(.975);
+}
+
+.fitness-dashboard .feature:focus-visible,
+.fitness-dashboard .coach-card button:focus-visible {
+  outline: 2px solid #55ff91;
+  outline-offset: 4px;
+}
+
+.fitness-dashboard footer {
+  padding-top: 48px;
+  color: #819488;
+}
+
+@media (min-width: 760px) {
+  .fitness-dashboard .features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+  }
+
+  .fitness-dashboard .feature {
+    min-height: 205px;
+    padding: 27px;
+  }
+}
+
+@media (max-width: 480px) {
+  .fitness-dashboard .container {
+    padding-top: 25px;
+    padding-bottom: 40px;
+  }
+
+  .fitness-dashboard .welcome {
+    margin-bottom: 30px;
+  }
+
+  .fitness-dashboard .coach-card {
+    min-height: 310px;
+  }
+
+  .fitness-dashboard .section-heading {
+    margin-top: 42px;
+    margin-bottom: 19px;
+  }
+
+  .fitness-dashboard .features {
+    gap: 12px;
+  }
+
+  .fitness-dashboard .feature {
+    min-height: 168px;
+    padding: 17px;
+    border-radius: 19px;
+  }
+
+  .fitness-dashboard .feature-icon {
+    width: 46px;
+    height: 46px;
+    font-size: 21px;
+  }
+
+  .fitness-dashboard .feature strong {
+    margin-top: 16px;
+    font-size: 13px;
+  }
+
+  .fitness-dashboard .feature small {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 350px) {
+  .fitness-dashboard .features {
+    gap: 9px;
+  }
+
+  .fitness-dashboard .feature {
+    padding: 13px;
+  }
+}
+
+
+/* PGROWTH EXPLORAR — PLATINUM MOTION */
+#explorar-pgrowth-cta{
+position:relative;isolation:isolate;overflow:hidden;
+display:flex;align-items:center;gap:15px;
+width:min(100% - 32px,760px);min-height:88px;
+margin:18px auto 28px;padding:17px 22px;
+box-sizing:border-box;text-decoration:none;color:#102b48;
+border:1px solid rgba(255,255,255,.9);border-radius:20px;
+background:linear-gradient(115deg,rgba(255,255,255,.96),rgba(215,224,235,.82) 35%,rgba(248,250,255,.94) 58%,rgba(190,205,222,.88));
+box-shadow:0 12px 32px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.95);
+animation:pgrowthPlatinumFloat 3.8s ease-in-out infinite;
+transition:transform .25s ease,box-shadow .25s ease;
+}
+#explorar-pgrowth-cta::before{
+content:"";position:absolute;z-index:-1;top:-80%;left:-45%;
+width:35%;height:260%;transform:rotate(25deg);
+background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);
+animation:pgrowthPlatinumShine 4.5s ease-in-out infinite;
+}
+#explorar-pgrowth-cta .explorar-cta-icon{
+display:grid;place-items:center;flex:0 0 48px;height:48px;
+border-radius:15px;color:white;font-size:27px;
+background:linear-gradient(145deg,#174d82,#398bd0);
+}
+#explorar-pgrowth-cta .explorar-cta-copy{
+display:flex;flex:1;flex-direction:column;gap:5px;
+}
+#explorar-pgrowth-cta strong{font-size:clamp(15px,3.8vw,19px);font-weight:900;letter-spacing:1px;color:#12375c;}
+#explorar-pgrowth-cta small{font-size:12px;color:#526b84;}
+#explorar-pgrowth-cta .explorar-cta-arrow{font-size:27px;font-weight:800;color:#2369a6;}
+@keyframes pgrowthPlatinumFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes pgrowthPlatinumShine{0%,35%{left:-45%}75%,100%{left:125%}}
+@media(prefers-reduced-motion:reduce){#explorar-pgrowth-cta,#explorar-pgrowth-cta::before{animation:none}}
+
+
+/* PGROWTH — EXPLORAR COMPACTO */
+#explorar-pgrowth-cta {
+  width: fit-content;
+  max-width: calc(100% - 30px);
+  min-height: 48px;
+  margin: 8px auto 15px;
+  padding: 8px 17px;
+  gap: 10px;
+  border-radius: 13px;
+}
+#explorar-pgrowth-cta .explorar-cta-icon {
+  flex-basis: 30px;
+  height: 30px;
+  border-radius: 9px;
+  font-size: 19px;
+}
+#explorar-pgrowth-cta .explorar-cta-copy {
+  gap: 2px;
+}
+#explorar-pgrowth-cta strong {
+  font-size: 13px;
+  letter-spacing: .8px;
+}
+#explorar-pgrowth-cta small {
+  font-size: 10px;
+}
+#explorar-pgrowth-cta .explorar-cta-arrow {
+  font-size: 19px;
+}
+
+
+/* PGROWTH PREMIUM 3D ICONS */
+.pg-icon-defs{position:absolute;width:0;height:0;overflow:hidden;pointer-events:none}
+.feature-icon,.ico{
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  isolation:isolate;
+}
+.feature-icon{width:76px;height:76px;margin:0 auto 12px}
+.ico{width:78px;height:78px;margin:0 auto 13px}
+.pg-icon-art{
+  display:block;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  filter:drop-shadow(0 7px 8px rgba(26,65,103,.19));
+  transform:translateZ(0);
+  transition:transform .28s ease,filter .28s ease;
+}
+.feature:hover .pg-icon-art,.card:hover .pg-icon-art{
+  transform:translateY(-4px) scale(1.07) rotate(-2deg);
+  filter:drop-shadow(0 11px 12px rgba(24,91,145,.28)) brightness(1.04);
+}
+.feature,.card{
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+  transform-origin:center;
+}
+.feature.pg-press,.card.pg-press{
+  animation:pgCardClick .34s cubic-bezier(.2,.8,.25,1);
+}
+.pg-press .pg-icon-art{
+  animation:pgIconClick .34s cubic-bezier(.2,.8,.25,1);
+}
+@keyframes pgCardClick{
+  0%{transform:scale(1)}
+  38%{transform:scale(.965)}
+  72%{transform:scale(1.025)}
+  100%{transform:scale(1)}
+}
+@keyframes pgIconClick{
+  0%{transform:scale(1) rotate(0)}
+  35%{transform:scale(.82) rotate(-7deg)}
+  72%{transform:scale(1.18) rotate(5deg)}
+  100%{transform:scale(1) rotate(0)}
+}
+@media(prefers-reduced-motion:reduce){
+  .pg-icon-art{transition:none}
+  .feature.pg-press,.card.pg-press,.pg-press .pg-icon-art{animation:none}
+}

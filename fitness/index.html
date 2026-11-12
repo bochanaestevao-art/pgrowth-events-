@@ -3,11 +3,181 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#effaf2">
+  <meta name="theme-color" content="#050806">
   <title>PGrowth Fitness</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="fitness-dashboard">
+
+<svg xmlns="http://www.w3.org/2000/svg" class="pg-icon-defs" aria-hidden="true" width="0" height="0">
+<defs>
+  <linearGradient id="pg-metal" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ffffff"/>
+    <stop offset=".25" stop-color="#dce6f0"/>
+    <stop offset=".52" stop-color="#879caf"/>
+    <stop offset=".76" stop-color="#f7fbff"/>
+    <stop offset="1" stop-color="#9aabba"/>
+  </linearGradient>
+  <linearGradient id="pg-blue" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#8ee4ff"/>
+    <stop offset=".42" stop-color="#168bd0"/>
+    <stop offset="1" stop-color="#123e83"/>
+  </linearGradient>
+  <linearGradient id="pg-darkblue" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#4b9bd5"/>
+    <stop offset="1" stop-color="#102f60"/>
+  </linearGradient>
+  <radialGradient id="pg-glow">
+    <stop offset="0" stop-color="#ffffff" stop-opacity=".9"/>
+    <stop offset="1" stop-color="#b7dfff" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="pg-shadow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="2.5"/>
+    <feOffset dy="3"/>
+    <feComponentTransfer><feFuncA type="linear" slope=".28"/></feComponentTransfer>
+    <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+
+  <symbol id="pg-run" viewBox="0 0 96 96">
+    <ellipse cx="49" cy="79" rx="34" ry="7" fill="#6d8ca9" opacity=".2"/>
+    <g filter="url(#pg-shadow)" transform="rotate(-12 48 48)">
+      <path d="M13 57 Q24 54 32 40 L43 22 Q47 17 52 24 L62 42 Q70 49 83 52 Q91 55 88 66 Q86 73 75 74 L23 74 Q12 72 11 65Z" fill="url(#pg-metal)" stroke="#71869c" stroke-width="2"/>
+      <path d="M35 43 Q47 49 62 46 L76 57 Q65 61 51 58 L26 55Z" fill="url(#pg-blue)"/>
+      <path d="M17 65 Q46 70 85 63 L86 70 Q80 77 68 77 L23 77 Q14 75 17 65Z" fill="#eaf5ff" stroke="#7895ae" stroke-width="1.5"/>
+      <path d="M43 29 L57 46 M37 36 L53 50 M32 43 L49 54" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+      <path d="M20 61 Q47 66 79 60" stroke="#ffffff" stroke-width="2" fill="none" opacity=".9"/>
+    </g>
+  </symbol>
+
+  <symbol id="pg-report" viewBox="0 0 96 96">
+    <g filter="url(#pg-shadow)">
+      <rect x="15" y="14" width="66" height="66" rx="12" fill="url(#pg-metal)" stroke="#8095aa" stroke-width="2"/>
+      <rect x="23" y="22" width="50" height="49" rx="6" fill="#f8fcff"/>
+      <path d="M30 61 V49 H39 V61 M44 61 V39 H53 V61 M58 61 V31 H67 V61" fill="url(#pg-blue)" stroke="#1c609b" stroke-width="1"/>
+      <path d="M28 43 L42 34 L51 38 L67 27" fill="none" stroke="#1a83c7" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M61 27 H68 V34" fill="none" stroke="#1a83c7" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="pg-profile" viewBox="0 0 96 96">
+    <g filter="url(#pg-shadow)">
+      <circle cx="47" cy="31" r="17" fill="url(#pg-metal)" stroke="#7e94a9" stroke-width="2"/>
+      <path d="M17 79 Q19 53 47 52 Q75 53 78 79Z" fill="url(#pg-blue)" stroke="#174d7c" stroke-width="2"/>
+      <path d="M34 28 Q47 10 61 28" fill="none" stroke="#ffffff" stroke-width="3" opacity=".8"/>
+      <rect x="61" y="48" width="25" height="30" rx="5" fill="url(#pg-metal)" stroke="#7890a8" stroke-width="1.5"/>
+      <path d="M67 57 H80 M67 63 H78 M67 69 H76" stroke="#246da7" stroke-width="2" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="pg-trophy" viewBox="0 0 96 96">
+    <g filter="url(#pg-shadow)">
+      <path d="M31 17 H65 V38 Q65 57 48 62 Q31 57 31 38Z" fill="url(#pg-metal)" stroke="#8b9caf" stroke-width="2"/>
+      <path d="M31 25 H18 Q16 47 37 49 M65 25 H78 Q80 47 59 49" fill="none" stroke="url(#pg-blue)" stroke-width="7"/>
+      <path d="M44 61 H52 V72 H44Z" fill="url(#pg-metal)"/>
+      <path d="M33 72 H63 V80 H33Z" fill="url(#pg-darkblue)" stroke="#9cb6ce" stroke-width="1.5"/>
+      <path d="M48 25 L51 33 L59 33 L53 38 L55 46 L48 41 L41 46 L43 38 L37 33 L45 33Z" fill="#ffffff" stroke="#8ca7bd" stroke-width="1"/>
+    </g>
+  </symbol>
+
+  <symbol id="pg-challenge" viewBox="0 0 96 96">
+    <g filter="url(#pg-shadow)">
+      <path d="M26 15 V81" stroke="url(#pg-metal)" stroke-width="6" stroke-linecap="round"/>
+      <path d="M30 18 Q49 8 69 20 L63 39 Q46 29 30 39Z" fill="url(#pg-blue)" stroke="#174c7e" stroke-width="2"/>
+      <path d="M30 39 Q48 30 65 40" fill="none" stroke="#ffffff" stroke-width="2"/>
+      <path d="M17 81 H39" stroke="#8ca5bb" stroke-width="5" stroke-linecap="round"/>
+      <path d="M48 67 L57 58 L66 67 L57 76Z" fill="url(#pg-metal)" stroke="#8198ad" stroke-width="1.5"/>
+      <path d="M57 61 V73" stroke="#2379b8" stroke-width="2"/>
+    </g>
+  </symbol>
+
+  <symbol id="pg-team" viewBox="0 0 96 96">
+    <g filter="url(#pg-shadow)">
+      <circle cx="48" cy="26" r="11" fill="url(#pg-metal)" stroke="#8298ad"/>
+      <circle cx="24" cy="34" r="9" fill="url(#pg-blue)" stroke="#235d8d"/>
+      <circle cx="72" cy="34" r="9" fill="url(#pg-blue)" stroke="#235d8d"/>
+      <path d="M32 55 Q33 40 48 40 Q63 40 64 55 V62 H32Z" fill="url(#pg-darkblue)"/>
+      <path d="M10 58 Q11 46 24 46 Q35 46 37 58 V64 H10Z" fill="url(#pg-metal)" stroke="#8196aa"/>
+      <path d="M59 58 Q61 46 72 46 Q85 46 86 58 V64 H59Z" fill="url(#pg-metal)" stroke="#8196aa"/>
+      <path d="M20 66 H76 L82 80 H14Z" fill="url(#pg-blue)" stroke="#1b5c91" stroke-width="2"/>
+      <path d="M39 66 H57 V80 H39Z" fill="url(#pg-metal)"/>
+    </g>
+  </symbol>
+
+  <symbol id="pg-premium" viewBox="0 0 96 96">
+    <g filter="url(#pg-shadow)">
+      <path d="M48 12 L57 27 L75 30 L62 43 L65 62 L48 53 L31 62 L34 43 L21 30 L39 27Z" fill="url(#pg-metal)" stroke="#8098ae" stroke-width="2"/>
+      <circle cx="48" cy="39" r="13" fill="url(#pg-blue)" stroke="#dcefff" stroke-width="2"/>
+      <path d="M42 39 H54 M48 33 V45" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+      <path d="M37 62 L31 83 L48 75 L65 83 L59 62" fill="url(#pg-darkblue)" stroke="#9db4c9" stroke-width="2"/>
+    </g>
+  </symbol>
+
+  <symbol id="pg-payment" viewBox="0 0 96 96">
+    <g filter="url(#pg-shadow)" transform="rotate(-7 48 48)">
+      <rect x="23" y="10" width="50" height="76" rx="9" fill="url(#pg-metal)" stroke="#7e94aa" stroke-width="2"/>
+      <rect x="29" y="18" width="38" height="40" rx="4" fill="url(#pg-darkblue)"/>
+      <rect x="35" y="25" width="26" height="15" rx="3" fill="#dff5ff"/>
+      <path d="M39 48 H57" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="48" cy="70" r="6" fill="url(#pg-blue)" stroke="#ffffff" stroke-width="1.5"/>
+      <path d="M42 5 Q58 -1 66 12 M37 9 Q51 3 59 14" fill="none" stroke="#238bd0" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="pg-coach" viewBox="0 0 96 96">
+    <g filter="url(#pg-shadow)">
+      <rect x="20" y="13" width="48" height="68" rx="7" fill="url(#pg-metal)" stroke="#8095aa" stroke-width="2"/>
+      <rect x="27" y="23" width="34" height="49" rx="3" fill="#f8fcff"/>
+      <path d="M33 34 H54 M33 43 H54 M33 52 H48" stroke="#7e9ab2" stroke-width="3" stroke-linecap="round"/>
+      <path d="M34 61 L39 66 L49 55" fill="none" stroke="#168bd0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="70" cy="67" r="15" fill="url(#pg-blue)" stroke="#dcefff" stroke-width="2"/>
+      <circle cx="70" cy="67" r="9" fill="none" stroke="#ffffff" stroke-width="2"/>
+      <path d="M70 67 L76 60" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="pg-business" viewBox="0 0 96 96">
+    <g filter="url(#pg-shadow)">
+      <path d="M14 79 V36 L48 17 L82 36 V79Z" fill="url(#pg-metal)" stroke="#8095aa" stroke-width="2"/>
+      <path d="M22 40 H74 V79 H22Z" fill="url(#pg-darkblue)"/>
+      <path d="M30 47 H39 V57 H30Z M45 47 H54 V57 H45Z M60 47 H69 V57 H60Z" fill="#e8f7ff"/>
+      <path d="M30 64 H39 V73 H30Z M60 64 H69 V73 H60Z" fill="#a8d8f5"/>
+      <path d="M42 62 H54 V79 H42Z" fill="url(#pg-metal)"/>
+      <path d="M10 80 H86" stroke="#7e94aa" stroke-width="5" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="pg-event" viewBox="0 0 96 96">
+    <g filter="url(#pg-shadow)" transform="rotate(-7 48 48)">
+      <path d="M17 24 H79 V39 Q68 48 79 57 V73 H17 V57 Q28 48 17 39Z" fill="url(#pg-metal)" stroke="#8196aa" stroke-width="2"/>
+      <path d="M48 28 V69" stroke="#8ba1b6" stroke-width="2" stroke-dasharray="4 4"/>
+      <path d="M33 43 L37 51 L46 52 L39 58 L41 67 L33 62 L25 67 L27 58 L20 52 L29 51Z" fill="url(#pg-blue)" stroke="#ffffff" stroke-width="1.5"/>
+      <path d="M57 42 H70 M57 49 H70 M57 56 H66" stroke="#2a6c9e" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </symbol>
+
+  <symbol id="pg-shop" viewBox="0 0 96 96">
+    <g filter="url(#pg-shadow)">
+      <path d="M19 34 H48 L53 78 H16Z" fill="url(#pg-blue)" stroke="#1d5a8c" stroke-width="2"/>
+      <path d="M27 34 V25 Q27 18 34 18 H39 Q46 18 46 25 V34" fill="none" stroke="url(#pg-metal)" stroke-width="6"/>
+      <path d="M22 45 H46" stroke="#ffffff" stroke-width="3" opacity=".8"/>
+      <path d="M63 31 H76 V42 H63Z" fill="url(#pg-metal)" stroke="#8197aa" stroke-width="1.5"/>
+      <path d="M59 42 H80 V67 Q80 73 74 73 H65 Q59 73 59 67Z" fill="url(#pg-darkblue)" stroke="#7895ae" stroke-width="2"/>
+      <path d="M63 51 H76" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+      <path d="M55 81 H84" stroke="#8da4b9" stroke-width="5" stroke-linecap="round"/>
+    </g>
+  </symbol>
+</defs>
+</svg>
+<!-- PGROWTH EXPLORAR -->
+<a id="explorar-pgrowth-cta" href="explorar.html">
+<span class="explorar-cta-icon">✦</span>
+<span class="explorar-cta-copy">
+<strong>EXPLORAR PGROWTH</strong>
+<small>Descobre tudo o que podes alcançar</small>
+</span>
+<span class="explorar-cta-arrow">↗</span>
+</a>
+
   <header class="topbar">
     <div class="brand">
       <span class="brand-icon">P</span>
@@ -116,28 +286,28 @@
 
     <section class="features">
       <a href="corrida.html" class="feature">
-        <span class="feature-icon">🏃</span>
+        <span class="<span class="feature-icon"><svg class="pg-icon-art" viewBox="0 0 96 96" role="img" aria-hidden="true"><use href="#pg-run"></use></svg></span>
         <strong>Corrida</strong>
         <small>Run with Coach</small>
         <span class="arrow">↗</span>
       </a>
 
       <a href="relatorios.html" class="feature">
-        <span class="feature-icon">📊</span>
+        <span class="<span class="feature-icon"><svg class="pg-icon-art" viewBox="0 0 96 96" role="img" aria-hidden="true"><use href="#pg-report"></use></svg></span>
         <strong>Relatórios</strong>
         <small>Analisa o teu progresso</small>
         <span class="arrow">↗</span>
       </a>
 
       <a href="meu-perfil.html" class="feature">
-        <span class="feature-icon">👤</span>
+        <span class="<span class="feature-icon"><svg class="pg-icon-art" viewBox="0 0 96 96" role="img" aria-hidden="true"><use href="#pg-profile"></use></svg></span>
         <strong>Meu Perfil</strong>
         <small>Os teus dados e objectivos</small>
         <span class="arrow">↗</span>
       </a>
 
       <a href="conquistas.html" class="feature">
-        <span class="feature-icon">🏆</span>
+        <span class="<span class="feature-icon"><svg class="pg-icon-art" viewBox="0 0 96 96" role="img" aria-hidden="true"><use href="#pg-trophy"></use></svg></span>
         <strong>Conquistas</strong>
         <small>Supera novos desafios</small>
         <span class="arrow">↗</span>
@@ -147,5 +317,28 @@
     <footer>PGrowth Fitness · Evolui todos os dias.</footer>
   </main>
   <script src="js/perfil-dashboard.js"></script>
+
+<script>
+/* PGROWTH CARD CLICK ANIMATION */
+document.addEventListener('click', function(event){
+  const card = event.target.closest('a.feature, a.card');
+  if (!card || event.defaultPrevented || event.button !== 0 ||
+      event.metaKey || event.ctrlKey || event.shiftKey || event.altKey ||
+      card.target === '_blank') return;
+
+  const destination = card.href;
+  if (!destination) return;
+
+  event.preventDefault();
+  card.classList.remove('pg-press');
+  void card.offsetWidth;
+  card.classList.add('pg-press');
+
+  window.setTimeout(function(){
+    window.location.href = destination;
+  }, 340);
+});
+</script>
+
 </body>
 </html>

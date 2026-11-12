@@ -133,3 +133,131 @@
 })();
 
 
+
+/* PGROWTH FITNESS — RESUMO DINÂMICO DO ATLETA */
+(() => {
+  "use strict";
+
+  const PROFILE_KEY = "pgrowth_fitness_athlete_profile_v1";
+  const HISTORY_KEY = "pgrowth_fitness_run_history_v1";
+
+  const style = document.createElement("style");
+  style.textContent = `
+    .fitness-live-summary {
+      margin: 24px auto;
+      padding: 22px;
+      width: min(1100px, calc(100% - 32px));
+      border: 1px solid rgba(150,255,80,.22);
+      border-radius: 20px;
+      background: linear-gradient(135deg,#101810,#080b08);
+      color: #fff;
+      box-sizing: border-box;
+    }
+    .fitness-live-summary .summary-eyebrow {
+      color: #a8ff60;
+      font-size: 10px;
+      letter-spacing: 2px;
+    }
+    .fitness-live-summary h2 {
+      margin: 8px 0 18px;
+      font-size: clamp(19px,4vw,26px);
+    }
+    .fitness-live-summary h2 span { color: #a8ff60; }
+    .fitness-live-grid {
+      display: grid;
+      grid-template-columns: repeat(3,minmax(0,1fr));
+      gap: 10px;
+    }
+    .fitness-live-grid div {
+      padding: 13px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.045);
+      min-width: 0;
+    }
+    .fitness-live-grid small {
+      display: block;
+      color: #9da99e;
+      font-size: 9px;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .fitness-live-grid strong {
+      color: #a8ff60;
+      font-size: clamp(16px,4vw,23px);
+      overflow-wrap: anywhere;
+    }
+    .fitness-live-summary a {
+      display: inline-block;
+      margin-top: 17px;
+      color: #a8ff60;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-decoration: none;
+    }
+    @media(max-width:480px) {
+      .fitness-live-summary { padding: 17px; }
+      .fitness-live-grid { gap: 7px; }
+      .fitness-live-grid div { padding: 10px 8px; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  const panel = document.createElement("section");
+  panel.className = "fitness-live-summary";
+  panel.innerHTML = `
+    <span class="summary-eyebrow">O TEU DESEMPENHO</span>
+    <h2>Bem-vindo, <span id="fitness-summary-name">Atleta</span></h2>
+    <div class="fitness-live-grid">
+      <div><small>CORRIDAS</small><strong id="fitness-summary-runs">0</strong></div>
+      <div><small>QUILÓMETROS</small><strong id="fitness-summary-distance">0,00</strong></div>
+      <div><small>MELHOR CORRIDA</small><strong id="fitness-summary-best">0,00 km</strong></div>
+    </div>
+    <a href="meu-perfil.html">CONSULTAR O MEU PROGRESSO →</a>
+  `;
+
+  const featureGrid = document.querySelector(".features");
+  if (featureGrid) featureGrid.insertAdjacentElement("afterend", panel);
+
+  function read(key, fallback) {
+    try {
+      return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)) ?? fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function refresh() {
+    const profile = read(PROFILE_KEY, {});
+    const fields = profile.fields || {};
+    const history = read(HISTORY_KEY, []);
+    const runs = Array.isArray(history) ? history.filter(run =>
+      run &&
+      Number.isFinite(Number(run.distanceKm)) &&
+      Number(run.distanceKm) > 0 &&
+      Number.isFinite(Number(run.durationMs)) &&
+      Number(run.durationMs) > 0
+    ) : [];
+
+    const distance = runs.reduce((sum, run) => sum + Number(run.distanceKm), 0);
+    const best = runs.reduce((max, run) => Math.max(max, Number(run.distanceKm)), 0);
+
+    const name = document.getElementById("fitness-summary-name");
+    const count = document.getElementById("fitness-summary-runs");
+    const total = document.getElementById("fitness-summary-distance");
+    const record = document.getElementById("fitness-summary-best");
+
+    if (name) name.textContent = fields.name || "Atleta";
+    if (count) count.textContent = String(runs.length);
+    if (total) total.textContent = distance.toFixed(2).replace(".", ",");
+    if (record) record.textContent = best.toFixed(2) + " km";
+  }
+
+  if (featureGrid) {
+    refresh();
+    window.addEventListener("pageshow", refresh);
+    window.addEventListener("focus", refresh);
+    window.addEventListener("storage", refresh);
+    window.setInterval(refresh, 15000);
+  }
+})();
