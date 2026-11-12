@@ -207,6 +207,32 @@ body{
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{transition:none!important}
 }
+
+/* PGrowth Fitness - guias dos desafios */
+.challenge-guide{overflow:hidden}
+.guide-kicker{font-size:9px;font-weight:950;letter-spacing:.13em;color:#5480a3}
+.challenge-guide>h2{margin-top:9px}
+.guide-image{display:block;width:100%;max-height:280px;object-fit:cover;border-radius:15px;margin:15px 0}
+.guide-meta{display:flex;justify-content:space-between;gap:12px;padding:13px 15px;border-radius:12px;background:#edf4fb;margin:12px 0 20px}
+.guide-meta span{font-size:9px;font-weight:900;color:#607d96}
+.guide-meta strong{font-size:14px;color:#1769aa}
+.challenge-guide h3{font-size:14px;color:var(--deep);margin:18px 0 10px}
+.guide-steps{padding-left:23px;display:grid;gap:10px}
+.guide-steps li{padding-left:5px;color:#405c74;font-size:12px;line-height:1.65}
+.guide-tip,.guide-safety{padding:14px;border-radius:13px;margin-top:14px}
+.guide-tip{background:#eaf4ff;border:1px solid #d8eaff}
+.guide-safety{background:#fff4e9;border:1px solid #f5e4ce}
+.guide-tip strong,.guide-safety strong{font-size:9px;letter-spacing:.09em}
+.guide-tip p,.guide-safety p{font-size:12px;line-height:1.6;color:#526a7e;margin:7px 0 0}
+.guide-video-area{margin-top:17px}
+.video-placeholder{min-height:145px;padding:22px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:1px dashed #b9cbdc;border-radius:15px;background:#edf3f9}
+.video-symbol{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#1769aa;color:white;font-size:17px;margin-bottom:10px}
+.video-placeholder strong{font-size:13px;color:#244d70}
+.video-placeholder p{font-size:11px;line-height:1.5;color:#647e94;margin:7px 0}
+.video-placeholder small{font-size:9px;color:#8295a7}
+.guide-video-player{display:block;width:100%;max-height:420px;border-radius:15px;background:#101820}
+@media(max-width:420px){.guide-image{max-height:220px}.guide-meta{flex-direction:column;gap:5px}}
+
 </style>
 </head>
 <body>
@@ -224,6 +250,7 @@ body{
 </main>
 <div class="toast" id="toast" role="status"></div>
 <script src="js/session.js"></script>
+<script src="js/desafio-guias.js"></script>
 <script src="js/desafios.js"></script>
 </body>
 </html>

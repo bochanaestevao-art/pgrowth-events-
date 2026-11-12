@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 440">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d8f5e9"/><stop offset="1" stop-color="#fff"/></linearGradient></defs>
+<rect width="800" height="440" rx="32" fill="url(#bg)"/>
+<circle cx="650" cy="100" r="95" fill="#16856b" opacity=".10"/>
+<circle cx="130" cy="360" r="120" fill="#16856b" opacity=".08"/>
+<path d="M0 350 Q200 300 400 355 T800 340 V440 H0Z" fill="#16856b" opacity=".12"/>
+<g fill="none" stroke="#16856b" stroke-width="23" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="405" cy="105" r="35" fill="#16856b" stroke="none"/>
+<path d="M390 153 L350 220 L430 260 M365 184 L275 205 L235 175 M390 170 L490 190 L535 160 M350 220 L300 315 L230 355 M430 260 L500 320 L570 325"/>
+</g>
+<text x="55" y="65" font-family="Arial" font-size="25" font-weight="800" fill="#16856b">PGROWTH FITNESS</text>
+<text x="55" y="405" font-family="Arial" font-size="27" font-weight="900" fill="#17334d">RESISTÊNCIA</text>
+</svg>

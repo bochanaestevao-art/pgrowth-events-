@@ -1,5 +1,6 @@
 (() => {
   "use strict";
+  // PGROWTH_CHALLENGE_GUIDE_INTEGRATION
 
   const STORAGE = "pgrowth_fitness_challenges_v1";
   const RUNS = "pgrowth_fitness_run_history_v1";
@@ -399,6 +400,8 @@
         <p class="detail-state">${done ? "META ALCANÇADA — PARABÉNS!" : "DESAFIO EM PROGRESSO"}</p>
       </section>
 
+      ${window.PGrowthChallengeGuideHtml ? window.PGrowthChallengeGuideHtml(challenge,state) : ""}
+
       <section class="detail-panel">
         <h2>A tua meta</h2>
         <p>Personaliza o objectivo deste desafio.</p>
@@ -450,7 +453,9 @@
       </section>
     `;
 
-    document.getElementById("target-form").addEventListener("submit",event => {
+    window.PGrowthChallengeGuideCheckVideo?.(challenge.id);
+
+   document.getElementById("target-form").addEventListener("submit",event => {
       event.preventDefault();
       const value = Number(document.getElementById("target-input").value);
       if (!Number.isFinite(value) || value <= 0) {
