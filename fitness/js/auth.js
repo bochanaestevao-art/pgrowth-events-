@@ -1,4 +1,4 @@
-const API = '/api/fitness/pass';
+const API = 'https://pgrowth-events-fitness-api.vercel.app/api/pass';
 const SESSION_KEY = 'pgrowth_fitness_auth_session';
 
 let config = null;
