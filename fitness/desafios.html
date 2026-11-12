@@ -27,7 +27,7 @@ h1{font-size:clamp(27px,6vw,43px);margin:8px 0;letter-spacing:-.04em}
 .filters button{white-space:nowrap;border:1px solid #d5e1ec;background:#ffffffb8;color:#42617d;border-radius:30px;padding:10px 14px;font-size:11px;font-weight:800}
 .filters button.active{background:var(--deep);border-color:var(--deep);color:white;box-shadow:0 5px 13px #103c6530}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
-.challenge{position:relative;min-width:0;background:linear-gradient(145deg,#ffffffed,#edf3f9e8);border:1px solid #ffffff;border-radius:20px;padding:16px;box-shadow:0 9px 25px #234c7010;transition:transform .2s,box-shadow .2s,border-color .2s}
+.challenge{display:block;color:inherit;text-decoration:none;position:relative;min-width:0;background:linear-gradient(145deg,#ffffffed,#edf3f9e8);border:1px solid #ffffff;border-radius:20px;padding:16px;box-shadow:0 9px 25px #234c7010;transition:transform .2s,box-shadow .2s,border-color .2s}
 .challenge:active{transform:scale(.975);box-shadow:0 3px 10px #234c7020}
 .challenge.done{border-color:#79b99c;background:linear-gradient(145deg,#f4fff8,#e9f6ef)}
 .card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -49,7 +49,7 @@ h1{font-size:clamp(27px,6vw,43px);margin:8px 0;letter-spacing:-.04em}
 .actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}
 .actions button{border:0;background:transparent;color:#52728e;font-size:10px;font-weight:800;padding:5px 0}
 .actions button.reset{color:#9b5960}
-.running-note{font-size:10px;color:#48799f;margin-top:12px;line-height:1.45}
+.open-challenge{display:flex;justify-content:space-between;align-items:center;margin-top:15px;padding-top:11px;border-top:1px solid var(--line);font-size:10px;font-weight:900;letter-spacing:.06em;color:var(--deep)}.open-challenge span{font-size:17px}.running-note{font-size:10px;color:#48799f;margin-top:12px;line-height:1.45}
 .history{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
 .history summary{font-size:10px;font-weight:800;color:#52728e;cursor:pointer}
 .history ul{padding-left:17px;color:#637d92;font-size:10px;line-height:1.8}
@@ -92,12 +92,13 @@ h1{font-size:clamp(27px,6vw,43px);margin:8px 0;letter-spacing:-.04em}
 
 <section class="grid" id="challenge-grid" aria-live="polite"></section>
 
-<div class="notice">
+<div class="notice"><strong id="sync-status">A preparar os teus desafios...</strong><br>
 <strong>Como são calculados os resultados?</strong><br>
 As metas de corrida são actualizadas através das corridas guardadas pelo Run With Coach. Os restantes desafios usam os registos feitos pelo atleta. Regista apenas actividades realmente realizadas. Os dados desta primeira versão ficam guardados neste dispositivo.
 </div>
 </main>
 <div class="toast" id="toast" role="status"></div>
+<script src="js/session.js"></script>
 <script src="js/desafios.js"></script>
 </body>
 </html>
