@@ -1817,3 +1817,80 @@ display:flex;flex:1;flex-direction:column;gap:5px;
     font-size: 9px;
   }
 }
+
+
+/* CABECALHO FITNESS - CONTROLos ALINHADOS A DIREITA */
+.fitness-dashboard .topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.fitness-header-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.fitness-header-actions .scroll-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fitness-header-actions .scroll-hint-arrow {
+  display: block;
+  text-align: right;
+}
+
+.fitness-header-actions .fitness-logout-button {
+  margin: 0;
+  padding: 9px 13px;
+  font-size: 9px;
+}
+
+@media (max-width: 480px) {
+  .fitness-dashboard .topbar {
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding-left: 5%;
+    padding-right: 5%;
+  }
+
+  .fitness-dashboard .brand {
+    min-width: 0;
+    flex-shrink: 1;
+    font-size: 17px;
+    gap: 8px;
+  }
+
+  .fitness-dashboard .brand-icon {
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+  }
+
+  .fitness-header-actions {
+    width: auto;
+    flex-shrink: 0;
+    gap: 6px;
+  }
+
+  .fitness-header-actions .fitness-logout-button {
+    padding: 8px 10px;
+    font-size: 8px;
+  }
+
+  .fitness-header-actions .scroll-hint {
+    font-size: 9px;
+  }
+}
