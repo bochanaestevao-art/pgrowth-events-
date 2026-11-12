@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#edf3f9">
+<title>Desafios | PGrowth Fitness</title>
+<style>
+:root{--blue:#1769aa;--deep:#103c65;--silver:#dce6f0;--ink:#17334d;--muted:#687f94;--line:rgba(60,100,140,.15)}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font-family:Inter,system-ui,-apple-system,sans-serif;background:linear-gradient(145deg,#f8fbff,#e7eef6 55%,#f5f8fc);min-height:100vh}
+.page{width:min(1120px,100%);margin:auto;padding:20px 17px 55px}
+.back{display:inline-flex;text-decoration:none;color:#315b7d;font-size:12px;font-weight:800;letter-spacing:.05em;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:#ffffffb8}
+.hero{position:relative;overflow:hidden;margin:17px 0 20px;padding:26px 23px;border-radius:25px;background:linear-gradient(120deg,#0d3458,#1769aa 65%,#83a9cc);color:white;box-shadow:0 15px 36px #174c772b}
+.hero:after{content:"";position:absolute;width:230px;height:230px;border:1px solid #ffffff30;border-radius:50%;right:-65px;top:-105px;box-shadow:0 0 0 25px #ffffff0c,0 0 0 55px #ffffff09}
+.eyebrow{font-size:10px;font-weight:900;letter-spacing:.18em;color:#c8e4ff}
+h1{font-size:clamp(27px,6vw,43px);margin:8px 0;letter-spacing:-.04em}
+.hero p{max-width:540px;color:#e1effb;font-size:13px;line-height:1.6;margin:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0 24px}
+.stat{background:#ffffffc9;border:1px solid white;border-radius:17px;padding:14px 12px;box-shadow:0 7px 20px #315b7d0b}
+.stat small{display:block;color:var(--muted);font-size:10px;font-weight:800}
+.stat strong{display:block;color:var(--deep);font-size:23px;margin-top:5px}
+.section-title{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:24px 2px 12px}
+.section-title h2{font-size:19px;margin:0;color:var(--deep)}
+.section-title p{font-size:11px;color:var(--muted);margin:4px 0 0}
+.filters{display:flex;gap:8px;overflow:auto;padding:2px 0 12px;scrollbar-width:none}
+.filters button{white-space:nowrap;border:1px solid #d5e1ec;background:#ffffffb8;color:#42617d;border-radius:30px;padding:10px 14px;font-size:11px;font-weight:800}
+.filters button.active{background:var(--deep);border-color:var(--deep);color:white;box-shadow:0 5px 13px #103c6530}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.challenge{position:relative;min-width:0;background:linear-gradient(145deg,#ffffffed,#edf3f9e8);border:1px solid #ffffff;border-radius:20px;padding:16px;box-shadow:0 9px 25px #234c7010;transition:transform .2s,box-shadow .2s,border-color .2s}
+.challenge:active{transform:scale(.975);box-shadow:0 3px 10px #234c7020}
+.challenge.done{border-color:#79b99c;background:linear-gradient(145deg,#f4fff8,#e9f6ef)}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.symbol{width:43px;height:43px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(145deg,#e9f3fc,#c9dced);color:#1769aa;font-size:12px;font-weight:950;letter-spacing:-.04em;box-shadow:inset 0 1px white,0 4px 10px #28577b18}
+.tag{font-size:9px;font-weight:900;letter-spacing:.07em;text-transform:uppercase;color:#47708f;background:#e5eef7;border-radius:20px;padding:6px 8px}
+.challenge h3{font-size:15px;margin:13px 0 5px;color:#153b5d}
+.description{font-size:11px;line-height:1.5;color:var(--muted);min-height:32px}
+.goal-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:13px 0 7px;font-size:10px;color:#56728b}
+.goal-line strong{color:#194f7c;font-size:11px}
+.progress{height:8px;border-radius:20px;background:#dce6ef;overflow:hidden}
+.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#287fc0,#79b4e2);border-radius:20px;transition:width .35s}
+.done .progress span{background:linear-gradient(90deg,#299b68,#73c89a)}
+.progress-text{display:flex;justify-content:space-between;font-size:10px;color:#698096;margin-top:7px}
+.manual{display:flex;gap:7px;margin-top:13px}
+.manual input,.target-edit input{min-width:0;width:100%;border:1px solid #d6e1eb;border-radius:10px;background:#fff;padding:10px;font-size:12px;color:var(--ink)}
+.manual button,.target-edit button{border:0;border-radius:10px;background:var(--deep);color:white;font-size:10px;font-weight:850;padding:0 12px;white-space:nowrap}
+.target-edit{display:flex;gap:6px;margin-top:9px}
+.target-edit button{background:#dce9f5;color:#285777}
+.actions{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}
+.actions button{border:0;background:transparent;color:#52728e;font-size:10px;font-weight:800;padding:5px 0}
+.actions button.reset{color:#9b5960}
+.running-note{font-size:10px;color:#48799f;margin-top:12px;line-height:1.45}
+.history{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.history summary{font-size:10px;font-weight:800;color:#52728e;cursor:pointer}
+.history ul{padding-left:17px;color:#637d92;font-size:10px;line-height:1.8}
+.empty{grid-column:1/-1;padding:30px;text-align:center;color:var(--muted);background:#ffffffa8;border-radius:18px;font-size:12px}
+.notice{margin-top:22px;padding:14px 15px;border:1px solid #d9e5ef;border-radius:15px;background:#ffffffa6;color:#627b91;font-size:10px;line-height:1.6}
+.toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#123e63;color:white;padding:12px 17px;border-radius:12px;font-size:12px;box-shadow:0 8px 25px #102f4c40;transition:.2s;z-index:20}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(min-width:760px){.page{padding-top:28px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.hero{padding:35px}.challenge{padding:19px}}
+@media(max-width:380px){.grid{grid-template-columns:1fr}.stats{gap:7px}.stat strong{font-size:19px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main class="page">
+<a class="back" href="explorar.html">← VOLTAR A EXPLORAR PGROWTH</a>
+
+<section class="hero">
+<span class="eyebrow">PGROWTH FITNESS · PERFORMANCE</span>
+<h1>DESAFIOS</h1>
+<p>Define metas, acompanha os teus resultados e supera os teus próprios limites. Cada conquista começa com uma decisão.</p>
+</section>
+
+<section class="stats" aria-label="Resumo dos desafios">
+<div class="stat"><small>DESAFIOS ACTIVOS</small><strong id="active-count">0</strong></div>
+<div class="stat"><small>CONCLUÍDOS</small><strong id="done-count">0</strong></div>
+<div class="stat"><small>CONQUISTAS</small><strong id="achievement-count">0</strong></div>
+</section>
+
+<div class="section-title">
+<div><h2>Escolhe o teu desafio</h2><p>Metas ajustáveis e resultados acompanhados.</p></div>
+</div>
+<nav class="filters" id="filters" aria-label="Filtrar desafios">
+<button class="active" data-filter="todos">Todos</button>
+<button data-filter="corrida">Corrida</button>
+<button data-filter="resistencia">Resistência</button>
+<button data-filter="forca">Força</button>
+<button data-filter="exercicios">Exercícios</button>
+<button data-filter="cardio">Cardio</button>
+</nav>
+
+<section class="grid" id="challenge-grid" aria-live="polite"></section>
+
+<div class="notice">
+<strong>Como são calculados os resultados?</strong><br>
+As metas de corrida são actualizadas através das corridas guardadas pelo Run With Coach. Os restantes desafios usam os registos feitos pelo atleta. Regista apenas actividades realmente realizadas. Os dados desta primeira versão ficam guardados neste dispositivo.
+</div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+<script src="js/desafios.js"></script>
+</body>
+</html>
