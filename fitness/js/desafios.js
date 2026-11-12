@@ -282,8 +282,48 @@
     return {active,done,achievements};
   }
 
+
+  function challengeCopy(challenge, state) {
+    const target = format(Number(state.target));
+    const unit = challenge.unit;
+    let title;
+    let desc;
+
+    if (challenge.kind === "run-best") {
+      title = "Desafio de " + target + " km";
+      desc = "Completa uma corrida de pelo menos " + target + " km.";
+    } else if (challenge.kind === "run-week") {
+      title = "Meta semanal de " + target + " km";
+      desc = "Acumula " + target + " km durante uma semana.";
+    } else if (challenge.kind === "run-month") {
+      title = "Meta mensal de " + target + " km";
+      desc = "Acumula " + target + " km durante o mês.";
+    } else if (unit === "min") {
+      title = "Meta de " + target + " minutos";
+      desc = "Regista " + target + " minutos de actividade.";
+    } else if (unit === "reps") {
+      title = "Meta de " + target + " repetições";
+      desc = "Completa " + target + " repetições neste exercício.";
+    } else if (unit === "seg") {
+      title = "Meta de " + target + " segundos";
+      desc = "Mantém o exercício durante " + target + " segundos.";
+    } else if (unit === "sessões") {
+      title = "Meta de " + target + " sessões";
+      desc = "Completa " + target + " sessões de treino.";
+    } else if (unit === "séries") {
+      title = "Meta de " + target + " séries";
+      desc = "Regista " + target + " séries completas.";
+    } else {
+      title = "Meta de " + target + " " + unit;
+      desc = "Alcança " + target + " " + unit + " neste desafio.";
+    }
+
+    return {title, desc};
+  }
+
   function cardHtml(challenge) {
     const state = stateFor(challenge);
+    const copy = challengeCopy(challenge,state);
     const current = progressFor(challenge,state);
     recordCompletion(challenge,state,current);
 
@@ -297,8 +337,8 @@
           <span class="symbol">${escapeHtml(challenge.symbol)}</span>
           <span class="tag">${escapeHtml(labels[challenge.category])}</span>
         </div>
-        <h3>${escapeHtml(challenge.title)}</h3>
-        <div class="description">${escapeHtml(challenge.desc)}</div>
+        <h3>${escapeHtml(copy.title)}</h3>
+        <div class="description">${escapeHtml(copy.desc)}</div>
         <div class="goal-line"><span>PROGRESSO</span><strong>${format(current)} / ${format(target)} ${escapeHtml(challenge.unit)}</strong></div>
         <div class="progress"><span style="width:${percent}%"></span></div>
         <div class="progress-text"><span>${percent}% concluído</span><span>${done ? "Meta alcançada" : "Em progresso"}</span></div>
@@ -335,6 +375,7 @@
     }
 
     const state = stateFor(challenge);
+    const copy = challengeCopy(challenge,state);
     const current = progressFor(challenge,state);
     recordCompletion(challenge,state,current);
 
@@ -348,8 +389,8 @@
       <section class="detail-hero ${done ? "completed" : ""}">
         <span class="detail-symbol">${escapeHtml(challenge.symbol)}</span>
         <span class="tag">${escapeHtml(labels[challenge.category])}</span>
-        <h1>${escapeHtml(challenge.title)}</h1>
-        <p>${escapeHtml(challenge.desc)}</p>
+        <h1>${escapeHtml(copy.title)}</h1>
+        <p>${escapeHtml(copy.desc)}</p>
         <div class="detail-progress-line">
           <strong>${format(current)} <small>/ ${format(target)} ${escapeHtml(challenge.unit)}</small></strong>
           <span>${percent}%</span>
