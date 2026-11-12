@@ -1766,3 +1766,54 @@ display:flex;flex:1;flex-direction:column;gap:5px;
   .pg-icon-art{transition:none}
   .feature.pg-press,.card.pg-press,.pg-press .pg-icon-art{animation:none}
 }
+
+
+/* PGROWTH FITNESS - TERMINAR SESSAO */
+.fitness-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.fitness-logout-button {
+  border: 1px solid rgba(88, 255, 145, .55);
+  border-radius: 999px;
+  padding: 11px 15px;
+  background: rgba(0, 80, 43, .35);
+  color: #75ffa8;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .7px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .2s, transform .2s;
+}
+
+.fitness-logout-button:active {
+  transform: scale(.96);
+  background: rgba(0, 150, 75, .35);
+}
+
+.fitness-logout-button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+@media (max-width: 480px) {
+  .fitness-dashboard .topbar {
+    flex-wrap: wrap;
+    row-gap: 12px;
+  }
+
+  .fitness-header-actions {
+    width: 100%;
+    gap: 9px;
+  }
+
+  .fitness-logout-button {
+    padding: 9px 11px;
+    font-size: 9px;
+  }
+}

@@ -85,9 +85,35 @@ async function fitnessRequest(action, method = 'GET', payload = {}) {
   return data;
 }
 
-function fitnessLogout() {
-  sessionStorage.removeItem(FITNESS_SESSION_KEY);
-  window.location.href = 'acesso.html';
+async function fitnessLogout() {
+  const session = fitnessReadSession();
+
+  try {
+    if (session?.access_token) {
+      const response = await fetch(`${FITNESS_API}?action=config`, {
+        cache: 'no-store'
+      });
+      const config = await response.json();
+
+      if (response.ok && config.supabaseUrl && config.supabaseAnonKey) {
+        await fetch(
+          `${config.supabaseUrl.replace(/\/$/, '')}/auth/v1/logout?scope=local`,
+          {
+            method: 'POST',
+            headers: {
+              apikey: config.supabaseAnonKey,
+              Authorization: `Bearer ${session.access_token}`
+            }
+          }
+        );
+      }
+    }
+  } catch (error) {
+    console.warn('Não foi possível confirmar o encerramento remoto da sessão.');
+  } finally {
+    sessionStorage.removeItem(FITNESS_SESSION_KEY);
+    window.location.href = 'acesso.html';
+  }
 }
 
 window.PGrowthSession = {
@@ -96,3 +122,18 @@ window.PGrowthSession = {
   request: fitnessRequest,
   logout: fitnessLogout
 };
+
+
+const fitnessLogoutButton = document.getElementById('fitness-logout');
+
+if (fitnessLogoutButton) {
+  fitnessLogoutButton.addEventListener('click', async () => {
+    if (!window.confirm('Tens a certeza de que pretendes terminar a sessão?')) {
+      return;
+    }
+
+    fitnessLogoutButton.disabled = true;
+    fitnessLogoutButton.textContent = 'A TERMINAR...';
+    await fitnessLogout();
+  });
+}
