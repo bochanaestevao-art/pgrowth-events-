@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#006b43">
+<title>CT GULERA Premium | PGrowth Fitness</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/premium.css">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html">
+    <span class="brand-icon">P</span>
+    <span>PGrowth <strong>Fitness</strong></span>
+  </a>
+  <a class="back-link" href="explorar.html">← Explorar</a>
+</header>
+
+<main class="premium-container">
+  <section class="premium-hero">
+    <div class="hero-copy">
+      <span class="eyebrow">ACOMPANHAMENTO EXCLUSIVO</span>
+      <h1>CT GULERA <span>PREMIUM</span></h1>
+      <p>Mais orientação, mais consistência e uma evolução acompanhada.</p>
+      <div class="pass-status" id="passStatus">A verificar o teu Passe Completo...</div>
+    </div>
+    <img src="assets/ct-gulera-avatar/ct-gulera-avatar.png"
+         alt="CT GULERA" class="premium-avatar">
+  </section>
+
+  <div id="loading" class="notice">A preparar a tua área Premium...</div>
+  <div id="errorBox" class="notice error hidden"></div>
+
+  <section id="lockedBox" class="locked-box hidden">
+    <h2>O teu Passe Completo é a chave.</h2>
+    <p>O CT GULERA Premium está incluído no Passe Completo activo. Activa ou renova o teu passe para acederes a estas funcionalidades.</p>
+    <a href="pagamentos.html" class="primary-link">VER PASSE COMPLETO</a>
+  </section>
+
+  <section id="athleteArea" class="hidden">
+    <div class="welcome-row">
+      <div>
+        <span class="eyebrow">A TUA JORNADA</span>
+        <h2>Continua a evoluir.</h2>
+      </div>
+      <span class="role-pill" id="athleteRole">ATLETA</span>
+    </div>
+
+    <nav class="premium-tabs" aria-label="Áreas Premium">
+      <button class="tab active" data-section="nutrition">🥗 Nutrição</button>
+      <button class="tab" data-section="workouts">🏃 Treinos</button>
+      <button class="tab" data-section="tips">💡 Dicas</button>
+      <button class="tab" data-section="progress">📈 Evolução</button>
+      <button class="tab" data-section="chat">💬 CT GULERA</button>
+      <button class="tab" data-section="support">🤝 Acompanhamento</button>
+    </nav>
+
+    <section class="content-section active" id="section-nutrition">
+      <div class="section-heading">
+        <div><span class="eyebrow">ORIENTAÇÃO PROFISSIONAL</span><h2>Nutrição e dieta</h2></div>
+      </div>
+      <p class="section-intro">Planos alimentares preparados e atribuídos pelo teu profissional. O CT GULERA não substitui a avaliação nutricional.</p>
+      <div id="nutritionList" class="content-grid"></div>
+    </section>
+
+    <section class="content-section" id="section-workouts">
+      <div class="section-heading"><div><span class="eyebrow">PREPARAÇÃO FÍSICA</span><h2>Planos de treino</h2></div></div>
+      <div id="workoutList" class="content-grid"></div>
+    </section>
+
+    <section class="content-section" id="section-tips">
+      <div class="section-heading"><div><span class="eyebrow">CONHECIMENTO E MOTIVAÇÃO</span><h2>Dicas CT GULERA</h2></div></div>
+      <div id="tipsList" class="content-grid"></div>
+    </section>
+
+    <section class="content-section" id="section-progress">
+      <div class="section-heading"><div><span class="eyebrow">ACOMPANHA OS TEUS RESULTADOS</span><h2>A minha evolução</h2></div></div>
+      <form id="checkinForm" class="premium-form">
+        <h3>Novo registo de evolução</h3>
+        <div class="form-grid">
+          <label>Peso (kg)<input name="weightKg" type="number" min="20" max="350" step="0.1" placeholder="Ex.: 72.5"></label>
+          <label>Altura (cm)<input name="heightCm" type="number" min="80" max="250" step="0.1" placeholder="Ex.: 175"></label>
+          <label>Nível de energia (1–10)<input name="energyLevel" type="number" min="1" max="10" value="7"></label>
+          <label>Estado de espírito
+            <select name="mood"><option value="">Seleccionar</option><option>Excelente</option><option>Bom</option><option>Normal</option><option>Cansado</option><option>Desmotivado</option></select>
+          </label>
+        </div>
+        <label>Notas sobre a tua evolução<textarea name="notes" rows="3" maxlength="1500" placeholder="Como te sentiste nos treinos?"></textarea></label>
+        <button class="primary-button" type="submit">GUARDAR REGISTO</button>
+      </form>
+      <div class="subheading"><h3>Histórico</h3></div>
+      <div id="checkinsList" class="timeline"></div>
+    </section>
+
+    <section class="content-section" id="section-chat">
+      <div class="coach-chat-header">
+        <img src="assets/ct-gulera-avatar/ct-gulera-avatar.png" alt="CT GULERA">
+        <div><span class="eyebrow">O TEU ASSISTENTE FITNESS</span><h2>CT GULERA Chat</h2><p>Respostas automáticas e ligação ao treinador.</p></div>
+      </div>
+      <div id="chatMessages" class="chat-messages"></div>
+      <form id="chatForm" class="chat-form">
+        <textarea name="message" rows="2" maxlength="3000" required placeholder="Escreve a tua mensagem ao CT GULERA..."></textarea>
+        <button class="primary-button" type="submit">ENVIAR</button>
+      </form>
+      <button class="secondary-button" id="speakLast" type="button">🔊 Ouvir última resposta</button>
+
+      <form id="questionForm" class="premium-form question-form">
+        <h3>Quero falar com um treinador</h3>
+        <label>Assunto<input name="subject" maxlength="160" required placeholder="Ex.: Preparação para 10 km"></label>
+        <label>A tua pergunta<textarea name="question" rows="3" maxlength="3000" required placeholder="Explica o que precisas de orientação..."></textarea></label>
+        <button class="primary-button" type="submit">ENVIAR AO TREINADOR</button>
+      </form>
+    </section>
+
+    <section class="content-section" id="section-support">
+      <div class="section-heading"><div><span class="eyebrow">CONTACTO HUMANO</span><h2>Acompanhamento</h2></div></div>
+      <div id="announcementsList"></div>
+      <div class="subheading"><h3>Mensagens e respostas</h3></div>
+      <div id="supportMessages" class="timeline"></div>
+      <div class="subheading"><h3>As minhas perguntas</h3></div>
+      <div id="questionsList" class="content-grid"></div>
+    </section>
+  </section>
+
+  <section id="coachArea" class="hidden">
+    <div class="welcome-row">
+      <div><span class="eyebrow">ÁREA PROFISSIONAL</span><h2>Painel de acompanhamento</h2></div>
+      <span class="role-pill" id="coachRole">TREINADOR</span>
+    </div>
+    <div class="coach-dashboard">
+      <section class="premium-form">
+        <h3>Atletas sob acompanhamento</h3>
+        <p class="section-intro">Selecciona um atleta para consultar o histórico e responder às suas mensagens.</p>
+        <div id="coachAthletes" class="athlete-list"></div>
+      </section>
+      <section class="premium-form">
+        <h3>Histórico do atleta</h3>
+        <div id="selectedAthlete">Selecciona um atleta para consultar os dados.</div>
+        <div id="coachHistory"></div>
+        <form id="coachReplyForm" class="hidden">
+          <input type="hidden" name="athleteId">
+          <input type="hidden" name="questionId">
+          <label>Resposta ao atleta<textarea name="reply" rows="3" maxlength="3000" required></textarea></label>
+          <button class="primary-button" type="submit">RESPONDER À PERGUNTA</button>
+        </form>
+        <form id="coachMessageForm">
+          <label>Mensagem directa<textarea name="message" rows="3" maxlength="3000" required placeholder="Escreve uma mensagem privada..."></textarea></label>
+          <button class="primary-button" type="submit">ENVIAR MENSAGEM PRIVADA</button>
+        </form>
+      </section>
+    </div>
+
+    <section class="premium-form management-panel">
+      <h3>Gestão de conteúdos CT GULERA</h3>
+      <p class="section-intro">Cria e publica planos profissionais. Os planos de nutrição devem ser preparados pelo profissional responsável.</p>
+
+      <form id="planForm" class="premium-form">
+        <h4>Criar plano</h4>
+        <label>Tipo de plano
+          <select name="type" required>
+            <option value="workout">Plano de treino</option>
+            <option value="nutrition">Plano de nutrição</option>
+          </select>
+        </label>
+        <label>Título<input name="title" maxlength="160" required></label>
+        <label>Descrição<textarea name="description" rows="2" maxlength="1500"></textarea></label>
+        <label>Conteúdo do plano (formato JSON)
+          <textarea name="content" rows="6" required placeholder='{"Semana 1":"Descrição do plano"}'>{}</textarea>
+        </label>
+        <label>Estado
+          <select name="status">
+            <option value="DRAFT">Rascunho</option>
+            <option value="PUBLISHED">Publicado</option>
+          </select>
+        </label>
+        <button class="primary-button" type="submit">GUARDAR PLANO</button>
+      </form>
+
+      <form id="tipForm" class="premium-form">
+        <h4>Publicar dica CT GULERA</h4>
+        <label>Título<input name="title" maxlength="160" required></label>
+        <label>Categoria<input name="category" maxlength="80" placeholder="Ex.: Corrida, recuperação, motivação"></label>
+        <label>Conteúdo<textarea name="content" rows="3" maxlength="3000" required></textarea></label>
+        <button class="primary-button" type="submit">PUBLICAR DICA</button>
+      </form>
+
+      <div id="managementContent" class="management-data"></div>
+    </section>
+
+    <section id="adminTools" class="premium-form management-panel hidden">
+      <h3>Administração PGrowth Fitness</h3>
+
+      <form id="manageCoachForm" class="premium-form">
+        <h4>Registar ou actualizar treinador</h4>
+        <label>Conta do treinador<select name="userId" required><option value="">Selecciona uma conta...</option></select></label>
+        <label>Nome apresentado<input name="displayName" maxlength="120" required></label>
+        <label>Estado
+          <select name="active">
+            <option value="true">Activo</option>
+            <option value="false">Desactivar</option>
+          </select>
+        </label>
+        <button class="primary-button" type="submit">GUARDAR TREINADOR</button>
+      </form>
+
+      <form id="assignPlanForm" class="premium-form">
+        <h4>Atribuir plano a atleta</h4>
+        <label>Atleta<select name="athleteId" required><option value="">Selecciona um atleta...</option></select></label>
+        <label>Tipo
+          <select name="type">
+            <option value="workout">Plano de treino</option>
+            <option value="nutrition">Plano de nutrição</option>
+          </select>
+        </label>
+        <label>Plano<select name="planId" required><option value="">Selecciona um plano...</option></select></label>
+        <label>Observações<textarea name="notes" rows="2" maxlength="1000"></textarea></label>
+        <button class="primary-button" type="submit">ATRIBUIR PLANO</button>
+      </form>
+
+      <form id="assignCoachForm" class="premium-form">
+        <h4>Atribuir treinador a atleta</h4>
+        <label>Atleta<select name="athleteId" required><option value="">Selecciona um atleta...</option></select></label>
+        <label>Treinador<select name="coachUserId" required><option value="">Selecciona um treinador...</option></select></label>
+        <button class="primary-button" type="submit">ATRIBUIR TREINADOR</button>
+      </form>
+
+      <form id="broadcastForm" class="premium-form">
+        <h4>Comunicado para atletas Premium</h4>
+        <label>Título<input name="title" maxlength="160" required></label>
+        <label>Mensagem<textarea name="message" rows="3" maxlength="3000" required></textarea></label>
+        <button class="primary-button" type="submit">PUBLICAR COMUNICADO</button>
+      </form>
+    </section>
+  </section>
+</main>
+
+<div id="toast" class="toast" role="status"></div>
+
+<script src="js/session.js"></script>
+<script type="module" src="js/premium.js"></script>
+</body>
+</html>
