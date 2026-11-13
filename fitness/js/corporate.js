@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const API = 'https://pgrowth-events-fitness-api.vercel.app/api/corporate';
+  const API = "https://pgrowth-events-fitness-api.vercel.app/api/corporate";
   const ROOT_ID = 'pgrowth-corporate-root';
 
   if (document.getElementById(ROOT_ID)) return;
