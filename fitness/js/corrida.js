@@ -341,6 +341,11 @@
 
       history.push(record);
       localStorage.setItem(historyKey, JSON.stringify(history));
+
+      window.dispatchEvent(new CustomEvent("pgrowth:run-saved", {
+        detail: record
+      }));
+
       return true;
     } catch (error) {
       console.error("Erro ao guardar corrida:", error);

@@ -85,6 +85,34 @@ async function fitnessRequest(action, method = 'GET', payload = {}) {
   return data;
 }
 
+
+async function fitnessSyncActivities(activities) {
+  const token = await fitnessToken();
+  const endpoint = FITNESS_API.replace(/\/api\/pass(?:\?.*)?$/, "/api/activities");
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ activities })
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (response.status === 401) {
+    sessionStorage.removeItem(FITNESS_SESSION_KEY);
+    throw new Error("A sessão expirou. Entre novamente.");
+  }
+
+  if (!response.ok) {
+    throw new Error(data.error || "Não foi possível sincronizar as corridas.");
+  }
+
+  return data;
+}
+
 async function fitnessLogout() {
   const session = fitnessReadSession();
 
@@ -120,6 +148,7 @@ window.PGrowthSession = {
   read: fitnessReadSession,
   token: fitnessToken,
   request: fitnessRequest,
+  syncActivities: fitnessSyncActivities,
   logout: fitnessLogout
 };
 
