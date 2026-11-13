@@ -196,6 +196,29 @@ export default async function handler(req, res) {
       return send(res, 200, { success: true, companies, pending_payments: payments });
     }
 
+    // EMPRESA: CRIAR CONTRATO COM PREÇO FIXO DEFINIDO NO SERVIDOR
+    if (action === "CREATE_COMPANY_CONTRACT") {
+      const companyId = required(body.company_id, "Empresa");
+      await requireManager(companyId, userId);
+
+      const prices = { MONTHLY: 1200, QUARTERLY: 1800, ANNUAL: 2000 };
+      const period = required(body.period_type, "Período");
+      if (!Object.prototype.hasOwnProperty.call(prices, period)) {
+        throw new Error("Período contratual inválido.");
+      }
+
+      const record = await db("fitness_company_contracts", "POST", {
+        company_id: companyId,
+        period_type: period,
+        price_mzn: prices[period],
+        currency: "MZN",
+        collaborators_limit: null,
+        status: "PENDING_PAYMENT",
+        created_by: userId
+      });
+      return send(res, 201, { success: true, contract: record[0] });
+    }
+
     // ADMIN: DEFINIR PREÇO E PERÍODO DO CONTRATO
     if (action === "ADMIN_SET_CONTRACT") {
       if (!(await isAdmin(userId))) throw new Error("Acesso reservado ao administrador PGrowth.");

@@ -189,18 +189,32 @@
       </div>
 
       <div class="corp-card">
-        <h3>Contrato empresarial</h3>
-        <p class="corp-muted">Preço fixo negociado por período. Colaboradores ilimitados. O acesso só é activado após aprovação manual do pagamento pela administração PGrowth.</p>
+        <h3>Escolher contrato empresarial</h3>
+        <p class="corp-muted">O acesso só será activado após aprovação manual do pagamento pela administração PGrowth.</p>
+        <div class="corp-grid">
+          <div class="corp-item"><strong>Mensal</strong><h3>1.200 MT</h3></div>
+          <div class="corp-item"><strong>Trimestral</strong><h3>1.800 MT</h3></div>
+          <div class="corp-item"><strong>Anual</strong><h3>2.000 MT</h3></div>
+        </div>
+        <form id="corp-contract-request">
+          ${selectField('Período do contrato','period_type',[
+            {value:'MONTHLY',label:'Mensal · 1.200 MT'},
+            {value:'QUARTERLY',label:'Trimestral · 1.800 MT'},
+            {value:'ANNUAL',label:'Anual · 2.000 MT'}
+          ])}
+          <button class="primary" type="submit">ESCOLHER CONTRATO</button>
+        </form>
+        <h3>Contratos da empresa</h3>
         ${listItems(contracts, c => `
           <div class="corp-item">
-            <strong>${escapeHtml(c.period || 'Período')}</strong> · ${escapeHtml(c.amount_mzn ?? '—')} MT
+            <strong>${escapeHtml(c.period_type || 'Período')}</strong> · ${escapeHtml(c.price_mzn ?? '—')} MT
             <span class="corp-pill">${escapeHtml(c.status || 'PENDING')}</span>
             <div class="corp-muted">${escapeHtml(c.starts_at || 'Por iniciar')} ${c.ends_at ? ' — ' + escapeHtml(c.ends_at) : ''}</div>
           </div>
         `)}
         <form id="corp-payment">
           <h3>Submeter pagamento</h3>
-          ${selectField('Contrato','contract_id',contracts.map(c => ({value:c.id,label:`${c.period} · ${c.amount_mzn} MT · ${c.status}`})))}
+          ${selectField('Contrato','contract_id',contracts.filter(c => c.status === 'PENDING_PAYMENT').map(c => ({value:c.id,label:`${c.period_type} · ${c.price_mzn} MT`})))}
           ${field('Valor pago (MT)','amount_mzn','number')}
           ${selectField('Método de pagamento','payment_method',[
             {value:'MPESA',label:'M-Pesa'},
@@ -208,7 +222,8 @@
             {value:'BANK',label:'Transferência bancária'},
             {value:'CASH',label:'Numerário'}
           ])}
-          ${field('Referência / comprovativo (URL)','proof_url','url',false)}
+          ${field('Referência do pagamento','payment_reference')}
+          ${field('URL do comprovativo (opcional)','proof_url','url',false)}
           <button class="primary" type="submit">SUBMETER PAGAMENTO</button>
         </form>
       </div>
@@ -384,7 +399,16 @@
           await loadCompanies();
           break;
 
-        case 'corp-payment':
+        case 'corp-contract-request':
+        result = await request('CREATE_COMPANY_CONTRACT', {
+          company_id: currentCompany.id,
+          period_type: data.period_type
+        });
+        notify('Contrato escolhido. Submeta agora o pagamento para aprovação.', 'success');
+        await loadDashboard(currentCompany.id);
+        break;
+
+      case 'corp-payment':
           data.amount_mzn = Number(data.amount_mzn);
           result = await request('SUBMIT_PAYMENT', {
             ...data,
@@ -432,11 +456,16 @@
           break;
 
         case 'corp-admin-contract':
-          data.amount_mzn = Number(data.amount_mzn);
-          result = await request('ADMIN_SET_CONTRACT', data);
-          notify('Contrato criado.', 'success');
-          await adminView();
-          break;
+        result = await request('ADMIN_SET_CONTRACT', {
+          company_id: data.company_id,
+          period_type: data.period,
+          price_mzn: Number(data.amount_mzn),
+          starts_at: data.starts_at,
+          ends_at: data.ends_at
+        });
+        notify('Contrato criado.', 'success');
+        await adminView();
+        break;
       }
     } catch (error) {
       notify(error.message || 'Ocorreu um erro.', 'error');
