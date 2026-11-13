@@ -292,7 +292,11 @@ async function loadData() {
   loading = true;
 
   try {
-    const session = window.PGrowthSession.read();
+    const sessionApi = window.PGrowthSession;
+    if (!sessionApi || typeof sessionApi.read !== "function") {
+      throw new Error("Sistema de sessão não carregou. Actualiza a página.");
+    }
+    const session = sessionApi.read();
     userId = session?.user?.id || '';
 
     if (!userId) {
