@@ -371,7 +371,15 @@
 
       switch (form.id) {
         case 'corp-register':
-          result = await request('REGISTER_COMPANY', data);
+          result = await request('REGISTER_COMPANY', {
+  name: data.company_name,
+  nuit: data.nuit,
+  industry: data.industry,
+  contact_name: data.contact_name,
+  contact_phone: data.phone,
+  contact_email: data.email,
+  city: data.location
+});
           notify('Empresa registada. Aguarde a configuração e aprovação do contrato.', 'success');
           await loadCompanies();
           break;
