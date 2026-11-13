@@ -579,7 +579,7 @@ async function submitActivity(userId, input) {
       activity_date: input.activityDate || new Date().toISOString(),
       timezone: "Africa/Maputo",
       route: Array.isArray(input.route) ? input.route : [],
-      verification_stat: "PENDING"
+      verification_status: "PENDING"
     }
   });
 
@@ -597,7 +597,7 @@ async function rankings() {
 
   const activities = await db(
     TABLES.activities,
-    "?verification_stat=eq.VERIFIED&select=team_id,athlete_id,distance_km"
+    "?verification_status=eq.VERIFIED&select=team_id,athlete_id,distance_km"
   );
 
   const totals = {};
