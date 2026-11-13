@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 
-const API = 'https://pgrowth-events-fitness-api.vercel.app/api/teams';
+const API = "https://pgrowth-events-fitness-api.vercel.app/api/teams";
 const RUNS = 'pgrowth_fitness_run_history_v1';
 const PROFILE = 'pgrowth_fitness_athlete_profile_v1';
 const INVITES = 'pgrowth_fitness_team_invites_v1';
