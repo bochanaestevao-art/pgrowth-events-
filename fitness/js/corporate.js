@@ -72,15 +72,15 @@
     message.className = 'corp-status' + (type ? ' ' + type : '');
   }
 
-  function sessionToken() {
+  async function sessionToken() {
     if (window.PGrowthSession && typeof window.PGrowthSession.token === 'function') {
-      return window.PGrowthSession.token();
+      return await window.PGrowthSession.token();
     }
     return null;
   }
 
   async function request(action, data = {}) {
-    const token = sessionToken();
+    const token = await sessionToken();
     if (!token) throw new Error('A sessão expirou. Entre novamente na sua conta PGrowth.');
 
     const response = await fetch(API, {
