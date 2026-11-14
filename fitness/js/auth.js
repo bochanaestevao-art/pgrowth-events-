@@ -253,7 +253,8 @@ form.addEventListener('submit', async (event) => {
       detail: { user: result.user }
     }));
 
-    window.location.href = 'index.html';
+    const requestedNext = new URLSearchParams(window.location.search).get('next');
+    window.location.href = requestedNext === 'admin.html' ? 'admin.html' : 'index.html';
 
   } catch (error) {
     showMessage(error.message || 'Ocorreu um erro.', true);

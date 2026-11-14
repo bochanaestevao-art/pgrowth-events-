@@ -40,7 +40,11 @@ async function request(api, action, method='GET', payload={}) {
 
   const response = await fetch(url, options);
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || data.message || `Erro HTTP ${response.status}`);
+  if (!response.ok) {
+    const error = new Error(data.error || data.message || `Erro HTTP ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
   return data;
 }
 
@@ -161,6 +165,15 @@ async function loadCommissions() {
 
 async function loadAll() {
   $('refresh').disabled = true;
+
+  try {
+    await request('premium', 'coach-requests');
+    $('adminLogin').hidden = true;
+  } catch (error) {
+    $('refresh').disabled = false;
+    throw error;
+  }
+
   message('A carregar dados administrativos...');
   const jobs = [
     ['Passes',loadPasses],
@@ -219,7 +232,17 @@ document.addEventListener('click', event => {
   if (button) perform(button);
 });
 
-$('refresh').addEventListener('click', loadAll);
+$('refresh').addEventListener('click', () => {
+  loadAll().catch(error => {
+    $('adminLogin').hidden = error.status === 403;
+    message(
+      error.status === 403
+        ? 'Acesso recusado. Esta conta não possui permissões administrativas.'
+        : error.message + ' Entra na tua conta PGrowth.',
+      'error'
+    );
+  });
+});
 $('logout').addEventListener('click', async () => {
   if (!confirm('Queres terminar a sessão PGrowth?')) return;
   try { await window.PGrowthSession?.logout?.(); } catch {}
@@ -231,7 +254,13 @@ $('logout').addEventListener('click', async () => {
     await token();
     await loadAll();
   } catch (error) {
-    message(error.message + ' Acede primeiro à tua conta PGrowth.', 'error');
+    $('adminLogin').hidden = error.status === 403;
+    message(
+      error.status === 403
+        ? 'Acesso recusado. Esta conta não possui permissões administrativas.'
+        : error.message + ' Acede primeiro à tua conta PGrowth.',
+      'error'
+    );
     $('passQueue').innerHTML = '<div class="empty">Sessão necessária.</div>';
     $('coachQueue').innerHTML = '<div class="empty">Sessão necessária.</div>';
     $('companyQueue').innerHTML = '<div class="empty">Sessão necessária.</div>';
