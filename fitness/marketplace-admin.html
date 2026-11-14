@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#07130e">
+<title>Admin Marketplace | PGrowth Fitness</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+:root{--gold:#d8b45b;--bg:#07130e;--panel:#101e17;--muted:#a8b6ad}
+body{background:var(--bg);color:#f5f5f5}
+main{max-width:1150px;margin:30px auto;padding:18px}
+.panel{background:var(--panel);border:1px solid #34483a;border-radius:14px;padding:20px;margin:18px 0}
+h1{font-size:clamp(25px,5vw,40px)}
+.eyebrow{color:var(--gold);letter-spacing:2px;font-size:12px;font-weight:bold}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:20px 0}
+button{background:var(--gold);color:#111;border:0;border-radius:8px;padding:11px 15px;font-weight:bold;cursor:pointer}
+button.secondary{background:#263a2d;color:white}
+button.danger{background:#7e3030;color:white}
+input,select,textarea{display:block;width:100%;box-sizing:border-box;margin:6px 0 14px;padding:11px;border:1px solid #465a4b;border-radius:8px;background:#09140e;color:white;font:inherit}
+label{display:block;color:#dce5de;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.item{padding:15px;border:1px solid #34483a;border-radius:10px;margin:12px 0;overflow-wrap:anywhere}
+.muted{color:var(--muted);line-height:1.6}
+.hidden{display:none!important}
+.status{color:var(--gold);font-weight:bold}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="index.html"><span class="brand-icon">P</span><span>PGrowth <strong>Fitness</strong></span></a>
+<a class="back-link" href="explorar.html">← Explorar</a>
+</header>
+<main>
+<span class="eyebrow">ÁREA RESTRITA</span>
+<h1>Gestão do Marketplace</h1>
+<p class="muted">Publicação de eventos, gestão da Loja Desportiva e validação de pagamentos. Acesso reservado à administração PGrowth.</p>
+<div id="message" class="panel">A verificar sessão e permissões...</div>
+<div id="adminArea" class="hidden">
+<nav class="tabs">
+<button data-tab="events">EVENTOS</button>
+<button data-tab="products">PRODUTOS</button>
+<button data-tab="orders">ENCOMENDAS</button>
+<button class="secondary" id="refresh">ACTUALIZAR</button>
+</nav>
+
+<section id="eventsTab" class="panel">
+<h2>Publicar / editar evento</h2>
+<form id="eventForm">
+<input type="hidden" name="id">
+<div class="grid">
+<label>Título<input name="title" minlength="3" maxlength="160" required></label>
+<label>Categoria<input name="category" value="EVENTO" maxlength="80"></label>
+<label>Localização<input name="location" maxlength="250" placeholder="Cidade, local"></label>
+<label>Cartaz — URL da imagem<input name="poster_url" type="url" placeholder="https://..."></label>
+<label>Data e hora de início<input name="start_at" type="datetime-local"></label>
+<label>Data e hora de fim<input name="end_at" type="datetime-local"></label>
+<label>Contacto<input name="contact_info" maxlength="300"></label>
+<label>Link de inscrição / informação<input name="registration_url" type="url"></label>
+</div>
+<label>Descrição<textarea name="description" rows="4" maxlength="10000"></textarea></label>
+<label>Estado<select name="status"><option value="DRAFT">Rascunho</option><option value="PUBLISHED">Publicado</option><option value="ARCHIVED">Arquivado</option></select></label>
+<div class="actions"><button type="submit">GUARDAR EVENTO</button><button type="reset" class="secondary" id="clearEvent">NOVO EVENTO</button></div>
+</form>
+<h3>Eventos registados</h3><div id="eventList"></div>
+</section>
+
+<section id="productsTab" class="panel hidden">
+<h2>Adicionar / editar produto</h2>
+<form id="productForm">
+<input type="hidden" name="id">
+<div class="grid">
+<label>Nome do produto<input name="name" minlength="2" maxlength="160" required></label>
+<label>Categoria<input name="category" value="DESPORTO" maxlength="80"></label>
+<label>Preço (MT)<input name="price_mzn" type="number" min="0" step="0.01" required></label>
+<label>Quantidade em stock<input name="stock_quantity" type="number" min="0" step="1" required></label>
+<label>Imagem — URL<input name="image_url" type="url" placeholder="https://..."></label>
+<label>Estado<select name="status"><option value="DRAFT">Rascunho</option><option value="PUBLISHED">Publicado</option><option value="ARCHIVED">Arquivado</option></select></label>
+</div>
+<label>Descrição<textarea name="description" rows="4" maxlength="10000"></textarea></label>
+<div class="actions"><button type="submit">GUARDAR PRODUTO</button><button type="reset" class="secondary" id="clearProduct">NOVO PRODUTO</button></div>
+</form>
+<h3>Produtos registados</h3><div id="productList"></div>
+</section>
+
+<section id="ordersTab" class="panel hidden">
+<h2>Encomendas e comprovativos</h2>
+<p class="muted">Os dados do comprador e os comprovativos são visíveis apenas nesta área autenticada. A aprovação desconta o stock automaticamente.</p>
+<div id="orderList"></div>
+</section>
+</div>
+</main>
+<script src="js/session.js"></script>
+<script>
+const API='https://pgrowth-events-fitness-api.vercel.app/api/marketplace';
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let events=[],products=[],orders=[];
+function message(t){$('#message').textContent=t;}
+async function request(action,payload=null){
+ const token=await PGrowthSession.token();
+ const options=payload===null
+  ?{headers:{Authorization:'Bearer '+token},cache:'no-store'}
+  :{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({action,...payload})};
+ const r=await fetch(payload===null?API+'?action='+encodeURIComponent(action):API,options);
+ const d=await r.json().catch(()=>({}));
+ if(!r.ok)throw Error(d.error||'Operação não concluída.');
+ return d;
+}
+function showTab(name){
+ ['events','products','orders'].forEach(k=>$('#'+k+'Tab').classList.toggle('hidden',k!==name));
+}
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+$('#refresh').onclick=()=>loadAll();
+function fillForm(form,obj){
+ for(const [key,value] of Object.entries(obj)){
+  const el=form.elements.namedItem(key);if(!el)continue;
+  if(el.type==='datetime-local'&&value){
+   const d=new Date(value);el.value=new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  }else el.value=value??'';
+ }
+}
+function renderEvents(){
+ $('#eventList').innerHTML=events.map(e=>`
+ <article class="item"><strong>${esc(e.title)}</strong><p class="muted">${esc(e.location)} · ${esc(e.status)}</p>
+ <div class="actions"><button type="button" data-edit-event="${esc(e.id)}">EDITAR</button>
+ ${e.status!=='ARCHIVED'?`<button type="button" class="danger" data-archive-event="${esc(e.id)}">ARQUIVAR</button>`:''}</div></article>`).join('')||'<p class="muted">Sem eventos.</p>';
+}
+function renderProducts(){
+ $('#productList').innerHTML=products.map(p=>`
+ <article class="item"><strong>${esc(p.name)}</strong><p class="muted">${Number(p.price_mzn).toLocaleString('pt-MZ')} MT · Stock: ${p.stock_quantity} · ${esc(p.status)}</p>
+ <div class="actions"><button type="button" data-edit-product="${esc(p.id)}">EDITAR</button>
+ ${p.status!=='ARCHIVED'?`<button type="button" class="danger" data-archive-product="${esc(p.id)}">ARQUIVAR</button>`:''}</div></article>`).join('')||'<p class="muted">Sem produtos.</p>';
+}
+function renderOrders(){
+ $('#orderList').innerHTML=orders.map(o=>`
+ <article class="item">
+ <div class="status">${esc(o.payment_status)} · ${esc(o.order_reference)}</div>
+ <h3>${esc(o.product_name)} × ${o.quantity}</h3>
+ <p><strong>Comprador:</strong> ${esc(o.buyer_name)}<br>
+ <strong>Telefone:</strong> ${esc(o.phone)}<br>
+ <strong>Pagamento:</strong> ${esc(o.payment_method)}<br>
+ <strong>Total:</strong> ${Number(o.total_amount_mzn).toLocaleString('pt-MZ')} MT<br>
+ <strong>Data:</strong> ${esc(new Date(o.created_at).toLocaleString('pt-MZ'))}</p>
+ <p><strong>Código:</strong> ${esc(o.transfer_code||'Não indicado')}</p>
+ <p><strong>SMS:</strong><br><span class="muted">${esc(o.payment_message||'Não indicado')}</span></p>
+ ${o.payment_status==='PENDING'?`
+ <label>Nota administrativa<textarea id="note-${esc(o.id)}" rows="2" maxlength="1000"></textarea></label>
+ <div class="actions"><button type="button" data-review="${esc(o.id)}" data-decision="APPROVED">APROVAR PAGAMENTO</button>
+ <button type="button" class="danger" data-review="${esc(o.id)}" data-decision="REJECTED">REJEITAR</button></div>`:
+ `<p class="muted">Analisada em: ${esc(o.reviewed_at||'—')} · Nota: ${esc(o.admin_note||'—')}</p>`}
+ </article>`).join('')||'<p class="muted">Ainda não existem encomendas.</p>';
+}
+async function loadAll(){
+ message('A actualizar dados...');
+ try{
+  const [a,b,c]=await Promise.all([request('admin-events'),request('admin-products'),request('admin-orders')]);
+  events=a.events||[];products=b.products||[];orders=c.orders||[];
+  renderEvents();renderProducts();renderOrders();message('Acesso administrativo confirmado. Dados actualizados.');
+ }catch(e){message(e.message);}
+}
+$('#eventForm').onsubmit=async e=>{
+ e.preventDefault();const f=e.currentTarget;const p=Object.fromEntries(new FormData(f).entries());
+ for(const k of ['start_at','end_at'])if(p[k])p[k]=new Date(p[k]).toISOString();else p[k]=null;
+ try{await request('admin-save-event',p);f.reset();f.elements.id.value='';await loadAll();showTab('events');}
+ catch(err){message(err.message);}
+};
+$('#productForm').onsubmit=async e=>{
+ e.preventDefault();const f=e.currentTarget;const p=Object.fromEntries(new FormData(f).entries());
+ p.price_mzn=Number(p.price_mzn);p.stock_quantity=Number(p.stock_quantity);
+ try{await request('admin-save-product',p);f.reset();f.elements.id.value='';await loadAll();showTab('products');}
+ catch(err){message(err.message);}
+};
+$('#clearEvent').onclick=()=>setTimeout(()=>$('#eventForm').elements.id.value='',0);
+$('#clearProduct').onclick=()=>setTimeout(()=>$('#productForm').elements.id.value='',0);
+document.addEventListener('click',async e=>{
+ const t=e.target;
+ try{
+  if(t.dataset.editEvent){
+   const item=events.find(x=>x.id===t.dataset.editEvent);if(item){fillForm($('#eventForm'),item);showTab('events');window.scrollTo(0,0);}
+  }
+  if(t.dataset.editProduct){
+   const item=products.find(x=>x.id===t.dataset.editProduct);if(item){fillForm($('#productForm'),item);showTab('products');window.scrollTo(0,0);}
+  }
+  if(t.dataset.archiveEvent||t.dataset.archiveProduct){
+   if(!confirm('Pretendes arquivar este registo?'))return;
+   await request(t.dataset.archiveEvent?'admin-archive-event':'admin-archive-product',{id:t.dataset.archiveEvent||t.dataset.archiveProduct});
+   await loadAll();
+  }
+  if(t.dataset.review){
+   const decision=t.dataset.decision;
+   const note=$('#note-'+t.dataset.review)?.value||'';
+   const question=decision==='APPROVED'?'Confirmas que o pagamento foi verificado e recebido?':'Confirmas a rejeição deste comprovativo?';
+   if(!confirm(question))return;
+   t.disabled=true;
+   await request('admin-review-order',{orderId:t.dataset.review,decision,adminNote:note});
+   await loadAll();showTab('orders');
+  }
+ }catch(err){message(err.message);}
+});
+async function start(){
+ try{
+  if(!window.PGrowthSession)throw Error('Sessão PGrowth indisponível.');
+  await PGrowthSession.token();
+  $('#adminArea').classList.remove('hidden');
+  await loadAll();
+ }catch(e){message(e.message+' Entra na tua conta administrativa PGrowth e volta a abrir esta página.');}
+}
+start();
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#07130e">
+<title>Marketplace de Eventos | PGrowth Fitness</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+:root{--gold:#d8b45b;--bg:#07130e;--panel:#101e17;--muted:#a8b6ad}
+body{background:var(--bg);color:#f5f5f5}
+.market{max-width:1100px;margin:35px auto;padding:20px}
+.hero{padding:35px 25px;border:1px solid #3b4b3f;border-radius:18px;background:linear-gradient(130deg,#14271b,#080d0a)}
+.eyebrow{color:var(--gold);letter-spacing:3px;font-size:12px;font-weight:bold}
+h1{font-size:clamp(30px,6vw,52px);margin:12px 0}
+.hero p,.muted{color:var(--muted);line-height:1.6}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:25px}
+.card{background:var(--panel);border:1px solid #2c4033;border-radius:15px;overflow:hidden}
+.card img{width:100%;height:190px;object-fit:cover;background:#18251d}
+.content{padding:18px}
+.content h2{margin:5px 0 10px;font-size:21px}
+.meta{color:var(--gold);font-size:13px;line-height:1.8}
+button,.linkbtn{background:var(--gold);color:#111;border:0;padding:12px 17px;border-radius:9px;font-weight:bold;cursor:pointer;text-decoration:none;display:inline-block}
+.notice{padding:16px;background:#14271b;border-radius:10px;margin:20px 0;color:var(--muted)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+a{color:var(--gold)}
+</style>
+</head>
+<body>
+<header class="topbar">
+<a class="brand" href="index.html"><span class="brand-icon">P</span><span>PGrowth <strong>Fitness</strong></span></a>
+<a class="back-link" href="explorar.html">← Explorar</a>
+</header>
+<main class="market">
+<section class="hero">
+<span class="eyebrow">PGROWTH FITNESS · COMUNIDADE</span>
+<h1>Marketplace de <span style="color:var(--gold)">Eventos</span></h1>
+<p>Descobre actividades, competições, encontros e experiências desportivas divulgadas pela PGrowth.</p>
+</section>
+<div class="top" style="margin-top:28px">
+<div><span class="eyebrow">AGENDA DA COMUNIDADE</span><h2>Eventos publicados</h2></div>
+<a class="linkbtn" href="marketplace-admin.html">Gestão administrativa</a>
+</div>
+<div id="message" class="notice">A carregar eventos...</div>
+<section id="events" class="grid"></section>
+</main>
+<script>
+const API='https://pgrowth-events-fitness-api.vercel.app/api/marketplace';
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function date(v){if(!v)return 'Data a anunciar';const d=new Date(v);return isNaN(d)?'Data a anunciar':d.toLocaleString('pt-MZ',{dateStyle:'medium',timeStyle:'short'});}
+async function load(){
+ const box=document.getElementById('message');
+ try{
+  const r=await fetch(API+'?action=events',{cache:'no-store'});
+  const d=await r.json();if(!r.ok)throw Error(d.error||'Não foi possível carregar os eventos.');
+  const items=d.events||[];
+  box.textContent=items.length?`${items.length} evento(s) disponível(is).`:'Ainda não existem eventos publicados.';
+  document.getElementById('events').innerHTML=items.map(e=>`
+   <article class="card">
+    ${e.poster_url?`<img src="${esc(e.poster_url)}" alt="${esc(e.title)}" loading="lazy">`:''}
+    <div class="content">
+     <span class="eyebrow">${esc(e.category)}</span>
+     <h2>${esc(e.title)}</h2>
+     <div class="meta">📅 ${esc(date(e.start_at))}<br>📍 ${esc(e.location||'Local a anunciar')}</div>
+     <p>${esc(e.description)}</p>
+     ${e.contact_info?`<p class="muted">Contacto: ${esc(e.contact_info)}</p>`:''}
+     ${e.registration_url?`<a class="linkbtn" href="${esc(e.registration_url)}" target="_blank" rel="noopener">Saber mais / Inscrever</a>`:''}
+    </div>
+   </article>`).join('');
+ }catch(e){box.textContent=e.message;}
+}
+load();
+</script>
+</body>
+</html>
