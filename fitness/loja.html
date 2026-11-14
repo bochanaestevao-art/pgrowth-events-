@@ -78,9 +78,8 @@ a{color:var(--gold)}
 <div class="muted" id="paymentLabel">M-Pesa · PGrowth Fitness</div>
 <p class="muted">Confirma o nome e o número do destinatário na aplicação antes de transferir.</p>
 </div>
-<label>Código da transferência<input name="transferCode" maxlength="150" placeholder="Código da transacção, se disponível"></label>
-<label>SMS completo de confirmação<textarea name="paymentMessage" rows="4" maxlength="10000" placeholder="Cola aqui o SMS recebido após a transferência."></textarea></label>
-<p class="muted">É obrigatório preencher o código ou o SMS de confirmação.</p>
+<label>SMS completo de confirmação do pagamento<textarea name="paymentMessage" rows="5" maxlength="10000" required placeholder="Cola aqui a mensagem completa recebida após o pagamento."></textarea></label>
+<p class="muted">É obrigatório enviar a mensagem completa de confirmação do pagamento.</p>
 <div id="total" class="price">Total: — MT</div>
 <button type="submit" id="submitOrder">ENVIAR ENCOMENDA</button>
 <div id="orderMessage" class="notice" hidden></div>
@@ -146,8 +145,8 @@ $('#orderForm').onsubmit=async e=>{
  const fd=new FormData(f);
  const payload=Object.fromEntries(fd.entries());
  payload.quantity=Number(payload.quantity);
- if(!payload.transferCode.trim()&&!payload.paymentMessage.trim()){
-  msg.hidden=false;msg.textContent='Introduza o código ou o SMS de confirmação.';return;
+ if(!payload.paymentMessage || payload.paymentMessage.trim().length < 12){
+  msg.hidden=false;msg.textContent='Cola o SMS completo de confirmação do pagamento.';return;
  }
  btn.disabled=true;btn.textContent='A ENVIAR...';
  try{

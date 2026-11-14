@@ -5,9 +5,7 @@ const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 
-const ALLOWED_ORIGINS = new Set([
-  'https://pgrowth-events.vercel.app'
-]);
+const ALLOWED_ORIGINS = new Set(["https://pgrowth-events.vercel.app","https://pgrowth-admin.vercel.app"]);
 
 function applyCors(req, res) {
   const origin = req.headers.origin || '';
@@ -186,7 +184,6 @@ export default async function handler(req, res) {
       const phone = clean(body.phone, 30);
       const paymentMethod = clean(body.paymentMethod, 20).toUpperCase();
       const paymentMessage = clean(body.paymentMessage, 10000);
-      const transferCode = clean(body.transferCode, 150);
 
       if (!['DIARIO', 'SEMANAL', 'QUINZENAL', 'MENSAL'].includes(planCode)) {
         return send(res, 400, { error: 'Pacote inválido.' });
@@ -204,9 +201,9 @@ export default async function handler(req, res) {
         return send(res, 400, { error: 'Método de pagamento inválido.' });
       }
 
-      if (!paymentMessage && !transferCode) {
+      if (paymentMessage.length < 12) {
         return send(res, 400, {
-          error: 'Introduza o SMS de confirmação ou o código da transferência.'
+          error: 'Cole o SMS completo de confirmação do pagamento.'
         });
       }
 
@@ -247,8 +244,8 @@ export default async function handler(req, res) {
         buyer_name: buyerName,
         phone,
         payment_method: paymentMethod,
-        payment_message: paymentMessage || null,
-        transfer_code: transferCode || null,
+        payment_message: paymentMessage,
+        transfer_code: null,
         plan_id: plan.id,
         plan_name: plan.name,
         duration_days: plan.duration_days,

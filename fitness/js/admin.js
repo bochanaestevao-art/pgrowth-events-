@@ -82,7 +82,7 @@ async function loadPasses() {
     [
       `Plano: ${o.plan_name || '—'} · Valor: ${o.requested_amount ?? '—'} MT`,
       `Referência: ${o.order_reference || o.id || '—'}`,
-      `Pagamento: ${o.payment_method || '—'} · Comprovativo: ${o.transfer_code || o.payment_message || '—'}`,
+      `Pagamento: ${o.payment_method || '—'} · SMS de confirmação: ${o.payment_message || 'Não disponível'}`,
       `Data: ${date(o.created_at)}`
     ],
     actionButton('APROVAR','pass-review',o.id,'APPROVED') +
@@ -136,7 +136,7 @@ async function loadOrders() {
     [
       `Cliente: ${o.buyer_name || '—'} · Telefone: ${o.phone || '—'}`,
       `Quantidade: ${o.quantity || 0} · Total: ${o.total_amount_mzn ?? '—'} MT`,
-      `Pagamento: ${o.payment_method || '—'} · Comprovativo: ${o.transfer_code || o.payment_message || '—'}`,
+      `Pagamento: ${o.payment_method || '—'} · SMS de confirmação: ${o.payment_message || 'Não disponível'}`,
       `Estado: ${o.payment_status || '—'} · ${date(o.created_at)}`
     ],
     o.payment_status === 'PENDING'

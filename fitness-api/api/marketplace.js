@@ -4,7 +4,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL
   ? new URL(process.env.SUPABASE_URL).origin : '';
 const ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const ORIGIN = 'https://pgrowth-events.vercel.app';
+const ALLOWED_ORIGINS = new Set(["https://pgrowth-events.vercel.app","https://pgrowth-admin.vercel.app"]);
 
 function send(res, status, data) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -13,8 +13,9 @@ function send(res, status, data) {
 }
 
 function cors(req, res) {
-  if (req.headers.origin === ORIGIN) {
-    res.setHeader('Access-Control-Allow-Origin', ORIGIN);
+  const origin = req.headers.origin || '';
+  if (ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
   }
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -200,7 +201,6 @@ export default async function handler(req, res) {
       const buyerName = clean(body.buyerName, 120);
       const phone = clean(body.phone, 30);
       const paymentMethod = clean(body.paymentMethod, 20).toUpperCase();
-      const transferCode = clean(body.transferCode, 150);
       const paymentMessage = clean(body.paymentMessage, 10000);
       const quantity = Number(body.quantity);
 
@@ -210,8 +210,8 @@ export default async function handler(req, res) {
       if (!['MPESA', 'EMOLA'].includes(paymentMethod)) {
         fail('Método de pagamento inválido.');
       }
-      if (!transferCode && !paymentMessage) {
-        fail('Introduza o código ou SMS de confirmação.');
+      if (paymentMessage.length < 12) {
+        fail('Cole o SMS completo de confirmação do pagamento.');
       }
       if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
         fail('Quantidade inválida.');
@@ -247,8 +247,8 @@ export default async function handler(req, res) {
         buyer_name: buyerName,
         phone,
         payment_method: paymentMethod,
-        transfer_code: transferCode || null,
-        payment_message: paymentMessage || null,
+        transfer_code: null,
+        payment_message: paymentMessage,
         payment_status: 'PENDING'
       };
 

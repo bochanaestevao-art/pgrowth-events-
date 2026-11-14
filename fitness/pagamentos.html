@@ -226,20 +226,16 @@ footer{text-align:center;color:#708c7b;font-size:10px;padding:5px 15px 25px}
    </div>
 
    <div class="field">
-    <label for="transferCode">Código da transferência</label>
-    <input id="transferCode" maxlength="150" placeholder="Cola o código da transacção, se disponível">
-   </div>
-   <div class="field">
-    <label for="paymentMessage">SMS completo de confirmação</label>
-    <textarea id="paymentMessage" maxlength="10000" placeholder="Cola aqui o SMS recebido após a transferência. Também podes preencher apenas o código acima."></textarea>
-    <p class="muted">É obrigatório preencher o código da transferência ou colar o SMS de confirmação.</p>
+    <label for="paymentMessage">SMS completo de confirmação do pagamento</label>
+    <textarea id="paymentMessage" maxlength="10000" required placeholder="Cola aqui a mensagem completa recebida após o pagamento."></textarea>
+    <p class="muted">É obrigatório enviar a mensagem completa de confirmação do pagamento.</p>
    </div>
 
    <div class="notice">
     <strong>Como funciona a aprovação?</strong>
     <div class="steps" style="margin-top:11px">
      <div class="step"><span>1</span> Efectua a transferência para o contacto indicado.</div>
-     <div class="step"><span>2</span> Cola o código ou SMS de confirmação neste formulário.</div>
+     <div class="step"><span>2</span> Cola o SMS completo de confirmação neste formulário.</div>
      <div class="step"><span>3</span> Envia o pedido para análise administrativa.</div>
      <div class="step"><span>4</span> Após a confirmação real do pagamento, o administrador aprova e o teu Passe é activado.</div>
     </div>

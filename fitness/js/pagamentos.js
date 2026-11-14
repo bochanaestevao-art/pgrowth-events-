@@ -226,11 +226,10 @@ $('orderForm').addEventListener('submit', async (event) => {
     return;
   }
 
-  const transferCode = $('transferCode').value.trim();
   const paymentMessage = $('paymentMessage').value.trim();
 
-  if (!transferCode && !paymentMessage) {
-    message('Cola o SMS completo de confirmação ou o código da transferência.', true);
+  if (paymentMessage.length < 12) {
+    message('Cola o SMS completo de confirmação do pagamento.', true);
     $('paymentMessage').focus();
     return;
   }
@@ -249,7 +248,6 @@ $('orderForm').addEventListener('submit', async (event) => {
         buyerName: $('buyerName').value.trim(),
         phone: $('phone').value.trim(),
         paymentMethod: $('method').value,
-        transferCode,
         paymentMessage
       }
     );
