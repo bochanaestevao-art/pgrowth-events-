@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#071b16">
+<title>Central de Controlo | PGrowth Fitness</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+:root{--bg:#07130f;--panel:#10251d;--line:#244437;--green:#a3e635;--muted:#a8b9ae;--red:#fb7185;--gold:#fbbf24}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#f5f8f5;font-family:Arial,sans-serif}
+.admin-wrap{max-width:1250px;margin:auto;padding:20px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+.brand{font-weight:900;letter-spacing:1px;color:var(--green)}
+.top p,.muted{color:var(--muted);font-size:13px}
+a{color:inherit;text-decoration:none}
+button,.btn{border:0;border-radius:10px;padding:11px 15px;background:var(--green);color:#14210e;font-weight:800;cursor:pointer}
+button.secondary,.btn.secondary{background:#203a2d;color:#fff;border:1px solid var(--line)}
+button.danger{background:#7f1d1d;color:white}
+button:disabled{opacity:.5;cursor:not-allowed}
+.hero{padding:25px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(130deg,#173b2b,#10231c 65%,#1d3020);margin-bottom:20px}
+.hero h1{font-size:clamp(24px,5vw,38px);margin:8px 0}
+.hero p{color:#d1dfd4;line-height:1.5;margin-bottom:0}
+.status{display:inline-flex;padding:6px 10px;border-radius:30px;background:#263c2e;color:var(--green);font-size:11px;font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+.stat,.module,.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:17px}
+.stat small{color:var(--muted);display:block}
+.stat strong{display:block;font-size:27px;margin-top:8px}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:28px 0 13px}
+.section-title h2{font-size:19px;margin:0}
+.modules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.module{display:block;transition:.2s}
+.module:hover{border-color:var(--green);transform:translateY(-2px)}
+.module .ico{font-size:25px}
+.module strong{display:block;margin:12px 0 6px}
+.module small{color:var(--muted);line-height:1.45}
+.module .open{display:block;color:var(--green);font-size:12px;font-weight:800;margin-top:13px}
+.panel{margin-bottom:14px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.panel-head h3{margin:0;font-size:16px}
+.queue{display:grid;gap:10px;margin-top:14px}
+.item{border:1px solid var(--line);border-radius:12px;padding:13px;background:#0b1b14}
+.item strong{display:block;margin-bottom:5px}
+.item p{font-size:13px;color:var(--muted);margin:5px 0;overflow-wrap:anywhere}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.actions button{font-size:12px;padding:9px 12px}
+.empty,.loading{padding:18px;text-align:center;color:var(--muted);font-size:13px}
+.notice{padding:12px 14px;border-radius:10px;background:#342d16;color:#fde68a;font-size:13px;line-height:1.5;margin:14px 0}
+.error{background:#421e25;color:#fecdd3}
+.good{background:#153b29;color:#bbf7d0}
+.footer{padding:22px 0;color:var(--muted);font-size:12px;text-align:center}
+@media(max-width:800px){.modules{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:430px){.admin-wrap{padding:13px}.modules{gap:8px}.module{padding:13px}.stat{padding:13px}}
+</style>
+</head>
+<body>
+<main class="admin-wrap">
+<header class="top">
+  <div>
+    <div class="brand">PGROWTH FITNESS</div>
+    <p>Centro de administração e operações</p>
+  </div>
+  <div class="actions">
+    <a class="btn secondary" href="index.html">VOLTAR AO FITNESS</a>
+    <button id="refresh">ACTUALIZAR</button>
+    <button id="logout" class="secondary">SAIR</button>
+  </div>
+</header>
+
+<section class="hero">
+  <span class="status">ÁREA RESTRITA · ADMINISTRAÇÃO PGROWTH</span>
+  <h1>Central de Controlo</h1>
+  <p>Uma única área para acompanhar os módulos, validar pedidos, gerir operações e aceder às ferramentas administrativas do PGrowth Fitness.</p>
+</section>
+
+<div id="globalMessage" class="notice">A verificar a sessão e as permissões administrativas...</div>
+
+<section class="stats">
+  <div class="stat"><small>Passes pendentes</small><strong id="nPasses">—</strong></div>
+  <div class="stat"><small>Pedidos de treinadores</small><strong id="nCoaches">—</strong></div>
+  <div class="stat"><small>Pagamentos empresariais</small><strong id="nCompanies">—</strong></div>
+  <div class="stat"><small>Encomendas da Loja</small><strong id="nOrders">—</strong></div>
+</section>
+
+<div class="section-title">
+  <h2>Os oito módulos PGrowth Fitness</h2>
+  <span class="muted">Acesso às áreas de gestão</span>
+</div>
+
+<section class="modules">
+  <a class="module" href="desafios.html"><span class="ico">🏃</span><strong>Desafios de Corrida</strong><small>Metas, participação e evolução dos atletas.</small><span class="open">ABRIR MÓDULO →</span></a>
+  <a class="module" href="equipas.html"><span class="ico">👥</span><strong>Equipas e Rankings</strong><small>Equipas, membros, convites e classificações.</small><span class="open">ABRIR MÓDULO →</span></a>
+  <a class="module" href="premium.html"><span class="ico">🏋️</span><strong>CT GULERA Premium</strong><small>Treinadores, acompanhamento, conteúdos e comissões.</small><span class="open">ABRIR GESTÃO →</span></a>
+  <a class="module" href="admin-passes.html"><span class="ico">💳</span><strong>Carteira e Pagamentos</strong><small>Pedidos de Passes e validação de pagamentos.</small><span class="open">ABRIR ADMINISTRAÇÃO →</span></a>
+  <a class="module" href="treinadores.html"><span class="ico">🎯</span><strong>Painel de Treinadores</strong><small>Área de acompanhamento e trabalho dos treinadores.</small><span class="open">ABRIR MÓDULO →</span></a>
+  <a class="module" href="empresas.html"><span class="ico">🏢</span><strong>Painel Empresarial</strong><small>Empresas, contratos, pagamentos e programas.</small><span class="open">ABRIR MÓDULO →</span></a>
+  <a class="module" href="eventos.html"><span class="ico">📅</span><strong>Marketplace de Eventos</strong><small>Eventos, publicações e informação de inscrições.</small><span class="open">ABRIR MÓDULO →</span></a>
+  <a class="module" href="loja.html"><span class="ico">🛍️</span><strong>Loja Desportiva</strong><small>Produtos, stock, encomendas e pagamentos.</small><span class="open">ABRIR MÓDULO →</span></a>
+</section>
+
+<div class="section-title">
+  <h2>Centro de aprovações</h2>
+  <span class="muted">Operações sujeitas à autorização do servidor</span>
+</div>
+
+<section class="panel">
+  <div class="panel-head"><h3>Pedidos de Passe Completo</h3><a class="muted" href="admin-passes.html">Gestão detalhada →</a></div>
+  <div class="queue" id="passQueue"><div class="loading">A carregar...</div></div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h3>Pedidos de acompanhamento por treinador</h3><a class="muted" href="premium.html">Painel CT GULERA →</a></div>
+  <div class="queue" id="coachQueue"><div class="loading">A carregar...</div></div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h3>Pagamentos empresariais</h3><a class="muted" href="empresas.html">Painel Empresarial →</a></div>
+  <div class="queue" id="companyQueue"><div class="loading">A carregar...</div></div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h3>Encomendas da Loja Desportiva</h3><a class="muted" href="marketplace-admin.html">Gestão de produtos e eventos →</a></div>
+  <div class="queue" id="orderQueue"><div class="loading">A carregar...</div></div>
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h3>Comissões dos treinadores</h3><a class="muted" href="premium.html">Gestão de comissões →</a></div>
+  <div class="queue" id="commissionQueue"><div class="loading">A carregar...</div></div>
+</section>
+
+<div class="notice">
+  <strong>Protecção dos dados e histórico:</strong> aprovações e rejeições são executadas nas APIs com verificação administrativa. Produtos e eventos podem ser arquivados no Marketplace. Não eliminamos registos financeiros, resultados desportivos ou histórico de atletas sem uma operação específica, segura e auditável.
+</div>
+
+<footer class="footer">PGrowth Fitness · Central de Controlo · Administração reservada</footer>
+</main>
+<script src="js/session.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
