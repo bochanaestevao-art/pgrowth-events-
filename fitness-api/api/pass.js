@@ -227,6 +227,20 @@ export default async function handler(req, res) {
       const orderReference =
         `PGF-${Date.now()}-${randomBytes(3).toString('hex').toUpperCase()}`;
 
+      const coachQuery = new URLSearchParams({
+        select: 'coach_id',
+        athlete_id: `eq.${user.id}`,
+        active: 'eq.true',
+        order: 'assigned_at.desc',
+        limit: '1'
+      });
+
+      const coachAssignments = await supabase(
+        `/rest/v1/fitness_coach_athletes?${coachQuery}`
+      );
+
+      const coachIdAtPurchase = coachAssignments?.[0]?.coach_id || null;
+
       const order = {
         order_reference: orderReference,
         user_id: user.id,
@@ -239,6 +253,7 @@ export default async function handler(req, res) {
         plan_name: plan.name,
         duration_days: plan.duration_days,
         requested_amount: plan.price_mzn,
+        coach_id_at_purchase: coachIdAtPurchase,
         payment_status: 'PENDING'
       };
 

@@ -121,6 +121,24 @@
       <div id="supportMessages" class="timeline"></div>
       <div class="subheading"><h3>As minhas perguntas</h3></div>
       <div id="questionsList" class="content-grid"></div>
+
+      <div class="premium-form" id="athleteCoachRequest">
+        <h3>Escolher treinador</h3>
+        <p class="section-intro">Solicita acompanhamento a um treinador PGrowth aprovado. A atribuição depende da aprovação da administração.</p>
+        <div id="currentCoachStatus"></div>
+        <form id="requestCoachForm">
+          <label>Treinador
+            <select name="coachId" required>
+              <option value="">A carregar treinadores...</option>
+            </select>
+          </label>
+          <label>Mensagem (opcional)
+            <textarea name="requestNote" rows="2" maxlength="1000" placeholder="Explica brevemente o acompanhamento que procuras."></textarea>
+          </label>
+          <button class="primary-button" type="submit">SOLICITAR ACOMPANHAMENTO</button>
+        </form>
+        <div id="myCoachRequests" class="timeline"></div>
+      </div>
     </section>
   </section>
 
@@ -226,6 +244,18 @@
         <button class="primary-button" type="submit">ATRIBUIR TREINADOR</button>
       </form>
 
+
+      <section class="premium-form">
+        <h4>Pedidos de acompanhamento pendentes</h4>
+        <p class="section-intro">A administração aprova ou rejeita os pedidos dos atletas.</p>
+        <div id="adminCoachRequests" class="timeline"></div>
+      </section>
+
+      <section class="premium-form">
+        <h4>Comissões dos treinadores · 15%</h4>
+        <p class="section-intro">Comissão calculada sobre o valor bruto dos passes elegíveis. A aprovação e o pagamento são registados manualmente.</p>
+        <div id="adminCommissions" class="timeline"></div>
+      </section>
       <form id="broadcastForm" class="premium-form">
         <h4>Comunicado para atletas Premium</h4>
         <label>Título<input name="title" maxlength="160" required></label>

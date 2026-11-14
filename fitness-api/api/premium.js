@@ -391,6 +391,76 @@ export default async function handler(req, res) {
       });
     }
 
+
+    if (req.method === "GET" && action === "available-coaches") {
+      if (!(await hasActivePass(user.id))) fail("O Passe Completo activo é necessário.", 403);
+      const coaches = await db("fitness_coaches", {
+        select: "id,display_name", active: "eq.true",
+        order: "display_name.asc", limit: "200"
+      });
+      return send(res, 200, { coaches: coaches || [] });
+    }
+
+    if (req.method === "GET" && action === "my-coach-requests") {
+      if (!(await hasActivePass(user.id))) fail("O Passe Completo activo é necessário.", 403);
+      const [requests, assignments, coaches] = await Promise.all([
+        db("fitness_coach_requests", {
+          select: "*", athlete_id: `eq.${user.id}`,
+          order: "created_at.desc", limit: "50"
+        }),
+        db("fitness_coach_athletes", {
+          select: "id,coach_id,assigned_at",
+          athlete_id: `eq.${user.id}`, active: "eq.true", limit: "1"
+        }),
+        db("fitness_coaches", {
+          select: "id,display_name", active: "eq.true", limit: "200"
+        })
+      ]);
+      const names = new Map((coaches || []).map(c => [c.id, c.display_name]));
+      const current = assignments?.[0] || null;
+      return send(res, 200, {
+        currentCoach: current ? {
+          ...current, display_name: names.get(current.coach_id) || "Treinador"
+        } : null,
+        requests: (requests || []).map(r => ({
+          ...r, display_name: names.get(r.coach_id) || "Treinador"
+        }))
+      });
+    }
+
+    if (req.method === "GET" && action === "coach-requests") {
+      if (!admin) fail("Acesso reservado ao administrador.", 403);
+      const [requests, coaches] = await Promise.all([
+        db("fitness_coach_requests", {
+          select: "*", status: "eq.PENDING",
+          order: "created_at.asc", limit: "300"
+        }),
+        db("fitness_coaches", { select: "id,display_name", limit: "500" })
+      ]);
+      const names = new Map((coaches || []).map(c => [c.id, c.display_name]));
+      return send(res, 200, {
+        requests: (requests || []).map(r => ({
+          ...r, display_name: names.get(r.coach_id) || "Treinador"
+        }))
+      });
+    }
+
+    if (req.method === "GET" && action === "commissions") {
+      if (!admin) fail("Acesso reservado ao administrador.", 403);
+      const [commissions, coaches] = await Promise.all([
+        db("fitness_coach_commissions", {
+          select: "*", order: "created_at.desc", limit: "1000"
+        }),
+        db("fitness_coaches", { select: "id,display_name", limit: "500" })
+      ]);
+      const names = new Map((coaches || []).map(c => [c.id, c.display_name]));
+      return send(res, 200, {
+        commissions: (commissions || []).map(c => ({
+          ...c, display_name: names.get(c.coach_id) || "Treinador"
+        }))
+      });
+    }
+
     if (req.method === "GET" && action === "athlete-history") {
       const athleteId = clean(url.searchParams.get("athleteId"), 80);
       await requireAthleteAccess(user, athleteId, admin, coach);
@@ -611,6 +681,93 @@ export default async function handler(req, res) {
       return send(res, 201, { tip: rows?.[0] });
     }
 
+
+    if (action === "request-coach") {
+      if (!(await hasActivePass(user.id))) fail("O Passe Completo activo é necessário.", 403);
+      const coachId = clean(body.coachId, 80);
+      const requestNote = clean(body.requestNote, 1000);
+      if (!coachId) fail("Selecciona um treinador.");
+
+      const coaches = await db("fitness_coaches", {
+        select: "id", id: `eq.${coachId}`,
+        active: "eq.true", limit: "1"
+      });
+      if (!coaches?.length) fail("Treinador indisponível.", 404);
+
+      const current = await db("fitness_coach_athletes", {
+        select: "id,coach_id", athlete_id: `eq.${user.id}`,
+        active: "eq.true", limit: "1"
+      });
+      if (current?.[0]?.coach_id === coachId) {
+        fail("Já estás acompanhado por este treinador.");
+      }
+
+      const pending = await db("fitness_coach_requests", {
+        select: "id", athlete_id: `eq.${user.id}`,
+        status: "eq.PENDING", limit: "1"
+      });
+      if (pending?.length) fail("Já tens um pedido pendente.");
+
+      const rows = await db("fitness_coach_requests", {}, "POST", {
+        athlete_id: user.id, coach_id: coachId,
+        request_note: requestNote || null, status: "PENDING"
+      });
+      return send(res, 201, { request: rows?.[0] });
+    }
+
+    if (action === "review-coach-request") {
+      if (!admin) fail("Só o administrador pode analisar pedidos.", 403);
+      const requestId = clean(body.requestId, 80);
+      const decision = clean(body.decision, 20).toUpperCase();
+      if (!requestId || !["APPROVED", "REJECTED"].includes(decision)) {
+        fail("Pedido ou decisão inválidos.");
+      }
+      const result = await db("rpc/fitness_admin_review_coach_request", {}, "POST", {
+        p_request_id: requestId, p_admin_user_id: user.id,
+        p_decision: decision,
+        p_admin_note: clean(body.adminNote, 1000) || null
+      });
+      return send(res, 200, { result });
+    }
+
+    if (action === "manage-commission") {
+      if (!admin) fail("Só o administrador pode gerir comissões.", 403);
+      const commissionId = clean(body.commissionId, 80);
+      const decision = clean(body.decision, 20).toUpperCase();
+      if (!commissionId || !["APPROVE", "PAY"].includes(decision)) {
+        fail("Operação de comissão inválida.");
+      }
+
+      const rows = await db("fitness_coach_commissions", {
+        select: "*", id: `eq.${commissionId}`, limit: "1"
+      });
+      const commission = rows?.[0];
+      if (!commission) fail("Comissão não encontrada.", 404);
+
+      let update;
+      if (decision === "APPROVE" && commission.status === "PENDING") {
+        update = {
+          status: "APPROVED", approved_at: new Date().toISOString(),
+          approved_by: user.id,
+          admin_note: clean(body.adminNote, 1000) || null
+        };
+      } else if (decision === "PAY" && commission.status === "APPROVED") {
+        update = {
+          status: "PAID", paid_at: new Date().toISOString(),
+          paid_by: user.id,
+          payment_reference: clean(body.paymentReference, 160) || null,
+          admin_note: clean(body.adminNote, 1000) || commission.admin_note || null
+        };
+      } else {
+        fail("Estado actual da comissão não permite esta operação.");
+      }
+
+      const updated = await db("fitness_coach_commissions", {
+        id: `eq.${commissionId}`
+      }, "PATCH", update);
+      return send(res, 200, { commission: updated?.[0] || null });
+    }
+
     if (action === "assign-plan") {
       if (!admin && !coach) fail("Acesso reservado ao treinador.", 403);
       const athleteId = clean(body.athleteId, 80);
@@ -626,12 +783,15 @@ export default async function handler(req, res) {
       const table = type === "nutrition"
         ? "fitness_nutrition_plans" : "fitness_workout_plans";
       const plans = await db(table, {
-        select: "id",
+        select: "id,coach_id",
         id: `eq.${planId}`,
         status: "eq.PUBLISHED",
         limit: "1"
       });
       if (!plans?.length) fail("O plano não existe ou não está publicado.", 404);
+      if (!admin && plans[0].coach_id !== coach.id) {
+        fail("Só podes atribuir os teus próprios planos.", 403);
+      }
 
       const rows = await db("fitness_plan_assignments", {}, "POST", {
         athlete_id: athleteId,
@@ -670,11 +830,24 @@ export default async function handler(req, res) {
         });
       }
 
-      const rows = await db("fitness_coach_athletes", {}, "POST", {
-        coach_id: coaches[0].id,
-        athlete_id: athleteId,
-        active: true
+      const previous = await db("fitness_coach_athletes", {
+        select: "id", coach_id: `eq.${coaches[0].id}`,
+        athlete_id: `eq.${athleteId}`, limit: "1"
       });
+
+      let rows;
+      if (previous?.length) {
+        rows = await db("fitness_coach_athletes", {
+          id: `eq.${previous[0].id}`
+        }, "PATCH", {
+          active: true, assigned_at: new Date().toISOString(), ended_at: null
+        });
+      } else {
+        rows = await db("fitness_coach_athletes", {}, "POST", {
+          coach_id: coaches[0].id, athlete_id: athleteId,
+          active: true, assigned_at: new Date().toISOString()
+        });
+      }
       return send(res, 201, { assignment: rows?.[0] });
     }
 

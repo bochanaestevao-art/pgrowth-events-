@@ -64,7 +64,11 @@ function renderOverview(data) {
   if (data.role === "COACH" || data.role === "ADMIN") {
     $("#coachArea").classList.remove("hidden");
     $("#coachRole").textContent = data.role === "ADMIN" ? "ADMINISTRADOR" : "TREINADOR";
-    if (data.role === "ADMIN") $("#adminTools").classList.remove("hidden");
+    if (data.role === "ADMIN") {
+      $("#adminTools").classList.remove("hidden");
+      loadAdminCoachRequests();
+      loadCommissions();
+    }
     loadCoachAthletes();
     loadManagementData();
     return;
@@ -77,6 +81,7 @@ function renderOverview(data) {
 
   $("#athleteArea").classList.remove("hidden");
   $("#athleteRole").textContent = "ATLETA PREMIUM";
+  loadAthleteCoachData();
 
   renderCards($("#nutritionList"), data.nutritionPlans, "Ainda não tens um plano de nutrição atribuído. O teu profissional poderá disponibilizá-lo aqui.", item => `
     <article class="info-card"><h3>${escapeHTML(item.title)}</h3><p>${escapeHTML(item.description || "")}</p><p>${formatContent(item.content)}</p><small class="card-meta">Plano profissional</small></article>`);
@@ -226,6 +231,215 @@ async function loadManagementData() {
   }
 }
 
+
+
+function coachStatusText(status) {
+  const labels = {
+    PENDING: "Pendente de aprovação",
+    APPROVED: "Aprovado",
+    REJECTED: "Rejeitado",
+    CANCELLED: "Cancelado",
+    ACTIVE: "Acompanhamento activo"
+  };
+  return labels[status] || status || "Estado não indicado";
+}
+
+async function loadAthleteCoachData() {
+  const statusBox = $("#currentCoachStatus");
+  const select = $("#requestCoachForm").elements.coachId;
+  const historyBox = $("#myCoachRequests");
+
+  statusBox.textContent = "A carregar o estado do acompanhamento...";
+  showEmpty(historyBox, "A carregar pedidos...");
+
+  try {
+    const results = await Promise.all([
+      request("available-coaches"),
+      request("my-coach-requests")
+    ]);
+
+    const available = results[0];
+    const mine = results[1];
+    const coaches = available.coaches || available.items || [];
+    const requests = mine.requests || [];
+
+    select.innerHTML = '<option value="">Selecciona um treinador...</option>' +
+      coaches.map(c =>
+        '<option value="' + escapeHTML(c.id) + '">' +
+        escapeHTML(c.display_name || c.name || "Treinador") +
+        '</option>'
+      ).join("");
+
+    const assignment = mine.assignment || mine.currentAssignment ||
+      mine.activeAssignment || mine.currentCoach || null;
+
+    if (assignment) {
+      const coachName = assignment.display_name || assignment.name ||
+        assignment.coach_name || "Treinador";
+      statusBox.innerHTML =
+        '<p class="section-intro">Treinador actual: <strong>' +
+        escapeHTML(coachName) + '</strong></p>';
+    } else {
+      statusBox.innerHTML =
+        '<p class="section-intro">Ainda não tens um treinador atribuído. Podes solicitar acompanhamento abaixo.</p>';
+    }
+
+    if (!requests.length) {
+      showEmpty(historyBox, "Ainda não fizeste pedidos de acompanhamento.");
+    } else {
+      historyBox.innerHTML = requests.map(r =>
+        '<article class="timeline-item">' +
+        '<small>' + escapeHTML(dateText(r.created_at)) + '</small>' +
+        '<h3>' + escapeHTML(r.display_name || r.coach_name || "Treinador") + '</h3>' +
+        '<p>' + escapeHTML(coachStatusText(r.status)) + '</p>' +
+        (r.admin_note ? '<p>' + escapeHTML(r.admin_note) + '</p>' : '') +
+        '</article>'
+      ).join("");
+    }
+
+    if (!coaches.length) {
+      select.innerHTML = '<option value="">Não existem treinadores disponíveis.</option>';
+    }
+  } catch (error) {
+    statusBox.textContent = error.message;
+    showEmpty(historyBox, "Não foi possível carregar os pedidos.");
+  }
+}
+
+async function loadAdminCoachRequests() {
+  const box = $("#adminCoachRequests");
+  showEmpty(box, "A carregar pedidos...");
+
+  try {
+    const data = await request("coach-requests");
+    const requests = data.requests || [];
+
+    if (!requests.length) {
+      return showEmpty(box, "Não existem pedidos pendentes.");
+    }
+
+    box.innerHTML = requests.map(r =>
+      '<article class="timeline-item">' +
+      '<small>' + escapeHTML(dateText(r.created_at)) + '</small>' +
+      '<h3>' + escapeHTML(r.athlete_name || r.athlete_id || "Atleta") + '</h3>' +
+      '<p>Treinador solicitado: <strong>' +
+      escapeHTML(r.display_name || r.coach_name || "Treinador") +
+      '</strong></p>' +
+      (r.request_note ? '<p>' + escapeHTML(r.request_note) + '</p>' : '') +
+      '<p>Estado: ' + escapeHTML(coachStatusText(r.status)) + '</p>' +
+      '<button class="primary-button" data-review-request="' +
+      escapeHTML(r.id) + '" data-decision="APPROVED">APROVAR</button> ' +
+      '<button class="secondary-button" data-review-request="' +
+      escapeHTML(r.id) + '" data-decision="REJECTED">REJEITAR</button>' +
+      '</article>'
+    ).join("");
+
+    box.querySelectorAll("[data-review-request]").forEach(button => {
+      button.addEventListener("click", async () => {
+        const decision = button.dataset.decision;
+        const question = decision === "APPROVED"
+          ? "Confirmas a aprovação deste acompanhamento?"
+          : "Confirmas a rejeição deste pedido?";
+
+        if (!window.confirm(question)) return;
+
+        const adminNote = window.prompt("Observação administrativa (opcional):") || "";
+
+        try {
+          await request("review-coach-request", "POST", {
+            requestId: button.dataset.reviewRequest,
+            decision,
+            adminNote
+          });
+          toast(decision === "APPROVED"
+            ? "Acompanhamento aprovado."
+            : "Pedido rejeitado.");
+          await loadAdminCoachRequests();
+          await loadCoachAthletes();
+        } catch (error) {
+          toast(error.message);
+        }
+      });
+    });
+  } catch (error) {
+    showEmpty(box, error.message);
+  }
+}
+
+async function loadCommissions() {
+  const box = $("#adminCommissions");
+  showEmpty(box, "A carregar comissões...");
+
+  try {
+    const data = await request("commissions");
+    const commissions = data.commissions || [];
+
+    if (!commissions.length) {
+      return showEmpty(box, "Ainda não existem comissões registadas.");
+    }
+
+    box.innerHTML = commissions.map(c => {
+      const amount = Number(c.commission_amount || 0).toFixed(2);
+      const gross = Number(c.gross_amount || 0).toFixed(2);
+
+      return '<article class="timeline-item">' +
+        '<small>' + escapeHTML(dateText(c.created_at)) + '</small>' +
+        '<h3>' + escapeHTML(c.display_name || "Treinador") + '</h3>' +
+        '<p>Valor bruto do passe: ' + gross + ' MT</p>' +
+        '<p>Comissão (' + escapeHTML(c.commission_rate || 15) +
+        '%): <strong>' + amount + ' MT</strong></p>' +
+        '<p>Estado: <strong>' + escapeHTML(c.status) + '</strong></p>' +
+        (c.payment_reference
+          ? '<p>Referência: ' + escapeHTML(c.payment_reference) + '</p>'
+          : '') +
+        (c.status === "PENDING"
+          ? '<button class="primary-button" data-commission="' +
+            escapeHTML(c.id) + '" data-decision="APPROVE">APROVAR COMISSÃO</button>'
+          : '') +
+        (c.status === "APPROVED"
+          ? '<button class="primary-button" data-commission="' +
+            escapeHTML(c.id) + '" data-decision="PAY">REGISTAR PAGAMENTO</button>'
+          : '') +
+        '</article>';
+    }).join("");
+
+    box.querySelectorAll("[data-commission]").forEach(button => {
+      button.addEventListener("click", async () => {
+        const decision = button.dataset.decision;
+        let paymentReference = "";
+
+        if (decision === "PAY") {
+          paymentReference = window.prompt(
+            "Indica a referência ou comprovativo do pagamento:"
+          );
+          if (!paymentReference || !paymentReference.trim()) {
+            return toast("A referência do pagamento é obrigatória.");
+          }
+        } else if (!window.confirm("Confirmas a aprovação desta comissão?")) {
+          return;
+        }
+
+        try {
+          await request("manage-commission", "POST", {
+            commissionId: button.dataset.commission,
+            decision,
+            paymentReference: paymentReference.trim()
+          });
+          toast(decision === "PAY"
+            ? "Pagamento registado."
+            : "Comissão aprovada.");
+          await loadCommissions();
+        } catch (error) {
+          toast(error.message);
+        }
+      });
+    });
+  } catch (error) {
+    showEmpty(box, error.message);
+  }
+}
+
+
 async function selectAthlete(athleteId, button) {
   state.selectedAthlete = athleteId;
   document.querySelectorAll(".athlete-choice").forEach(el => el.classList.remove("active"));
@@ -318,6 +532,25 @@ $("#questionForm").addEventListener("submit", async event => {
     renderOverview(await request("overview"));
     document.querySelector('[data-section="support"]').click();
   } catch (error) { toast(error.message); }
+});
+
+
+
+$("#requestCoachForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+
+  try {
+    await request("request-coach", "POST", {
+      coachId: form.elements.coachId.value,
+      requestNote: form.elements.requestNote.value.trim()
+    });
+    form.reset();
+    toast("Pedido enviado para aprovação da administração.");
+    await loadAthleteCoachData();
+  } catch (error) {
+    toast(error.message);
+  }
 });
 
 $("#coachReplyForm").addEventListener("submit", async event => {
