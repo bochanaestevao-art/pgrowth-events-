@@ -114,13 +114,14 @@ window.PGrowthChallengeGuideCheckVideo = async function(challengeId) {
       throw new Error('Inicia sessão para assistir ao vídeo.');
     }
 
-    const authToken = await session.token();
-    const response = await fetch(
+    let authToken = await session.token();
+
+    const requestVideo = token => fetch(
       'https://pgrowth-events-fitness-api.vercel.app/api/challenges',
       {
         method: 'POST',
         headers: {
-          Authorization: 'Bearer ' + authToken,
+          Authorization: 'Bearer ' + token,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -129,6 +130,14 @@ window.PGrowthChallengeGuideCheckVideo = async function(challengeId) {
         })
       }
     );
+
+    let response = await requestVideo(authToken);
+
+    // Se o token for rejeitado, renovar e repetir apenas uma vez.
+    if (response.status === 401 && typeof session.refresh === 'function') {
+      authToken = await session.refresh();
+      response = await requestVideo(authToken);
+    }
 
     const result = await response.json().catch(() => ({}));
 

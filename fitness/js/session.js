@@ -1,4 +1,4 @@
-const FITNESS_API = "https://pgrowth-events-fitness-api.vercel.app/api/pass";
+const FITNESS_API = "https://" + "pgrowth-events-fitness-api.vercel.app/api/pass";
 const FITNESS_SESSION_KEY = 'pgrowth_fitness_auth_session';
 
 function fitnessReadSession() {
@@ -39,18 +39,36 @@ async function fitnessAuthRequest(path, payload) {
   return data;
 }
 
-async function fitnessToken() {
-  let session = fitnessReadSession();
+async function fitnessRefreshToken() {
+  const session = fitnessReadSession();
+
+  if (!session?.refresh_token) {
+    throw new Error('A sessão terminou. Entre novamente.');
+  }
+
+  const updated = await fitnessAuthRequest('token?grant_type=refresh_token', {
+    refresh_token: session.refresh_token
+  });
+
+  if (!updated?.access_token || !updated?.refresh_token) {
+    throw new Error('Não foi possível renovar a sessão.');
+  }
+
+  sessionStorage.setItem(FITNESS_SESSION_KEY, JSON.stringify(updated));
+  return updated.access_token;
+}
+
+async function fitnessToken(forceRefresh = false) {
+  const session = fitnessReadSession();
 
   if (!session?.access_token) {
     throw new Error('Inicie sessão para continuar.');
   }
 
-  if (session.expires_at && session.expires_at <= Math.floor(Date.now() / 1000) + 60) {
-    session = await fitnessAuthRequest('token?grant_type=refresh_token', {
-      refresh_token: session.refresh_token
-    });
-    sessionStorage.setItem(FITNESS_SESSION_KEY, JSON.stringify(session));
+  const expiresAt = Number(session.expires_at || 0);
+
+  if (forceRefresh || (expiresAt && expiresAt <= Math.floor(Date.now() / 1000) + 60)) {
+    return await fitnessRefreshToken();
   }
 
   return session.access_token;
@@ -147,6 +165,7 @@ async function fitnessLogout() {
 window.PGrowthSession = {
   read: fitnessReadSession,
   token: fitnessToken,
+  refresh: fitnessRefreshToken,
   request: fitnessRequest,
   syncActivities: fitnessSyncActivities,
   logout: fitnessLogout
