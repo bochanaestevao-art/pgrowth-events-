@@ -167,17 +167,25 @@
     const session = window.PGrowthSession;
     if (!session?.token) throw new Error("Inicia sessão para sincronizar.");
 
-    const token = await session.token();
-    const response = await fetch(API, {
+    let token = await session.token();
+
+    const sendRequest = () => fetch(API, {
       method,
       headers: {
-        Authorization:"Bearer " + token,
+        Authorization: "Bearer " + token,
         ...(method === "POST" ? {"Content-Type":"application/json"} : {})
       },
       ...(method === "POST"
         ? {body:JSON.stringify({challengeData})}
         : {})
     });
+
+    let response = await sendRequest();
+
+    if (response.status === 401 && typeof session.refresh === 'function') {
+      token = await session.refresh();
+      response = await sendRequest();
+    }
 
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || "Falha na sincronização.");

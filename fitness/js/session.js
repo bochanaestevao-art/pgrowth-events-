@@ -1,5 +1,6 @@
 const FITNESS_API = "https://" + "pgrowth-events-fitness-api.vercel.app/api/pass";
 const FITNESS_SESSION_KEY = 'pgrowth_fitness_auth_session';
+let fitnessRefreshPromise = null;
 
 function fitnessReadSession() {
   try {
@@ -40,22 +41,38 @@ async function fitnessAuthRequest(path, payload) {
 }
 
 async function fitnessRefreshToken() {
-  const session = fitnessReadSession();
+  if (fitnessRefreshPromise) return fitnessRefreshPromise;
 
-  if (!session?.refresh_token) {
-    throw new Error('A sessão terminou. Entre novamente.');
+  fitnessRefreshPromise = (async () => {
+    const session = fitnessReadSession();
+
+    if (!session?.refresh_token) {
+      throw new Error('A sessão terminou. Entre novamente.');
+    }
+
+    const updated = await fitnessAuthRequest('token?grant_type=refresh_token', {
+      refresh_token: session.refresh_token
+    });
+
+    if (!updated?.access_token || !updated?.refresh_token) {
+      throw new Error('Não foi possível renovar a sessão.');
+    }
+
+    const normalized = {
+      ...updated,
+      expires_at: Number(updated.expires_at) ||
+        Math.floor(Date.now() / 1000) + Number(updated.expires_in || 3600)
+    };
+
+    sessionStorage.setItem(FITNESS_SESSION_KEY, JSON.stringify(normalized));
+    return normalized.access_token;
+  })();
+
+  try {
+    return await fitnessRefreshPromise;
+  } finally {
+    fitnessRefreshPromise = null;
   }
-
-  const updated = await fitnessAuthRequest('token?grant_type=refresh_token', {
-    refresh_token: session.refresh_token
-  });
-
-  if (!updated?.access_token || !updated?.refresh_token) {
-    throw new Error('Não foi possível renovar a sessão.');
-  }
-
-  sessionStorage.setItem(FITNESS_SESSION_KEY, JSON.stringify(updated));
-  return updated.access_token;
 }
 
 async function fitnessToken(forceRefresh = false) {
@@ -67,7 +84,8 @@ async function fitnessToken(forceRefresh = false) {
 
   const expiresAt = Number(session.expires_at || 0);
 
-  if (forceRefresh || (expiresAt && expiresAt <= Math.floor(Date.now() / 1000) + 60)) {
+  if (forceRefresh || !expiresAt ||
+      expiresAt <= Math.floor(Date.now() / 1000) + 60) {
     return await fitnessRefreshToken();
   }
 
@@ -75,12 +93,12 @@ async function fitnessToken(forceRefresh = false) {
 }
 
 async function fitnessRequest(action, method = 'GET', payload = {}) {
-  const token = await fitnessToken();
+  let token = await fitnessToken();
   const url = method === 'GET'
     ? `${FITNESS_API}?action=${encodeURIComponent(action)}`
     : FITNESS_API;
 
-  const response = await fetch(url, {
+  const sendRequest = () => fetch(url, {
     method,
     headers: {
       Authorization: `Bearer ${token}`,
@@ -89,12 +107,14 @@ async function fitnessRequest(action, method = 'GET', payload = {}) {
     ...(method === 'POST' ? { body: JSON.stringify({ action, ...payload }) } : {})
   });
 
-  const data = await response.json().catch(() => ({}));
+  let response = await sendRequest();
 
   if (response.status === 401) {
-    sessionStorage.removeItem(FITNESS_SESSION_KEY);
-    throw new Error('A sessão expirou. Entre novamente.');
+    token = await fitnessRefreshToken();
+    response = await sendRequest();
   }
+
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
     throw new Error(data.error || 'Não foi possível concluir a operação.');
@@ -105,10 +125,10 @@ async function fitnessRequest(action, method = 'GET', payload = {}) {
 
 
 async function fitnessSyncActivities(activities) {
-  const token = await fitnessToken();
+  let token = await fitnessToken();
   const endpoint = FITNESS_API.replace(/\/api\/pass(?:\?.*)?$/, "/api/activities");
 
-  const response = await fetch(endpoint, {
+  const sendRequest = () => fetch(endpoint, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -117,12 +137,14 @@ async function fitnessSyncActivities(activities) {
     body: JSON.stringify({ activities })
   });
 
-  const data = await response.json().catch(() => ({}));
+  let response = await sendRequest();
 
   if (response.status === 401) {
-    sessionStorage.removeItem(FITNESS_SESSION_KEY);
-    throw new Error("A sessão expirou. Entre novamente.");
+    token = await fitnessRefreshToken();
+    response = await sendRequest();
   }
+
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
     throw new Error(data.error || "Não foi possível sincronizar as corridas.");

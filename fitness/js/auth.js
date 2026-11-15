@@ -1,4 +1,4 @@
-const API = "https://pgrowth-events-fitness-api.vercel.app/api/pass";
+const API = "https://" + "pgrowth-events-fitness-api.vercel.app/api/pass";
 const SESSION_KEY = 'pgrowth_fitness_auth_session';
 
 let config = null;
@@ -97,7 +97,15 @@ function saveSession(session) {
     );
   }
 
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  const expiresIn = Number(session.expires_in || 3600);
+  const normalized = {
+    ...session,
+    expires_at: Number(session.expires_at) ||
+      Math.floor(Date.now() / 1000) + expiresIn
+  };
+
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(normalized));
+  return normalized;
 }
 
 function readSession() {
@@ -120,8 +128,7 @@ async function refreshSession() {
     refresh_token: session.refresh_token
   });
 
-  saveSession(updated);
-  return updated;
+  return saveSession(updated);
 }
 
 async function getAccessToken() {
@@ -133,7 +140,7 @@ async function getAccessToken() {
 
   const expiresAt = Number(session.expires_at || 0);
 
-  if (expiresAt && expiresAt <= Math.floor(Date.now() / 1000) + 60) {
+  if (!expiresAt || expiresAt <= Math.floor(Date.now() / 1000) + 60) {
     session = await refreshSession();
   }
 
@@ -141,9 +148,9 @@ async function getAccessToken() {
 }
 
 async function apiRequest(action, payload = {}) {
-  const token = await getAccessToken();
+  let token = await getAccessToken();
 
-  const response = await fetch(API, {
+  const sendRequest = () => fetch(API, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -152,12 +159,15 @@ async function apiRequest(action, payload = {}) {
     body: JSON.stringify({ action, ...payload })
   });
 
-  const data = await response.json().catch(() => ({}));
+  let response = await sendRequest();
 
   if (response.status === 401) {
-    sessionStorage.removeItem(SESSION_KEY);
-    throw new Error('A sessão expirou. Entre novamente.');
+    const updated = await refreshSession();
+    token = updated.access_token;
+    response = await sendRequest();
   }
+
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
     throw new Error(data.error || 'O pedido não pôde ser concluído.');
@@ -254,7 +264,7 @@ form.addEventListener('submit', async (event) => {
     }));
 
     const requestedNext = new URLSearchParams(window.location.search).get('next');
-    window.location.href = requestedNext === 'admin.html' ? 'admin.html' : 'index.html';
+  window.location.href = requestedNext === 'admin.html' ? 'admin.html' : requestedNext === 'treinadores.html' ? 'treinadores.html' : 'index.html';
 
   } catch (error) {
     showMessage(error.message || 'Ocorreu um erro.', true);
