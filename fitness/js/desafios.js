@@ -230,7 +230,9 @@ const API = "https://" + "pgrowth-events-fitness-api.vercel.app/api/challenges";
         }
       }));
 
-      definitions.splice(0, definitions.length, ...remote);
+      if (remote.length) {
+        definitions.splice(0, definitions.length, ...remote);
+      }
     } catch (error) {
       console.warn('Catálogo remoto indisponível; mantém-se a lista local.', error);
     }

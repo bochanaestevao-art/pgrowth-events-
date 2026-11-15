@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const API = 'https://pgrowth-events-fitness-api.vercel.app/api/admin';
+  const API = "https://" + "pgrowth-events-fitness-api.vercel.app/api/admin";
   const $ = id => document.getElementById(id);
   const state = { items: [], selected: null, busy: false, started: false };
   if (!$('challengeAdminPanel')) return;

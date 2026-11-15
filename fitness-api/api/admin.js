@@ -437,10 +437,6 @@ async function challengeUploadUrl(body) {
   const id = clean(body.id, 70);
   if (!/^[a-z0-9-]{2,70}$/.test(id)) fail("Desafio inválido.");
 
-  const rows = await adminChallengeDb(
-    `fitness_challenge_catalog?id=eq.${encodeURIComponent(id)}&select=id&limit=1`
-  );
-  if (!rows?.length) fail("Desafio não encontrado.", 404);
 
   const path = `${id}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.mp4`;
   const result = await adminStorage(
