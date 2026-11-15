@@ -3,7 +3,7 @@
 
   const API = 'https://pgrowth-events-fitness-api.vercel.app/api/admin';
   const $ = id => document.getElementById(id);
-  const state = { items: [], selected: null, busy: false };
+  const state = { items: [], selected: null, busy: false, started: false };
   if (!$('challengeAdminPanel')) return;
 
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c =>
@@ -269,7 +269,13 @@
     }
   });
 
-  load().catch(error =>
-    notice(`Não foi possível carregar o catálogo: ${error.message}`, 'error')
-  );
+  window.PGrowthAdminChallenges = {
+    start() {
+      if (state.started) return;
+      state.started = true;
+      load().catch(error =>
+        notice(`Não foi possível carregar o catálogo: ${error.message}`, 'error')
+      );
+    }
+  };
 })();

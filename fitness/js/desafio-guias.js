@@ -153,6 +153,10 @@ window.PGrowthChallengeGuideCheckVideo = async function(challengeId) {
       throw new Error(result.error || result.message || 'Não foi possível carregar o vídeo. Tenta novamente.');
     }
 
+    if (typeof result.videoUrl !== 'string' || !/^https?:\/\//i.test(result.videoUrl)) {
+      throw new Error('A API não devolveu um endereço válido para o vídeo.');
+    }
+
     const video = document.createElement('video');
     video.controls = true;
     video.playsInline = true;
@@ -166,6 +170,12 @@ window.PGrowthChallengeGuideCheckVideo = async function(challengeId) {
     source.src = result.videoUrl;
     source.type = 'video/mp4';
     video.appendChild(source);
+    video.addEventListener('error', () => {
+      const notice = document.createElement('div');
+      notice.className = 'video-placeholder';
+      notice.textContent = 'Não foi possível reproduzir este vídeo. Verifica a ligação e tenta novamente.';
+      slot.replaceChildren(notice);
+    });
     slot.replaceChildren(video);
   } catch (error) {
     const notice = document.createElement('div');

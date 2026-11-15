@@ -90,61 +90,22 @@ async function authRequest(path, payload) {
   return data;
 }
 
+
 function saveSession(session) {
-  if (!session?.access_token || !session?.refresh_token) {
-    throw new Error(
-      'O Supabase não devolveu uma sessão. Confirme se a confirmação de email está desactivada.'
-    );
-  }
-
-  const expiresIn = Number(session.expires_in || 3600);
-  const normalized = {
-    ...session,
-    expires_at: Number(session.expires_at) ||
-      Math.floor(Date.now() / 1000) + expiresIn
-  };
-
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(normalized));
-  return normalized;
+  return window.PGrowthSession.save(session);
 }
 
 function readSession() {
-  try {
-    return JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
-  } catch {
-    sessionStorage.removeItem(SESSION_KEY);
-    return null;
-  }
+  return window.PGrowthSession.read();
 }
 
 async function refreshSession() {
-  const session = readSession();
-
-  if (!session?.refresh_token) {
-    throw new Error('A sessão terminou. Entre novamente.');
-  }
-
-  const updated = await authRequest('token?grant_type=refresh_token', {
-    refresh_token: session.refresh_token
-  });
-
-  return saveSession(updated);
+  await window.PGrowthSession.refresh();
+  return readSession();
 }
 
 async function getAccessToken() {
-  let session = readSession();
-
-  if (!session?.access_token) {
-    throw new Error('Inicie sessão para continuar.');
-  }
-
-  const expiresAt = Number(session.expires_at || 0);
-
-  if (!expiresAt || expiresAt <= Math.floor(Date.now() / 1000) + 60) {
-    session = await refreshSession();
-  }
-
-  return session.access_token;
+  return window.PGrowthSession.token();
 }
 
 async function apiRequest(action, payload = {}) {
@@ -278,10 +239,7 @@ window.PGrowthAuth = {
   getAccessToken,
   apiRequest,
   readSession,
-  logout() {
-    sessionStorage.removeItem(SESSION_KEY);
-    window.location.href = 'acesso.html';
-  }
+  logout() { window.PGrowthSession.logout(); }
 };
 
 setMode('signup');

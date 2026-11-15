@@ -272,7 +272,7 @@ const API = "https://" + "pgrowth-events-fitness-api.vercel.app/api/challenges";
       updateSyncStatus();
     } catch (error) {
       cloudReady = false;
-      syncMessage = "Sincronização indisponível — dados locais preservados";
+      syncMessage = "Sincronização indisponível: " + (error.message || "erro desconhecido") + " — dados locais preservados";
       updateSyncStatus();
       console.warn("Fitness challenges sync:", error.message);
     }

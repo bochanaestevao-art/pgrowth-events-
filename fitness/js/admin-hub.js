@@ -131,9 +131,7 @@
     </div>
   `;
 
-  const main = document.querySelector("main") ||
-               document.querySelector(".container") ||
-               document.body;
+  const main = document.getElementById("adminProtected") || document.querySelector("main") || document.querySelector(".container") || document.body;
 
   main.prepend(section);
 })();

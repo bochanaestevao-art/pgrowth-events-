@@ -63,8 +63,8 @@ button:disabled{opacity:.5;cursor:not-allowed}
   </div>
   <div class="actions">
     <a class="btn secondary" href="index.html">VOLTAR AO FITNESS</a>
-    <button id="refresh">ACTUALIZAR</button>
-    <button id="logout" class="secondary">SAIR</button>
+    <button id="refresh" hidden>ACTUALIZAR</button>
+    <button id="logout" class="secondary" hidden>SAIR</button>
   </div>
 </header>
 
@@ -75,12 +75,22 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </section>
 
 <div id="globalMessage" class="notice">A verificar a sessão e as permissões administrativas...</div>
-<div id="adminLogin" class="notice">
-  <strong>ACESSO À ADMINISTRAÇÃO</strong><br>
-  Entra na tua conta PGrowth para verificar as permissões administrativas.
-  <p><a href="acesso.html?next=admin.html">ENTRAR NA CONTA PGROWTH →</a></p>
+<div id="adminLogin" class="panel" style="max-width:480px;margin:18px auto;padding:22px">
+  <h2 style="margin-top:0">ACESSO EXCLUSIVO · PGROWTH ADMIN</h2>
+  <p class="muted">Entrada reservada à conta autorizada. Não existe registo público nesta área.</p>
+  <form id="adminLoginForm" style="display:grid;gap:12px">
+    <label style="display:grid;gap:6px">Telefone ou email
+      <input id="adminIdentity" type="text" autocomplete="username" required placeholder="Telefone ou email da conta">
+    </label>
+    <label style="display:grid;gap:6px">Palavra-passe
+      <input id="adminPassword" type="password" autocomplete="current-password" required minlength="8">
+    </label>
+    <button id="adminLoginSubmit" type="submit">ENTRAR NA ADMINISTRAÇÃO</button>
+    <p id="adminLoginMessage" class="muted" aria-live="polite"></p>
+  </form>
 </div>
 
+<div id="adminProtected" hidden>
 <section class="stats">
   <div class="stat"><small>Passes pendentes</small><strong id="nPasses">—</strong></div>
   <div class="stat"><small>Pedidos de treinadores</small><strong id="nCoaches">—</strong></div>
@@ -335,6 +345,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </div>
 
 <footer class="footer">PGrowth Fitness · Central de Controlo · Administração reservada</footer>
+</div>
 </main>
 <script src="js/session.js"></script>
 <script src="js/admin.js"></script>

@@ -152,7 +152,11 @@ async function loadAll() {
 
   try {
     await request('premium', 'coach-requests');
-    $('adminLogin').hidden = true;
+    $('adminProtected').hidden = false;
+   $('refresh').hidden = false;
+   $('logout').hidden = false;
+   $('adminLogin').hidden = true;
+   window.PGrowthAdminChallenges?.start?.();
   } catch (error) {
     $('refresh').disabled = false;
     throw error;
@@ -214,9 +218,89 @@ document.addEventListener('click', event => {
   if (button) perform(button);
 });
 
+
+$('adminLoginForm').addEventListener('submit', async event => {
+  event.preventDefault();
+
+  const button = $('adminLoginSubmit');
+  const output = $('adminLoginMessage');
+  button.disabled = true;
+  output.textContent = 'A autenticar...';
+
+  try {
+    const identity = $('adminIdentity').value.trim();
+    const password = $('adminPassword').value;
+
+    if (password.length < 8) {
+      throw new Error('A palavra-passe deve ter pelo menos 8 caracteres.');
+    }
+
+    let email;
+    if (identity.includes('@')) {
+      email = identity.toLowerCase();
+    } else {
+      let phone = identity.replace(/[ 	().-]/g, '');
+      if (phone.startsWith('00258')) phone = phone.slice(2);
+      if (phone.startsWith('+258')) phone = phone.slice(4);
+      else if (phone.startsWith('258')) phone = phone.slice(3);
+
+      if (phone.length !== 9 || phone[0] !== '8' || !/^[0-9]+$/.test(phone)) {
+        throw new Error('Introduz um telefone moçambicano válido ou o email da conta.');
+      }
+
+      email = '258' + phone + '@pgrowth-events.vercel.app';
+    }
+
+    const configResponse = await fetch(API + '/pass?action=config', {
+      cache: 'no-store'
+    });
+    const config = await configResponse.json().catch(() => ({}));
+
+    if (!configResponse.ok || !config.supabaseUrl || !config.supabaseAnonKey) {
+      throw new Error(config.error || 'Configuração de autenticação indisponível.');
+    }
+
+    const authResponse = await fetch(
+      config.supabaseUrl.replace(/\/$/, '') + '/auth/v1/token?grant_type=password',
+      {
+        method: 'POST',
+        headers: {
+          apikey: config.supabaseAnonKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      }
+    );
+
+    const session = await authResponse.json().catch(() => ({}));
+
+    if (!authResponse.ok || !session.access_token) {
+      throw new Error(session.msg || session.message || session.error_description || session.error || 'Credenciais inválidas.');
+    }
+
+    window.PGrowthSession.save(session);
+    output.textContent = 'Sessão iniciada. A verificar autorização administrativa...';
+    await loadAll();
+
+  } catch (error) {
+    $('adminProtected').hidden = true;
+    $('refresh').hidden = true;
+    $('logout').hidden = true;
+    $('adminLogin').hidden = false;
+    output.textContent = error.status === 403
+      ? 'Acesso recusado. Esta conta não está autorizada na administração PGrowth.'
+      : (error.message || 'Não foi possível iniciar sessão.');
+  } finally {
+    button.disabled = false;
+  }
+});
+
 $('refresh').addEventListener('click', () => {
   loadAll().catch(error => {
-    $('adminLogin').hidden = error.status === 403;
+    $('adminLogin').hidden = false;
+    $('adminProtected').hidden = true;
+    $('refresh').hidden = true;
+    $('logout').hidden = true;
     message(
       error.status === 403
         ? 'Acesso recusado. Esta conta não possui permissões administrativas.'
@@ -228,7 +312,7 @@ $('refresh').addEventListener('click', () => {
 $('logout').addEventListener('click', async () => {
   if (!confirm('Queres terminar a sessão PGrowth?')) return;
   try { await window.PGrowthSession?.logout?.(); } catch {}
-  location.href = 'acesso.html';
+  location.href = 'admin.html';
 });
 
 (async () => {
@@ -236,7 +320,10 @@ $('logout').addEventListener('click', async () => {
     await token();
     await loadAll();
   } catch (error) {
-    $('adminLogin').hidden = error.status === 403;
+    $('adminLogin').hidden = false;
+    $('adminProtected').hidden = true;
+    $('refresh').hidden = true;
+    $('logout').hidden = true;
     message(
       error.status === 403
         ? 'Acesso recusado. Esta conta não possui permissões administrativas.'
