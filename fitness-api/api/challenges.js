@@ -51,6 +51,109 @@ async function database(path, options = {}) {
   return data;
 }
 
+/* PGROWTH_PRIVATE_CHALLENGE_VIDEO_V1 */
+const CHALLENGE_BUCKET = 'fitness-challenge-videos';
+
+function challengeError(message, status) {
+  return Object.assign(new Error(message), { status });
+}
+
+async function hasActiveCompletePass(userId) {
+  const now = new Date().toISOString();
+  const query = new URLSearchParams({
+    select: 'id,status,valid_from,valid_until,approved_order_id',
+    user_id: 'eq.' + userId,
+    status: 'eq.ACTIVE',
+    valid_until: 'gt.' + now,
+    order: 'valid_until.desc',
+    limit: '1'
+  });
+  const rows = await database('fitness_passes?' + query.toString());
+  return Array.isArray(rows) && rows.length > 0;
+}
+
+async function getChallengeCatalog() {
+  const rows = await database(
+    'fitness_challenge_catalog?active=eq.true&select=id,category,title,description,target,unit,kind,symbol,guide_steps,guide_tip,guide_safety,video_path,sort_order,active&order=sort_order.asc'
+  );
+
+  return (Array.isArray(rows) ? rows : []).map(row => {
+    const { video_path, ...challenge } = row;
+    return { ...challenge, has_video: Boolean(video_path) };
+  });
+}
+
+async function getChallengeVideoUrl(userId, challengeId) {
+  const id = String(challengeId || '');
+
+  if (!/^[a-z0-9-]{2,70}$/.test(id)) {
+    throw challengeError('Identificador de desafio inválido.', 400);
+  }
+
+  if (!(await hasActiveCompletePass(userId))) {
+    throw challengeError(
+      'É necessário ter um Passe Completo activo para assistir aos vídeos.',
+      403
+    );
+  }
+
+  const rows = await database(
+    'fitness_challenge_catalog?id=eq.' +
+    encodeURIComponent(id) +
+    '&active=eq.true&select=id,video_path&limit=1'
+  );
+
+  const videoPath = rows?.[0]?.video_path;
+  if (!videoPath) {
+    throw challengeError('Este desafio ainda não tem vídeo.', 404);
+  }
+
+  let cleanPath = String(videoPath);
+  while (cleanPath.startsWith('/')) cleanPath = cleanPath.slice(1);
+
+  if (!cleanPath || cleanPath.split('/').includes('..')) {
+    throw challengeError('Caminho do vídeo inválido.', 400);
+  }
+
+  const encodedPath = cleanPath.split('/').map(encodeURIComponent).join('/');
+  const response = await fetch(
+    SUPABASE_URL + '/storage/v1/object/sign/' +
+    CHALLENGE_BUCKET + '/' + encodedPath,
+    {
+      method: 'POST',
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: 'Bearer ' + SERVICE_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ expiresIn: 3600 })
+    }
+  );
+
+  const raw = await response.text();
+  let signed = {};
+  try { signed = raw ? JSON.parse(raw) : {}; } catch {}
+
+  if (!response.ok) {
+    throw challengeError(
+      signed.message || signed.error || 'Não foi possível preparar o vídeo.',
+      response.status
+    );
+  }
+
+  const signedURL = signed.signedURL || signed.signedUrl;
+  if (!signedURL) {
+    throw challengeError('O armazenamento não devolveu o endereço do vídeo.', 502);
+  }
+
+  return {
+    videoUrl: signedURL.startsWith('http')
+      ? signedURL
+      : SUPABASE_URL + '/storage/v1' + signedURL,
+    expiresIn: 3600
+  };
+}
+
 export default async function handler(req, res) {
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Origin', 'https://pgrowth-events.vercel.app');
@@ -69,6 +172,20 @@ export default async function handler(req, res) {
 
   try {
     const user = await authenticate(req);
+
+    const requestUrl = new URL(req.url, 'https://localhost');
+    const action = requestUrl.searchParams.get('action');
+
+    if (req.method === 'GET' && action === 'catalog') {
+      return send(res, 200, {
+        challenges: await getChallengeCatalog()
+      });
+    }
+
+    if (req.method === 'POST' && req.body?.action === 'video-url') {
+      const result = await getChallengeVideoUrl(user.id, req.body.challengeId);
+      return send(res, 200, result);
+    }
 
     if (req.method === 'GET') {
       const rows = await database(
@@ -120,7 +237,7 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     const message = error?.message || 'Erro interno.';
-    const status = /sessão|autenticado|expirada/i.test(message) ? 401 : 500;
+    const status = error.status || (/sessão|autenticado|expirada/i.test(message) ? 401 : 500);
     return send(res, status, { error: message });
   }
 }

@@ -184,6 +184,50 @@
     return result;
   }
 
+  
+  async function loadRemoteChallengeCatalog() {
+    try {
+      const session = window.PGrowthSession;
+      if (!session || typeof session.token !== 'function') return;
+
+      const authToken = await session.token();
+      const url = new URL(API);
+      url.searchParams.set('action', 'catalog');
+
+      const response = await fetch(url, {
+        headers: { Authorization: 'Bearer ' + authToken }
+      });
+
+      if (!response.ok) return;
+
+      const result = await response.json();
+      if (!Array.isArray(result.challenges)) return;
+
+      const remote = result.challenges.map(item => ({
+        id: item.id,
+        category: item.category,
+        title: item.title,
+        desc: item.description || '',
+        description: item.description || '',
+        target: item.target,
+        unit: item.unit,
+        kind: item.kind,
+        symbol: item.symbol,
+        sort_order: item.sort_order,
+        has_video: Boolean(item.has_video),
+        guide: {
+          steps: Array.isArray(item.guide_steps) ? item.guide_steps : [],
+          tip: item.guide_tip || '',
+          safety: item.guide_safety || ''
+        }
+      }));
+
+      definitions.splice(0, definitions.length, ...remote);
+    } catch (error) {
+      console.warn('Catálogo remoto indisponível; mantém-se a lista local.', error);
+    }
+  }
+
   async function syncFromCloud() {
     if (!window.PGrowthSession?.read?.()) {
       syncMessage = "Inicia sessão para sincronizar os teus desafios";
@@ -336,7 +380,7 @@
       <a class="challenge ${done ? "done" : ""}" href="desafio.html?id=${encodeURIComponent(challenge.id)}">
         <div class="card-top">
           <span class="symbol">${escapeHtml(challenge.symbol)}</span>
-          <span class="tag">${escapeHtml(labels[challenge.category])}</span>
+          <span class="tag">${escapeHtml(labels[challenge.category] || challenge.category)}</span>
         </div>
         <h3>${escapeHtml(copy.title)}</h3>
         <div class="description">${escapeHtml(copy.desc)}</div>
@@ -389,7 +433,7 @@
     root.innerHTML = `
       <section class="detail-hero ${done ? "completed" : ""}">
         <span class="detail-symbol">${escapeHtml(challenge.symbol)}</span>
-        <span class="tag">${escapeHtml(labels[challenge.category])}</span>
+        <span class="tag">${escapeHtml(labels[challenge.category] || challenge.category)}</span>
         <h1>${escapeHtml(copy.title)}</h1>
         <p>${escapeHtml(copy.desc)}</p>
         <div class="detail-progress-line">
@@ -534,7 +578,8 @@
       }
     });
 
-    syncFromCloud().finally(() => {
+    syncFromCloud().finally(async () => {
+      await loadRemoteChallengeCatalog();
       isDetail ? renderDetail() : renderList();
     });
 

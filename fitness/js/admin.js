@@ -146,22 +146,6 @@ async function loadOrders() {
   ), 'Ainda não existem encomendas.');
 }
 
-async function loadCommissions() {
-  const data = await request('premium', 'commissions');
-  const rows = list(data, 'commissions', 'data').filter(x=>['PENDING','APPROVED'].includes(String(x.status||'').toUpperCase()));
-  state.queues.commissions = rows;
-  renderQueue('commissionQueue', rows, o => item(
-    o.coach_name || o.coach_user_id || 'Comissão de treinador',
-    [
-      `Valor: ${o.amount_mzn ?? o.amount ?? '—'} MT`,
-      `Estado: ${o.status || '—'}`,
-      `Criada: ${date(o.created_at)}`
-    ],
-    (o.status === 'PENDING'
-      ? actionButton('APROVAR COMISSÃO','commission-review',o.id,'APPROVE')
-      : actionButton('REGISTAR PAGAMENTO','commission-review',o.id,'PAY'))
-  ), 'Não existem comissões por tratar.');
-}
 
 async function loadAll() {
   $('refresh').disabled = true;
@@ -180,7 +164,6 @@ async function loadAll() {
     ['Treinadores',loadCoaches],
     ['Empresas',loadCompanies],
     ['Marketplace',loadOrders],
-    ['Comissões',loadCommissions]
   ];
   const results = await Promise.allSettled(jobs.map(x=>x[1]()));
   const failed = results.map((r,i)=>r.status==='rejected' ? `${jobs[i][0]}: ${r.reason.message}` : null).filter(Boolean);
@@ -198,15 +181,16 @@ async function loadAll() {
 async function perform(button) {
   const { action, id, decision } = button.dataset;
   if (!id) return;
+
   const isReject = decision === 'REJECTED';
   const confirmText = isReject
     ? 'Confirmas a rejeição deste pedido?'
-    : action === 'commission-review'
-      ? decision === 'PAY' ? 'Confirmas que esta comissão foi paga?' : 'Confirmas a aprovação desta comissão?'
-      : 'Confirmas a aprovação deste pedido?';
+    : 'Confirmas a aprovação deste pedido?';
+
   if (!window.confirm(confirmText)) return;
 
   button.disabled = true;
+
   try {
     if (action === 'pass-review') {
       await request('pass','admin-review','POST',{orderId:id,decision,adminNote:''});
@@ -216,9 +200,8 @@ async function perform(button) {
       await request('corporate',decision==='APPROVED'?'ADMIN_APPROVE_PAYMENT':'ADMIN_REJECT_PAYMENT','POST',{payment_id:id,admin_note:''});
     } else if (action === 'order-review') {
       await request('marketplace','admin-review-order','POST',{orderId:id,decision,adminNote:''});
-    } else if (action === 'commission-review') {
-      await request('premium','manage-commission','POST',{commissionId:id,decision});
     }
+
     message('Operação enviada e aceite pelo servidor.', 'good');
     await loadAll();
   } catch (error) {
@@ -226,7 +209,6 @@ async function perform(button) {
     button.disabled = false;
   }
 }
-
 document.addEventListener('click', event => {
   const button = event.target.closest('button[data-action]');
   if (button) perform(button);
@@ -265,7 +247,6 @@ $('logout').addEventListener('click', async () => {
     $('coachQueue').innerHTML = '<div class="empty">Sessão necessária.</div>';
     $('companyQueue').innerHTML = '<div class="empty">Sessão necessária.</div>';
     $('orderQueue').innerHTML = '<div class="empty">Sessão necessária.</div>';
-    $('commissionQueue').innerHTML = '<div class="empty">Sessão necessária.</div>';
   }
 })();
 })();

@@ -96,13 +96,214 @@ button:disabled{opacity:.5;cursor:not-allowed}
 <section class="modules">
   <a class="module" href="desafios.html"><span class="ico">🏃</span><strong>Desafios de Corrida</strong><small>Metas, participação e evolução dos atletas.</small><span class="open">ABRIR MÓDULO →</span></a>
   <a class="module" href="equipas.html"><span class="ico">👥</span><strong>Equipas e Rankings</strong><small>Equipas, membros, convites e classificações.</small><span class="open">ABRIR MÓDULO →</span></a>
-  <a class="module" href="premium.html"><span class="ico">🏋️</span><strong>CT GULERA Premium</strong><small>Treinadores, acompanhamento, conteúdos e comissões.</small><span class="open">ABRIR GESTÃO →</span></a>
+  <a class="module" href="premium.html"><span class="ico">🏋️</span><strong>CT GULERA Premium</strong><small>Treinadores, acompanhamento profissional e conteúdos.</small><span class="open">ABRIR GESTÃO →</span></a>
   <a class="module" href="admin-passes.html"><span class="ico">💳</span><strong>Carteira e Pagamentos</strong><small>Pedidos de Passes e validação de pagamentos.</small><span class="open">ABRIR ADMINISTRAÇÃO →</span></a>
   <a class="module" href="treinadores.html"><span class="ico">🎯</span><strong>Painel de Treinadores</strong><small>Área de acompanhamento e trabalho dos treinadores.</small><span class="open">ABRIR MÓDULO →</span></a>
   <a class="module" href="empresas.html"><span class="ico">🏢</span><strong>Painel Empresarial</strong><small>Empresas, contratos, pagamentos e programas.</small><span class="open">ABRIR MÓDULO →</span></a>
   <a class="module" href="eventos.html"><span class="ico">📅</span><strong>Marketplace de Eventos</strong><small>Eventos, publicações e informação de inscrições.</small><span class="open">ABRIR MÓDULO →</span></a>
   <a class="module" href="loja.html"><span class="ico">🛍️</span><strong>Loja Desportiva</strong><small>Produtos, stock, encomendas e pagamentos.</small><span class="open">ABRIR MÓDULO →</span></a>
 </section>
+
+
+<section class="section-title">
+  <h2>Gestão global de desafios e vídeos</h2>
+  <span class="muted" id="challengeAdminCount">A carregar...</span>
+</section>
+
+<section class="panel" id="challengeAdminPanel">
+  <div class="panel-head">
+    <h3>Catálogo de desafios</h3>
+    <div class="actions">
+      <button type="button" class="secondary" id="challengeRefresh">ACTUALIZAR</button>
+      <button type="button" id="challengeNew">+ NOVO DESAFIO</button>
+    </div>
+  </div>
+
+  <div id="challengeAdminMessage" class="notice" hidden></div>
+
+  <div class="challenge-admin-layout">
+    <div id="challengeAdminList" class="challenge-admin-list">
+      <div class="loading">A carregar desafios...</div>
+    </div>
+
+    <form id="challengeForm" class="challenge-admin-form">
+      <h3>Dados do desafio</h3>
+
+      <label>ID único
+        <input id="challengeId" required pattern="[a-z0-9-]{2,70}" maxlength="70" placeholder="novo-desafio">
+      </label>
+
+      <label>Categoria
+        <select id="challengeCategory">
+          <option value="corrida">Corrida</option>
+          <option value="resistencia">Resistência</option>
+          <option value="forca">Força</option>
+          <option value="exercicios">Exercícios</option>
+          <option value="cardio">Cardio</option>
+        </select>
+      </label>
+
+      <label>Título
+        <input id="challengeTitle" required maxlength="120">
+      </label>
+
+      <label>Descrição
+        <textarea id="challengeDescription" rows="3" maxlength="1000"></textarea>
+      </label>
+
+      <div class="challenge-admin-grid">
+        <label>Meta padrão
+          <input id="challengeTarget" type="number" min="0.01" step="any" value="1" required>
+        </label>
+        <label>Unidade
+          <input id="challengeUnit" required maxlength="30" placeholder="km, reps, min...">
+        </label>
+      </div>
+
+      <div class="challenge-admin-grid">
+        <label>Tipo de registo
+          <input id="challengeKind" value="manual" maxlength="30">
+        </label>
+        <label>Símbolo
+          <input id="challengeSymbol" maxlength="30" placeholder="5 KM">
+        </label>
+      </div>
+
+      <label>Ordem de apresentação
+        <input id="challengeSort" type="number" step="1" value="0">
+      </label>
+
+      <label>Instruções / tarefas (uma por linha)
+        <textarea id="challengeSteps" rows="5"></textarea>
+      </label>
+
+      <label>Dica de treino
+        <textarea id="challengeTip" rows="2" maxlength="1000"></textarea>
+      </label>
+
+      <label>Nota de segurança
+        <textarea id="challengeSafety" rows="2" maxlength="1000"></textarea>
+      </label>
+
+      <label>Vídeo MP4 (máximo 500 MB)
+        <input id="challengeVideo" type="file" accept="video/mp4,.mp4">
+      </label>
+
+      <p class="muted" id="challengeVideoStatus">Nenhum vídeo associado.</p>
+
+      <label class="challenge-admin-check">
+        <input id="challengeActive" type="checkbox" checked>
+        Desafio activo para os atletas
+      </label>
+
+      <div class="actions">
+        <button id="challengeSave" type="submit">GUARDAR DESAFIO</button>
+        <button id="challengeRemoveVideo" type="button" class="secondary" hidden>REMOVER VÍDEO</button>
+        <button id="challengeArchive" type="button" class="danger" hidden>ARQUIVAR</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<style>
+#challengeAdminPanel .challenge-admin-layout {
+  display:grid;
+  grid-template-columns:minmax(220px,.8fr) minmax(0,1.5fr);
+  gap:16px;
+  margin-top:16px
+}
+#challengeAdminPanel .challenge-admin-list {
+  display:grid;
+  align-content:start;
+  gap:8px;
+  max-height:760px;
+  overflow:auto
+}
+#challengeAdminPanel .challenge-admin-item {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  text-align:left;
+  background:#0b1b14;
+  color:#fff;
+  border:1px solid var(--line);
+  padding:12px;
+  border-radius:10px
+}
+#challengeAdminPanel .challenge-admin-item.selected {
+  border-color:var(--green)
+}
+#challengeAdminPanel .challenge-admin-item strong,
+#challengeAdminPanel .challenge-admin-item small {
+  display:block
+}
+#challengeAdminPanel .challenge-admin-item small {
+  color:var(--muted);
+  font-size:11px;
+  margin-top:5px
+}
+#challengeAdminPanel .challenge-admin-status {
+  font-size:9px;
+  color:#fca5a5;
+  white-space:nowrap
+}
+#challengeAdminPanel .challenge-admin-status.is-active {
+  color:var(--green)
+}
+#challengeAdminPanel .challenge-admin-form {
+  display:grid;
+  gap:11px;
+  padding:15px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:#0b1b14
+}
+#challengeAdminPanel .challenge-admin-form h3 {
+  margin:0 0 5px
+}
+#challengeAdminPanel .challenge-admin-form label {
+  display:grid;
+  gap:6px;
+  color:#dce9df;
+  font-size:12px;
+  font-weight:700
+}
+#challengeAdminPanel .challenge-admin-form input:not([type=checkbox]),
+#challengeAdminPanel .challenge-admin-form textarea,
+#challengeAdminPanel .challenge-admin-form select {
+  width:100%;
+  min-width:0;
+  padding:11px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:#10251d;
+  color:#fff;
+  font:inherit
+}
+#challengeAdminPanel .challenge-admin-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px
+}
+#challengeAdminPanel .challenge-admin-check {
+  display:flex!important;
+  align-items:center;
+  grid-template-columns:auto 1fr
+}
+#challengeAdminPanel .challenge-admin-check input {
+  width:18px;
+  height:18px
+}
+@media(max-width:700px) {
+  #challengeAdminPanel .challenge-admin-layout {
+    grid-template-columns:1fr
+  }
+  #challengeAdminPanel .challenge-admin-list {
+    max-height:300px
+  }
+}
+</style>
 
 <div class="section-title">
   <h2>Centro de aprovações</h2>
@@ -129,11 +330,6 @@ button:disabled{opacity:.5;cursor:not-allowed}
   <div class="queue" id="orderQueue"><div class="loading">A carregar...</div></div>
 </section>
 
-<section class="panel">
-  <div class="panel-head"><h3>Comissões dos treinadores</h3><a class="muted" href="premium.html">Gestão de comissões →</a></div>
-  <div class="queue" id="commissionQueue"><div class="loading">A carregar...</div></div>
-</section>
-
 <div class="notice">
   <strong>Protecção dos dados e histórico:</strong> aprovações e rejeições são executadas nas APIs com verificação administrativa. Produtos e eventos podem ser arquivados no Marketplace. Não eliminamos registos financeiros, resultados desportivos ou histórico de atletas sem uma operação específica, segura e auditável.
 </div>
@@ -143,5 +339,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 <script src="js/session.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/admin-hub.js"></script>
+<script src="js/desafio-guias.js"></script>
+<script src="js/admin-challenges.js"></script>
 </body>
 </html>
