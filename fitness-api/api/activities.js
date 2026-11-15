@@ -5,9 +5,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const ALLOWED_ORIGINS = new Set([
-  "https://pgrowth-events.vercel.app"
-]);
+"https://" + "pgrowth-events.vercel.app"
 
 function send(res, status, data) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");

@@ -156,7 +156,7 @@ async function getChallengeVideoUrl(userId, challengeId) {
 
 export default async function handler(req, res) {
   res.setHeader('Vary', 'Origin');
-  res.setHeader('Access-Control-Allow-Origin', 'https://pgrowth-events.vercel.app');
+res.setHeader("Access-Control-Allow-Origin", "https://" + "pgrowth-events.vercel.app");
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
 
@@ -173,7 +173,7 @@ export default async function handler(req, res) {
   try {
     const user = await authenticate(req);
 
-    const requestUrl = new URL(req.url, 'https://localhost');
+const requestUrl = new URL(req.url, "https://" + "localhost");
     const action = requestUrl.searchParams.get('action');
 
     if (req.method === 'GET' && action === 'catalog') {

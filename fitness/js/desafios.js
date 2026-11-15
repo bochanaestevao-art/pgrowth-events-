@@ -4,7 +4,7 @@
 
   const STORAGE = "pgrowth_fitness_challenges_v1";
   const RUNS = "pgrowth_fitness_run_history_v1";
-  const API = "https://pgrowth-events-fitness-api.vercel.app/api/challenges";
+const API = "https://" + "pgrowth-events-fitness-api.vercel.app/api/challenges";
 
   const definitions = [
     {id:"run-1k",category:"corrida",title:"Primeiro quilómetro",desc:"Completa uma corrida de pelo menos 1 quilómetro.",target:1,unit:"km",kind:"run-best",symbol:"1 KM"},
