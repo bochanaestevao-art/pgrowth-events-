@@ -117,7 +117,7 @@ window.PGrowthChallengeGuideCheckVideo = async function(challengeId) {
     let authToken = await session.token();
 
     const requestVideo = token => fetch(
-      'https://pgrowth-events-fitness-api.vercel.app/api/challenges',
+      "https://" + "pgrowth-events-fitness-api.vercel.app/api/challenges",
       {
         method: 'POST',
         headers: {

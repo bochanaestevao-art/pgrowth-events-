@@ -64,11 +64,12 @@ async function hasActiveCompletePass(userId) {
     select: 'id,status,valid_from,valid_until,approved_order_id',
     user_id: 'eq.' + userId,
     status: 'eq.ACTIVE',
+    valid_from: 'lte.' + now,
     valid_until: 'gt.' + now,
     order: 'valid_until.desc',
     limit: '1'
   });
-  const rows = await database('fitness_passes?' + query.toString());
+  const rows = await database('fitness_athlete_passes?' + query.toString());
   return Array.isArray(rows) && rows.length > 0;
 }
 
