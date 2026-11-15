@@ -133,7 +133,15 @@ window.PGrowthChallengeGuideCheckVideo = async function(challengeId) {
     const result = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      throw new Error(result.error || result.message || 'Vídeo indisponível.');
+      if (response.status === 401) {
+        throw new Error('A tua sessão expirou ou deixou de ser válida. Entra novamente na tua conta.');
+      }
+
+      if (response.status === 403) {
+        throw new Error('Este vídeo é exclusivo para atletas com Passe Completo activo. Adquire ou activa o teu Passe Completo para assistir.');
+      }
+
+      throw new Error(result.error || result.message || 'Não foi possível carregar o vídeo. Tenta novamente.');
     }
 
     const video = document.createElement('video');
