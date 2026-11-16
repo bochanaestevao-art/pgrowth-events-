@@ -138,7 +138,7 @@ async function fitnessWithRefreshLock(callback) {
   throw new Error('Não foi possível coordenar a renovação da sessão. Tenta novamente.');
 }
 
-async function fitnessRefreshToken() {
+async function fitnessRefreshToken(rejectedAccessToken = null) {
   if (fitnessRefreshPromise) return fitnessRefreshPromise;
 
   const initial = fitnessReadSession();
@@ -154,8 +154,17 @@ async function fitnessRefreshToken() {
       throw new Error('A sessão terminou. Entre novamente.');
     }
 
-    if (latest.refresh_token !== initial.refresh_token &&
-        latest.access_token) {
+    const latestExpiresAt = Number(latest.expires_at || 0);
+    const latestIsUsable = Boolean(
+      latest.access_token &&
+      latestExpiresAt > Math.floor(Date.now() / 1000) + 60
+    );
+
+    const latestWasUpdated = rejectedAccessToken
+      ? latest.access_token !== rejectedAccessToken
+      : latest.refresh_token !== initial.refresh_token;
+
+    if (latestWasUpdated && latestIsUsable) {
       return latest.access_token;
     }
 
@@ -224,7 +233,7 @@ async function fitnessRequest(action, method = 'GET', payload = {}) {
   let response = await sendRequest();
 
   if (response.status === 401) {
-    token = await fitnessRefreshToken();
+    token = await fitnessRefreshToken(token);
     response = await sendRequest();
   }
 
@@ -257,7 +266,7 @@ async function fitnessSyncActivities(activities) {
   let response = await sendRequest();
 
   if (response.status === 401) {
-    token = await fitnessRefreshToken();
+    token = await fitnessRefreshToken(token);
     response = await sendRequest();
   }
 

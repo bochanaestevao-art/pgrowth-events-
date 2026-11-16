@@ -183,7 +183,7 @@ const API = "https://" + "pgrowth-events-fitness-api.vercel.app/api/challenges";
     let response = await sendRequest();
 
     if (response.status === 401 && typeof session.refresh === 'function') {
-      token = await session.refresh();
+      token = await session.refresh(token);
       response = await sendRequest();
     }
 

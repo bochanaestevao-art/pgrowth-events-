@@ -135,7 +135,7 @@ window.PGrowthChallengeGuideCheckVideo = async function(challengeId) {
 
     // Se o token for rejeitado, renovar e repetir apenas uma vez.
     if (response.status === 401 && typeof session.refresh === 'function') {
-      authToken = await session.refresh();
+      authToken = await session.refresh(authToken);
       response = await requestVideo(authToken);
     }
 
