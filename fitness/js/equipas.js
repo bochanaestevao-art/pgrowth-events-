@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 
-const API = "https://pgrowth-events-fitness-api.vercel.app/api/teams";
+const API = "https://" + "pgrowth-events-fitness-api.vercel.app/api/teams";
 const RUNS = 'pgrowth_fitness_run_history_v1';
 const PROFILE = 'pgrowth_fitness_athlete_profile_v1';
 const INVITES = 'pgrowth_fitness_team_invites_v1';
@@ -27,6 +27,7 @@ let teams = [];
 let discoveries = [];
 let challenges = [];
 let rankings = [];
+let remoteRuns = [];
 let memberCounts = {};
 let userId = '';
 let loading = false;
@@ -90,10 +91,29 @@ function saveInvites() {
 }
 
 function getRuns() {
-  const runs = read(RUNS, []);
-  return Array.isArray(runs)
-    ? runs.filter(r => Number(r.distanceKm) > 0)
-    : [];
+  const localRuns = read(RUNS, []);
+  const merged = new Map();
+
+  if (Array.isArray(remoteRuns)) {
+    remoteRuns.forEach(run => {
+      if (run && run.id && Number(run.distanceKm) > 0) {
+        merged.set(String(run.id), run);
+      }
+    });
+  }
+
+  if (Array.isArray(localRuns)) {
+    localRuns.forEach(run => {
+      if (run && run.id && Number(run.distanceKm) > 0) {
+        const id = String(run.id);
+        merged.set(id, { ...(merged.get(id) || {}), ...run });
+      }
+    });
+  }
+
+  return [...merged.values()].sort((a, b) =>
+    new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
+  );
 }
 
 function renderStats() {
@@ -197,8 +217,9 @@ function renderIndividual() {
   const runs = getRuns();
   const profile = read(PROFILE, {});
   const fields = profile.fields || {};
-  const name = fields.name || profile.name || profile.fullName || 'Atleta deste dispositivo';
+  const name = fields.name || profile.name || profile.fullName || 'Atleta';
   const distance = runs.reduce((sum, run) => sum + Number(run.distanceKm || 0), 0);
+  const team = myMembershipTeam();
 
   $('individualRanking').innerHTML = `
     <div class="card">
@@ -206,12 +227,42 @@ function renderIndividual() {
         <div class="rank-number">1</div>
         <div class="rank-info">
           <strong>${safe(name)}</strong>
-          <small>${runs.length} corridas GPS guardadas neste dispositivo</small>
+          <small>${runs.length} corridas no histórico da tua conta e dispositivo</small>
         </div>
         <div class="rank-value">${km(distance)}</div>
       </div>
-      <p class="muted">Este é o teu resumo local, não uma classificação geral verificada.</p>
+      <p class="muted">Histórico pessoal sincronizado. O ranking das equipas considera apenas corridas verificadas.</p>
     </div>
+
+    ${runs.length ? runs.map(run => {
+      const date = run.date && Number.isFinite(new Date(run.date).getTime())
+        ? new Date(run.date).toLocaleDateString('pt-MZ')
+        : 'Data indisponível';
+
+      return `
+        <div class="card">
+          <div class="rank-row">
+            <div class="rank-info">
+              <strong>${safe(date)}</strong>
+              <small>${safe(run.pace || 'Ritmo não indicado')} · ${Math.round(Number(run.durationSeconds || Number(run.durationMs || 0) / 1000))} s</small>
+            </div>
+            <div class="rank-value">${km(run.distanceKm)}</div>
+          </div>
+          ${team ? `
+            <div class="actions">
+              <button class="btn secondary" data-action="submit-run" data-id="${safe(run.id)}">
+                ENVIAR À EQUIPA
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('') : `
+      <div class="empty">
+        <strong>Ainda não existem corridas.</strong>
+        As tuas corridas GPS aparecerão aqui depois de serem guardadas.
+      </div>
+    `}
   `;
 }
 
@@ -301,6 +352,30 @@ async function loadData() {
 
     if (!userId) {
       throw new Error('Inicia sessão para aceder às equipas.');
+    }
+
+    // Preserva e sincroniza o histórico deste dispositivo antes da leitura remota.
+    const localRuns = read(RUNS, []);
+
+    if (Array.isArray(localRuns) && typeof sessionApi.syncActivities === 'function') {
+      for (let i = 0; i < localRuns.length; i += 25) {
+        const batch = localRuns.slice(i, i + 25);
+        if (!batch.length) continue;
+
+        try {
+          await sessionApi.syncActivities(batch);
+        } catch (error) {
+          console.warn('Sincronização do histórico local:', error.message);
+          break;
+        }
+      }
+    }
+
+    try {
+      remoteRuns = await sessionApi.getActivities();
+    } catch (error) {
+      remoteRuns = [];
+      console.warn('Leitura do histórico remoto:', error.message);
     }
 
     const results = await Promise.all([
@@ -448,6 +523,34 @@ document.addEventListener('click', async event => {
   button.disabled = true;
 
   try {
+    if (action === 'submit-run') {
+      if (!myMembershipTeam()) {
+        throw new Error('Tens de pertencer a uma equipa para enviar uma corrida.');
+      }
+
+      const run = getRuns().find(item => String(item.id) === String(id));
+
+      if (!run) {
+        throw new Error('Não foi possível localizar esta corrida.');
+      }
+
+      const sessionApi = window.PGrowthSession;
+
+      if (!sessionApi || typeof sessionApi.syncActivities !== 'function') {
+        throw new Error('Sincronização do histórico indisponível.');
+      }
+
+      await sessionApi.syncActivities([run]);
+
+      const result = await request('submit_activity', {
+        clientRunId: String(run.id)
+      });
+
+      toast(result.message || 'Corrida enviada e pendente de verificação.');
+      await loadData();
+      return;
+    }
+
     if (action === 'copy') {
       const code = invites[id];
 

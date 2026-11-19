@@ -4,7 +4,10 @@ const SUPABASE_URL = process.env.SUPABASE_URL ? new URL(process.env.SUPABASE_URL
 const ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-const ALLOWED_ORIGIN = "https://pgrowth-events.vercel.app";
+const ALLOWED_ORIGINS = new Set([
+  "https://" + "pgrowth-events.vercel.app",
+  "https://" + "pgrowth-admin.vercel.app"
+]);
 
 const TABLES = {
   teams: "fitness_teams",
@@ -539,29 +542,56 @@ async function submitActivity(userId, input) {
     );
   }
 
-  const distance = Number(input.distanceKm);
-  const duration = Number(input.durationMs);
+  const clientRunId = String(input.clientRunId || "");
+
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(clientRunId)) {
+    throw Object.assign(new Error("Identificador de corrida inválido."), {
+      status: 400
+    });
+  }
+
+  // A corrida tem de existir no histórico pessoal da mesma conta.
+  const personalRuns = await db(
+    "fitness_athlete_activities",
+    `?user_id=eq.${encodeURIComponent(userId)}` +
+    `&client_activity_id=eq.${encodeURIComponent(clientRunId)}` +
+    "&select=client_activity_id,distance_km,duration_ms,pace," +
+    "activity_date,timezone,route&limit=1"
+  );
+
+  const personalRun = personalRuns?.[0];
+
+  if (!personalRun) {
+    throw Object.assign(
+      new Error("Esta corrida ainda não está sincronizada no teu histórico pessoal."),
+      { status: 404 }
+    );
+  }
+
+  const distance = Number(personalRun.distance_km);
+  const duration = Number(personalRun.duration_ms);
+  const activityDate = new Date(personalRun.activity_date);
 
   if (
-    !Number.isFinite(distance) ||
-    distance <= 0 ||
-    !Number.isFinite(duration) ||
-    duration <= 0
+    !Number.isFinite(distance) || distance <= 0 || distance > 500 ||
+    !Number.isFinite(duration) || duration <= 0 || duration > 86400000 ||
+    !Number.isFinite(activityDate.getTime())
   ) {
-    throw Object.assign(new Error("Dados da corrida inválidos."), {
+    throw Object.assign(new Error("O registo pessoal da corrida é inválido."), {
       status: 400
     });
   }
 
   const duplicate = await db(
     TABLES.activities,
-    `?client_run_id=eq.${encodeURIComponent(input.clientRunId || "")}` +
+    `?athlete_id=eq.${encodeURIComponent(userId)}` +
+    `&client_run_id=eq.${encodeURIComponent(clientRunId)}` +
     "&select=id&limit=1"
   );
 
   if (duplicate.length) {
     throw Object.assign(
-      new Error("Esta corrida já foi enviada."),
+      new Error("Esta corrida já foi enviada à equipa."),
       { status: 409 }
     );
   }
@@ -572,13 +602,13 @@ async function submitActivity(userId, input) {
       team_id: membership.team_id,
       athlete_id: userId,
       membership_id: membership.id,
-      client_run_id: input.clientRunId || null,
+      client_run_id: personalRun.client_activity_id,
       distance_km: distance,
       duration_ms: duration,
-      pace: String(input.pace || ""),
-      activity_date: input.activityDate || new Date().toISOString(),
-      timezone: "Africa/Maputo",
-      route: Array.isArray(input.route) ? input.route : [],
+      pace: String(personalRun.pace || "").slice(0, 30),
+      activity_date: activityDate.toISOString(),
+      timezone: String(personalRun.timezone || "Africa/Maputo").slice(0, 64),
+      route: Array.isArray(personalRun.route) ? personalRun.route : [],
       verification_status: "PENDING"
     }
   });
@@ -665,16 +695,19 @@ async function listChallengeAcceptances(userId, challengeId) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Authorization, Content-Type"
-  );
-  res.setHeader("Vary", "Origin");
+  const origin = req.headers.origin || "";
 
-  if (req.headers.origin && req.headers.origin !== ALLOWED_ORIGIN) {
+  res.setHeader("Vary", "Origin");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  res.setHeader("Access-Control-Max-Age", "86400");
+
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
     return json(res, 403, { error: "Origem não autorizada." });
+  }
+
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
   }
 
   if (req.method === "OPTIONS") {

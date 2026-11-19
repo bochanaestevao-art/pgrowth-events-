@@ -5,7 +5,12 @@ const SUPABASE_URL = process.env.SUPABASE_URL
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-"https://" + "pgrowth-events.vercel.app"
+const ALLOWED_ORIGINS = new Set([
+  "https://" + "pgrowth-events.vercel.app",
+  "https://" + "pgrowth-admin.vercel.app"
+]);
+
+
 
 function send(res, status, data) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -21,7 +26,7 @@ function applyCors(req, res) {
   }
 
   res.setHeader("Vary", "Origin");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
   res.setHeader("Access-Control-Max-Age", "86400");
 }
@@ -128,7 +133,7 @@ export default async function handler(req, res) {
     return res.status(204).end();
   }
 
-  if (req.method !== "POST") {
+  if (!["GET", "POST"].includes(req.method)) {
     return send(res, 405, { error: "Método não permitido." });
   }
 
@@ -138,6 +143,50 @@ export default async function handler(req, res) {
 
   try {
     const user = await authenticate(req);
+
+    if (req.method === "GET") {
+      const query =
+        "?user_id=eq." + encodeURIComponent(user.id) +
+        "&select=client_activity_id,activity_type,distance_km,duration_ms," +
+        "duration_seconds,pace,activity_date,timezone,route," +
+        "verification_status,submitted_at" +
+        "&order=activity_date.desc&limit=500";
+
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/fitness_athlete_activities${query}`,
+        {
+          headers: {
+            apikey: SERVICE_KEY,
+            Authorization: `Bearer ${SERVICE_KEY}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Não foi possível carregar o histórico pessoal.");
+      }
+
+      const rows = await response.json();
+
+      const activities = rows.map(row => ({
+        id: row.client_activity_id,
+        date: row.activity_date,
+        timezone: row.timezone || "Africa/Maputo",
+        distanceKm: Number(row.distance_km || 0),
+        durationMs: Number(row.duration_ms || 0),
+        durationSeconds: Number(row.duration_seconds || 0),
+        pace: row.pace || "",
+        route: Array.isArray(row.route) ? row.route : [],
+        verificationStatus: row.verification_status,
+        submittedAt: row.submitted_at
+      }));
+
+      return send(res, 200, {
+        success: true,
+        activities
+      });
+    }
+
     const body = req.body && typeof req.body === "object" ? req.body : {};
     const activities = body.activities;
 

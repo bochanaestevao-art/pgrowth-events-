@@ -279,6 +279,39 @@ async function fitnessSyncActivities(activities) {
   return data;
 }
 
+async function fitnessGetActivities() {
+  let token = await fitnessToken();
+
+  const endpoint = FITNESS_API.replace(
+    /\/api\/pass(?:\?.*)?$/,
+    '/api/activities'
+  );
+
+  const sendRequest = () => fetch(endpoint, {
+    method: 'GET',
+    headers: {
+      Authorization: 'Bearer ' + token,
+      'Cache-Control': 'no-store'
+    },
+    cache: 'no-store'
+  });
+
+  let response = await sendRequest();
+
+  if (response.status === 401) {
+    token = await fitnessRefreshToken(token);
+    response = await sendRequest();
+  }
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.error || 'Não foi possível carregar o histórico.');
+  }
+
+  return Array.isArray(data.activities) ? data.activities : [];
+}
+
 async function fitnessLogout() {
   const session = fitnessReadSession();
 
@@ -319,6 +352,7 @@ window.PGrowthSession = {
   refresh: fitnessRefreshToken,
   request: fitnessRequest,
   syncActivities: fitnessSyncActivities,
+  getActivities: fitnessGetActivities,
   logout: fitnessLogout
 };
 
